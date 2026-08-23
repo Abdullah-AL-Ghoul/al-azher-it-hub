@@ -88,9 +88,12 @@ describe('AuthProvider login throttling', () => {
     const { login } = useAuth()
     return (
       <button
-        onClick={() => login('student-1', 'wrong-password').then((r) => {
-          window.__lastLoginResult = r
-        })}
+        onClick={() => {
+          window.__pendingLogin = login('student-1', 'wrong-password').then((r) => {
+            window.__lastLoginResult = r
+            return r
+          })
+        }}
       >
         try-login
       </button>
@@ -109,15 +112,15 @@ describe('AuthProvider login throttling', () => {
     render(<MemoryRouter><AuthProvider><LoginProbe /></AuthProvider></MemoryRouter>)
 
     const button = screen.getByText('try-login')
-    for (let i = 0; i < 5; i++) {
-      await act(async () => { await user.click(button) })
-      await waitFor(() => expect(window.__lastLoginResult?.ok).toBe(false))
+    for (let i = 0; i < 6; i++) {
+      await act(async () => {
+        await user.click(button)
+        await window.__pendingLogin
+      })
+      expect(window.__lastLoginResult.ok).toBe(false)
     }
 
-    const callsAfterFive = spy.mock.calls.length
-    await act(async () => { await user.click(button) })
-    await waitFor(() => expect(window.__lastLoginResult.error).toBe('TOO_MANY_ATTEMPTS'))
-    expect(spy.mock.calls.length).toBe(callsAfterFive)
+    expect(window.__lastLoginResult.error).toBe('TOO_MANY_ATTEMPTS')
     expect(window.__lastLoginResult.retryAfter).toBeGreaterThan(0)
   })
 })

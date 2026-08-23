@@ -70,7 +70,11 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
-    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+    __BUILD_DATE__: JSON.stringify(
+      process.env.SOURCE_DATE_EPOCH
+        ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000).toISOString()
+        : new Date().toISOString()
+    ),
     __DEV__: JSON.stringify(process.env.NODE_ENV === 'development')
   }
 })

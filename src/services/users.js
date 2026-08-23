@@ -8,6 +8,13 @@ import { safeActivity } from './activity'
 
 const USER_COLS = 'studentId, name, role, email, major, google, linkedin, whatsapp, status, "lastVisit", "createdAt"'
 
+const DUMMY_SALT = '0123456789abcdef0123456789abcdef'
+
+function pickPreferredProfile(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return null
+  return rows.find(r => (r.role || 'student') === 'admin') || rows[0]
+}
+
 export async function getUsers() {
   const { data, error } = await getSupabase().from('users').select(USER_COLS).limit(500)
   if (error) throw error
@@ -171,10 +178,11 @@ export async function authenticateUser(studentIdOrEmail, password) {
     const signIn = await tryAuthSignIn(trimmed, password)
     if (signIn.emailNotConfirmed) return { ok: false, error: 'EMAIL_NOT_CONFIRMED' }
     if (signIn.authData?.user) {
-      const [{ data: profile }, { data: profileByEmail }] = await Promise.all([
+      const [{ data: profile }, { data: profilesByEmail }] = await Promise.all([
         getSupabase().from('users').select(USER_COLS).eq('auth_user_id', signIn.authData.user.id).maybeSingle(),
-        getSupabase().from('users').select(USER_COLS).ilike('email', trimmed).order('role', { ascending: false }).maybeSingle(),
+        getSupabase().from('users').select(USER_COLS).ilike('email', trimmed).limit(4),
       ])
+      const profileByEmail = pickPreferredProfile(profilesByEmail)
       if (profile) {
         await linkAuthUser(profile.studentId)
         return { ok: true, user: { ...profile, role: profile.role || 'student' } }
@@ -185,8 +193,12 @@ export async function authenticateUser(studentIdOrEmail, password) {
       }
       return { ok: false, error: 'INVALID_CREDENTIALS' }
     }
-    const { data: profileByEmail } = await getSupabase().from('users').select(USER_COLS).ilike('email', trimmed).order('role', { ascending: false }).maybeSingle()
-    if (!profileByEmail) return { ok: false, error: 'INVALID_CREDENTIALS' }
+    const { data: profilesByEmail } = await getSupabase().from('users').select(USER_COLS).ilike('email', trimmed).limit(4)
+    const profileByEmail = pickPreferredProfile(profilesByEmail)
+    if (!profileByEmail) {
+      await hashPassword(password, DUMMY_SALT)
+      return { ok: false, error: 'INVALID_CREDENTIALS' }
+    }
     const pwOk = await verifyPassword(profileByEmail.studentId, password)
     if (!pwOk) return { ok: false, error: 'INVALID_CREDENTIALS' }
     await ensureAuthLinked(profileByEmail, password)
@@ -194,7 +206,11 @@ export async function authenticateUser(studentIdOrEmail, password) {
   }
 
   const { data: lookupUser } = await getSupabase().from('users').select(`${USER_COLS}, auth_user_id`).eq('studentId', trimmed).maybeSingle()
-  if (!lookupUser) return { ok: false, error: 'INVALID_CREDENTIALS' }
+  if (!lookupUser) {
+    await hashPassword(password, DUMMY_SALT)
+    return { ok: false, error: 'INVALID_CREDENTIALS'
+    }
+  }
   const candidateEmails = []
   if (lookupUser.email?.includes('@')) candidateEmails.push(lookupUser.email.trim())
   candidateEmails.push(authEmail(trimmed))

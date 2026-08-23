@@ -13,3 +13,6 @@ dist/
 .vercel
 .env*
 !.env.example
+
+# Test coverage output
+coverage/

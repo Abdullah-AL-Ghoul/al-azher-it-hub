@@ -15,30 +15,47 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
+function cacheResponse(cacheName, request, response) {
+  const clone = response.clone()
+  return caches.open(cacheName).then((cache) => cache.put(request, clone))
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event
   if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) return
+
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((res) => {
-          if (res.ok) {
-            const clone = res.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', clone))
-          }
+          if (res.ok) event.waitUntil(cacheResponse(CACHE_NAME, '/index.html', res))
           return res
         })
         .catch(() => caches.match('/index.html').then((r) => r || caches.match('/')))
     )
     return
   }
+
+  const url = new URL(request.url)
+  // Hashed, immutable build output: serve from cache immediately when present.
+  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/js/')) {
+    event.respondWith(
+      caches.match(request).then(
+        (cached) =>
+          cached ||
+          fetch(request).then((res) => {
+            if (res.ok) event.waitUntil(cacheResponse(CACHE_NAME, request, res))
+            return res
+          })
+      )
+    )
+    return
+  }
+
   event.respondWith(
     fetch(request)
       .then((res) => {
-        if (res.ok) {
-          const clone = res.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-        }
+        if (res.ok) event.waitUntil(cacheResponse(CACHE_NAME, request, res))
         return res
       })
       .catch(() => caches.match(request))

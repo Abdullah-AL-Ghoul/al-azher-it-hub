@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import { useLanguage } from './context/LanguageContext'
 import { useAuth } from './context/AuthContext'
 import { pageTransition } from './utils/motionTokens'
+import { useSeo } from './hooks/useSeo'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import BackToTop from './components/BackToTop'
@@ -66,6 +67,8 @@ function AppContent() {
  const { user } = useAuth()
  const location = useLocation()
  const [showSuccessRedirect, setShowSuccessRedirect] = useState(false)
+
+ useSeo(location.pathname, lang)
 
  useEffect(() => {
   window.scrollTo({ top: 0, behavior: 'instant' })

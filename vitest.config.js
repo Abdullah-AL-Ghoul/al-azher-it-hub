@@ -11,6 +11,18 @@ export default mergeConfig(
       environment: 'jsdom',
       globals: false,
       setupFiles: './src/test-utils/setup.js',
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'html', 'json-summary'],
+        include: ['src/**'],
+        exclude: ['src/test-utils/**', 'src/i18n/**', 'src/data/**', '**/__tests__/**'],
+        thresholds: {
+          statements: 4,
+          branches: 15,
+          functions: 8,
+          lines: 4,
+        },
+      },
     },
-  }),
+  })
 )
