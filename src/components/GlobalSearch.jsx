@@ -1,0 +1,302 @@
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
+import { getLectures, getSources, getAdditions } from '../services'
+import { modalOverlay, modalContent } from '../utils/motionTokens'
+import { FiSearch, FiFileText, FiGrid, FiHeart, FiArrowRight, FiX } from 'react-icons/fi'
+
+const navPages = [
+ { to: '/home', keys: ['home', 'الرئيسية'] },
+ { to: '/lectures', keys: ['lectures', 'محاضرات'] },
+ { to: '/sources', keys: ['sources', 'مصادر'] },
+ { to: '/study-plan', keys: ['study plan', 'خطة دراسية', 'الخطة الدراسية'] },
+ { to: '/roadmap', keys: ['roadmap', 'مسار', 'المسار الدراسي'] },
+ { to: '/additions', keys: ['additions', 'إضافات'] },
+ { to: '/contact', keys: ['contact', 'تواصل'] },
+ { to: '/profile', keys: ['profile', 'ملفي', 'الملف الشخصي'] },
+]
+
+const typeIcons = {
+ lecture: FiFileText,
+ source: FiGrid,
+ addition: FiHeart,
+ page: FiArrowRight,
+}
+
+const typeColors = {
+ lecture: 'from-violet-500 to-violet-600',
+ source: 'from-amber-500 to-amber-600',
+ addition: 'from-emerald-500 to-emerald-600',
+ page: 'from-cyan-500 to-cyan-600',
+}
+
+export default function GlobalSearch() {
+ const { lang, t } = useLanguage()
+ const { user } = useAuth()
+ const navigate = useNavigate()
+ const isArabic = lang === 'ar'
+
+ const [open, setOpen] = useState(false)
+ const [query, setQuery] = useState('')
+ const [results, setResults] = useState([])
+ const [activeIndex, setActiveIndex] = useState(0)
+ const [loading, setLoading] = useState(false)
+ const inputRef = useRef(null)
+ const listRef = useRef(null)
+ const allItems = useRef([])
+
+ const openModal = useCallback(() => {
+  if (!user) return
+  setOpen(true)
+  setQuery('')
+  setResults([])
+  setActiveIndex(0)
+ }, [user])
+
+ const closeModal = useCallback(() => {
+  setOpen(false)
+  setQuery('')
+  setResults([])
+  setActiveIndex(0)
+ }, [])
+
+ useEffect(() => {
+  const handler = (e) => {
+   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault()
+    if (open) closeModal()
+    else openModal()
+   }
+  }
+  window.addEventListener('keydown', handler)
+  return () => window.removeEventListener('keydown', handler)
+ }, [open, openModal, closeModal])
+
+ useEffect(() => {
+  if (open) {
+   setTimeout(() => inputRef.current?.focus(), 100)
+   const prev = document.body.style.overflow
+   document.body.style.overflow = 'hidden'
+   return () => { document.body.style.overflow = prev }
+  }
+ }, [open])
+
+ const performSearch = useCallback(async (q) => {
+  if (!q.trim()) { setResults([]); setActiveIndex(0); return }
+  setLoading(true)
+  try {
+   const lower = q.toLowerCase()
+   const [lectures, sources, additions] = await Promise.all([
+    getLectures().catch(() => []),
+    getSources().catch(() => []),
+    getAdditions().catch(() => []),
+   ])
+
+   const items = []
+
+   lectures.forEach(l => {
+    const title = isArabic ? l.titleAr : l.titleEn
+    const subject = isArabic ? l.subjectAr : l.subjectEn
+    if (title?.toLowerCase().includes(lower) || subject?.toLowerCase().includes(lower)) {
+     items.push({ type: 'lecture', title: title || '', subtitle: subject || '', id: l.id })
+    }
+   })
+
+   sources.forEach(s => {
+    const title = isArabic ? s.titleAr : s.titleEn
+    const subject = isArabic ? s.subjectAr : s.subjectEn
+    if (title?.toLowerCase().includes(lower) || subject?.toLowerCase().includes(lower)) {
+     items.push({ type: 'source', title: title || '', subtitle: subject || '', id: s.id })
+    }
+   })
+
+   additions.forEach(a => {
+    const title = isArabic ? a.titleAr : a.titleEn
+    if (title?.toLowerCase().includes(lower)) {
+     items.push({ type: 'addition', title: title || '', subtitle: '', id: a.id })
+    }
+   })
+
+   navPages.forEach(p => {
+    if (p.keys.some(k => k.toLowerCase().includes(lower))) {
+     items.push({ type: 'page', title: isArabic ? (p.keys[1] || p.keys[0]) : p.keys[0], subtitle: '', to: p.to })
+    }
+   })
+
+   allItems.current = items
+   setResults(items.slice(0, 12))
+   setActiveIndex(0)
+  } catch { setResults([]) }
+  setLoading(false)
+ }, [isArabic])
+
+ useEffect(() => {
+  const timer = setTimeout(() => performSearch(query), 200)
+  return () => clearTimeout(timer)
+ }, [query, performSearch])
+
+  const handleSelect = useCallback((item) => {
+   if (item.type === 'page') {
+    navigate(item.to)
+   } else if (item.type === 'lecture') {
+    // Navigate to the actual lecture detail page, not the generic list.
+    navigate(item.id ? `/lecture/${item.id}` : '/lectures')
+   } else if (item.type === 'source') {
+    navigate('/sources')
+   } else if (item.type === 'addition') {
+    navigate('/additions')
+   }
+   closeModal()
+  }, [navigate, closeModal])
+
+ const handleKeyDown = (e) => {
+  if (e.key === 'ArrowDown') {
+   e.preventDefault()
+   setActiveIndex(i => Math.min(i + 1, results.length - 1))
+  } else if (e.key === 'ArrowUp') {
+   e.preventDefault()
+   setActiveIndex(i => Math.max(i - 1, 0))
+  } else if (e.key === 'Enter' && results[activeIndex]) {
+   e.preventDefault()
+   handleSelect(results[activeIndex])
+  } else if (e.key === 'Escape') {
+   closeModal()
+  }
+ }
+
+ const scrollToItem = (index) => {
+  const el = listRef.current?.children?.[index]
+  el?.scrollIntoView({ block: 'nearest' })
+ }
+
+ useEffect(() => { scrollToItem(activeIndex) }, [activeIndex])
+
+ if (!user) return null
+
+ return (
+  <>
+   <button
+    onClick={openModal}
+    className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-600 dark:text-white/60 hover:text-navy-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition"
+    title={isArabic ? 'بحث (Ctrl+K)' : 'Search (Ctrl+K)'}
+    aria-label={isArabic ? 'بحث عالمي' : 'Global search'}
+   >
+    <FiSearch size={18} />
+   </button>
+
+   <AnimatePresence>
+    {open && (
+     <motion.div
+      {...modalOverlay}
+      className="fixed inset-0 z-[200] bg-black/50 dark:bg-black/70 flex items-start justify-center pt-[10vh] p-4"
+      onClick={closeModal}
+      role="dialog"
+      aria-modal="true"
+      aria-label={isArabic ? 'بحث عالمي' : 'Global search'}
+     >
+      <motion.div
+       {...modalContent}
+       className="modal-spatial rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl"
+       onClick={e => e.stopPropagation()}
+      >
+       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10">
+        <FiSearch size={18} className="text-slate-400 dark:text-white/40 shrink-0" />
+        <input
+         ref={inputRef}
+         value={query}
+         onChange={e => setQuery(e.target.value)}
+         onKeyDown={handleKeyDown}
+         placeholder={isArabic ? 'ابحث عن محاضرة، مصدر، صفحة...' : 'Search lectures, sources, pages...'}
+         className="flex-1 bg-transparent text-navy-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40 text-sm outline-none"
+         autoComplete="off"
+        />
+        <button onClick={closeModal} className="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors" aria-label={t('common.close')}>
+         <FiX size={16} className="text-slate-400 dark:text-white/40" />
+        </button>
+       </div>
+
+       <div ref={listRef} className="max-h-[60vh] overflow-y-auto overscroll-contain">
+        {loading && query.trim() && (
+         <div className="py-10 text-center text-sm text-slate-400 dark:text-white/40">
+          {isArabic ? 'جارٍ البحث...' : 'Searching...'}
+         </div>
+        )}
+
+        {!loading && query.trim() && results.length === 0 && (
+         <div className="py-10 text-center">
+          <FiSearch size={32} className="mx-auto mb-3 text-slate-300 dark:text-white/20" />
+          <p className="text-sm text-slate-400 dark:text-white/40">
+           {isArabic ? 'لا توجد نتائج' : 'No results found'}
+          </p>
+         </div>
+        )}
+
+        {!loading && !query.trim() && (
+         <div className="py-10 text-center">
+          <FiSearch size={32} className="mx-auto mb-3 text-slate-300 dark:text-white/20" />
+          <p className="text-sm text-slate-400 dark:text-white/40">
+           {isArabic ? 'ابدأ الكتابة للبحث' : 'Start typing to search'}
+          </p>
+          <div className="flex items-center justify-center gap-1 mt-2 text-xs text-slate-400 dark:text-white/30">
+           <kbd className="px-1.5 py-0.5 bg-black/5 dark:bg-white/5 rounded text-[10px] font-mono">Ctrl+K</kbd>
+           <span>{isArabic ? 'للفتح' : 'to open'}</span>
+          </div>
+         </div>
+        )}
+
+        {results.length > 0 && (
+         <div className="py-2">
+          {results.map((item, i) => {
+           const Icon = typeIcons[item.type]
+           return (
+            <button
+             key={`${item.type}-${item.id || item.to}-${i}`}
+             ref={el => { if (i === activeIndex) el?.focus() }}
+             onClick={() => handleSelect(item)}
+             onMouseEnter={() => setActiveIndex(i)}
+             className={`w-full flex items-center gap-3 px-4 py-3 text-right transition-colors ${
+              i === activeIndex
+               ? 'bg-royal-500/10 dark:bg-cyan-500/10'
+               : 'hover:bg-black/5 dark:hover:bg-white/5'
+             } ${isArabic ? 'text-right' : 'text-left'}`}
+             role="option"
+             aria-selected={i === activeIndex}
+            >
+             <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${typeColors[item.type]} flex items-center justify-center text-white shrink-0`}>
+              <Icon size={14} />
+             </div>
+             <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-navy-900 dark:text-white truncate">{item.title}</p>
+              {item.subtitle && (
+               <p className="text-xs text-slate-400 dark:text-white/40 truncate">{item.subtitle}</p>
+              )}
+             </div>
+             <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-white/30 font-medium shrink-0">
+              {item.type === 'lecture' ? (isArabic ? 'محاضرة' : 'Lecture') : item.type === 'source' ? (isArabic ? 'مصدر' : 'Source') : item.type === 'addition' ? (isArabic ? 'إضافة' : 'Addition') : (isArabic ? 'صفحة' : 'Page')}
+             </span>
+            </button>
+           )
+          })}
+         </div>
+        )}
+       </div>
+
+       <div className="flex items-center justify-between px-4 py-2 border-t border-slate-200 dark:border-white/10 text-[10px] text-slate-400 dark:text-white/30">
+        <div className="flex items-center gap-2">
+         <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">↑↓</kbd> {isArabic ? 'تنقل' : 'navigate'}</span>
+         <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">↵</kbd> {isArabic ? 'اختيار' : 'select'}</span>
+         <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">esc</kbd> {isArabic ? 'إغلاق' : 'close'}</span>
+        </div>
+        {results.length > 0 && (
+         <span>{results.length} {isArabic ? 'نتيجة' : 'results'}</span>
+        )}
+       </div>
+      </motion.div>
+     </motion.div>
+    )}
+   </AnimatePresence>
+  </>
+ )
+}

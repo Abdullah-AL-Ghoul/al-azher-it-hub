@@ -1,0 +1,161 @@
+﻿import { useState, useEffect, useRef, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
+import { useLanguage } from '../context/LanguageContext'
+import { pageContainerSlow, pageItemSlow } from '../utils/motionTokens'
+import { FiArrowDown, FiArrowUpRight, FiPlay } from 'react-icons/fi'
+
+function AnimatedCounter({ end, duration = 2000, suffix = '' }) {
+ const [count, setCount] = useState(0)
+ const [started, setStarted] = useState(false)
+ const ref = useRef(null)
+
+ useEffect(() => {
+  const observer = new IntersectionObserver(
+   ([entry]) => { if (entry.isIntersecting) setStarted(true) },
+   { threshold: 0.3 }
+  )
+  if (ref.current) observer.observe(ref.current)
+  return () => observer.disconnect()
+ }, [])
+
+ useEffect(() => {
+  if (!started) return
+  let startTime = null
+  let rafId = null
+  const animate = (currentTime) => {
+   if (!startTime) startTime = currentTime
+   const progress = Math.min((currentTime - startTime) / duration, 1)
+   const eased = 1 - Math.pow(1 - progress, 3)
+   setCount(Math.floor(eased * end))
+   if (progress < 1) rafId = requestAnimationFrame(animate)
+  }
+  rafId = requestAnimationFrame(animate)
+  return () => { if (rafId) cancelAnimationFrame(rafId) }
+ }, [started, end, duration])
+
+ return <span ref={ref}>{count}{suffix}</span>
+}
+
+export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount = 50, sourcesCount = 15, studentsCount = 200, materialsCount = 15 }) {
+ const { lang, t } = useLanguage()
+ const prefersReduced = useReducedMotion()
+ const isArabic = lang === 'ar'
+ const { scrollY } = useScroll()
+ const bgY = useTransform(scrollY, [0, 600], [0, 160])
+ const contentY = useTransform(scrollY, [0, 600], [0, -60])
+ const bgOpacity = useTransform(scrollY, [0, 500], [1, 0.4])
+
+  const stats = useMemo(() => ({
+   lectures: lecturesCount || 50,
+   sources: sourcesCount || 15,
+   materials: materialsCount || 15,
+   watched: studentsCount || 0,
+  }), [lecturesCount, sourcesCount, studentsCount, materialsCount])
+
+ const scrollToContent = () => {
+  window.scrollTo({ top: window.innerHeight - 100, behavior: 'smooth' })
+ }
+
+ return (
+  <div className="relative min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden bg-spatial-page grain">
+   <motion.div style={prefersReduced ? {} : { y: bgY, opacity: bgOpacity }} className="absolute inset-0 pointer-events-none" aria-hidden="true">
+    <div className="absolute top-20 left-10 w-64 h-64 bg-royal-500/20 rounded-full blur-2xl animate-orb-float-1"></div>
+    <div className="absolute bottom-20 right-10 w-80 h-80 bg-cyan-400/15 rounded-full blur-2xl animate-orb-float-2"></div>
+   </motion.div>
+
+   <div className="absolute inset-0">
+    <div className="absolute top-1/3 right-[25%] w-3 h-3 bg-cyan-400/30 rounded-full animate-depth-breathe" />
+    <div className="absolute bottom-1/3 left-[33%] w-1.5 h-1.5 bg-violet-400/30 animate-depth-breathe" style={{ animationDelay: '1s' }} />
+    <div className="absolute top-2/3 right-[33%] w-2 h-2 bg-royal-500/30 rounded-full animate-depth-breathe" style={{ animationDelay: '2s' }} />
+    <div className="absolute bottom-[20%] right-[15%] w-2.5 h-2.5 bg-cyan-400/20 rounded-full animate-depth-breathe" style={{ animationDelay: '3s' }} />
+   </div>
+
+   {/* Blueprint grid + orbital rings (decorative) */}
+   <div className="spatial-grid" aria-hidden="true" />
+   {!prefersReduced && (
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] md:w-[720px] md:h-[720px]" aria-hidden="true">
+     <div className="hero-orbit absolute inset-0" />
+     <div className="hero-orbit absolute inset-[14%]" style={{ animationDuration: '60s', animationDirection: 'reverse' }} />
+    </div>
+   )}
+
+   <motion.div style={prefersReduced ? {} : { y: contentY }} variants={prefersReduced ? { hidden: {}, visible: {} } : pageContainerSlow} initial="hidden" animate="visible" className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+    <motion.div variants={pageItemSlow} className="inline-flex items-center gap-2 glass px-5 py-2 mb-8">
+     <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+     <span className="text-slate-600 dark:text-white/80 text-sm font-medium">{t('home.hero.subtitle')}</span>
+    </motion.div>
+
+    <motion.h1 variants={pageItemSlow} className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6">
+     <span className="gradient-text-spatial">
+      {t('home.hero.title')}
+     </span>
+    </motion.h1>
+
+    <motion.p variants={pageItemSlow} className="text-lg md:text-xl text-slate-500 dark:text-white/60 mb-8 max-w-2xl mx-auto">
+      {t('home.hero.description')}
+     </motion.p>
+
+     <motion.div variants={pageItemSlow} className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
+      <Link to={ctaLink || '/lectures'} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl btn-primary font-semibold text-[15px]">
+       <FiPlay size={16} />
+       {isArabic ? 'استكشف المحاضرات' : 'Browse Lectures'}
+       <FiArrowUpRight size={14} className="opacity-60" />
+      </Link>
+      <Link to={ctaSecondaryLink || '/sources'} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl btn-secondary font-semibold text-[15px]">
+       {isArabic ? 'تصفح المصادر' : 'Explore Sources'}
+      </Link>
+     </motion.div>
+
+     {/* Animated Counters */}
+    <motion.div variants={pageItemSlow} className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-3xl mx-auto">
+      {[
+       { value: stats.lectures, suffix: '+', labelAr: 'محاضرة', labelEn: 'Lectures', gradient: 'from-violet-500 to-cyan-500', dir: 'right' },
+       { value: stats.materials, suffix: '+', labelAr: 'مادة', labelEn: 'Materials', gradient: 'from-emerald-500 to-cyan-500', dir: 'left' },
+       { value: stats.sources, suffix: '+', labelAr: 'مصدر', labelEn: 'Sources', gradient: 'from-amber-500 to-orange-500', dir: 'top' },
+       { value: stats.watched, suffix: '', labelAr: 'مشاهدة', labelEn: 'Watched', gradient: 'from-rose-500 to-pink-500', dir: 'bottom' },
+      ].map((stat, i) => {
+      const heroDirAnim = {
+       right: { opacity: 0, x: 80, y: 0, scale: 0.7, rotate: 5 },
+       left: { opacity: 0, x: -80, y: 0, scale: 0.7, rotate: -5 },
+       top: { opacity: 0, x: 0, y: -80, scale: 0.7, rotate: -3 },
+       bottom: { opacity: 0, x: 0, y: 80, scale: 0.7, rotate: 3 },
+      }
+      return (
+       <motion.div
+        key={i}
+        initial={prefersReduced ? {} : heroDirAnim[stat.dir]}
+        animate={prefersReduced ? {} : { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }}
+        transition={prefersReduced ? {} : { duration: 0.9, delay: 0.6 + i * 0.18, type: 'spring', stiffness: 120, damping: 12 }}
+        whileHover={prefersReduced ? {} : { scale: 1.08, y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
+        className="text-center glass rounded-2xl px-3 py-5 cursor-default border border-white/10 hover:border-royal-500/30"
+       >
+        <div className={`text-3xl md:text-4xl font-extrabold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent mb-1 tabular-nums`}>
+         <AnimatedCounter end={stat.value} suffix={stat.suffix} duration={1500 + i * 200} />
+        </div>
+        <div className="text-xs text-slate-500 dark:text-white/50 font-medium">{lang === 'ar' ? stat.labelAr : stat.labelEn}</div>
+       </motion.div>
+      )
+     })}
+    </motion.div>
+   </motion.div>
+
+   {/* Interactive scroll arrow */}
+    <motion.button
+     initial={{ opacity: 0 }}
+     animate={{ opacity: 1 }}
+     transition={{ delay: 1.2 }}
+     onClick={scrollToContent}
+     className="absolute bottom-10 left-1/2 -translate-x-1/2 group cursor-pointer"
+     aria-label={isArabic ? 'التمرير للأسفل' : 'Scroll down'}
+    >
+    <div className="relative">
+     <div className="absolute inset-0 bg-black/5 dark:bg-white/5 rounded-full blur-xl group-hover:bg-royal-500/15 transition-colors duration-500 scale-150" />
+     <div className="relative w-12 h-12 glass rounded-full flex items-center justify-center group-hover:bg-white/15 transition duration-500 group-hover:scale-110">
+      <FiArrowDown className="text-slate-500 dark:text-white/50 group-hover:text-navy-900 dark:group-hover:text-white transition-colors animate-bounce" size={20} />
+     </div>
+    </div>
+   </motion.button>
+  </div>
+ )
+}

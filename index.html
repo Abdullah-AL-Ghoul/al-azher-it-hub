@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="AL-Azher IT Hub - منصة تعليمية لطلبة تكنولوجيا المعلومات - محاضرات فيديو، ملخصات، وملفات PDF" />
+    <meta name="theme-color" content="#f0f4f8" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#05060a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AL-Azher IT Hub" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://al-azher-it-hub.vercel.app/" />
+    <meta property="og:title" content="AL-Azher IT Hub - منصة تعليمية لطلبة تكنولوجيا المعلومات" />
+    <meta property="og:description" content="محاضرات فيديو، ملخصات، وملفات PDF — متاحة لكل طلبة تكنولوجيا المعلومات (جميع السنوات)" />
+    <meta property="og:image" content="https://al-azher-it-hub.vercel.app/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:locale" content="ar_AR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:site_name" content="AL-Azher IT Hub" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://al-azher-it-hub.vercel.app/" />
+    <meta name="twitter:title" content="AL-Azher IT Hub - منصة تعليمية لطلبة تكنولوجيا المعلومات" />
+    <meta name="twitter:description" content="محاضرات فيديو، ملخصات، وملفات PDF — متاحة لكل طلبة تكنولوجيا المعلومات (جميع السنوات)" />
+    <meta name="twitter:image" content="https://al-azher-it-hub.vercel.app/icon-512.png" />
+    
+    <!-- Canonical -->
+    <link rel="canonical" href="https://al-azher-it-hub.vercel.app/" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"EducationalOrganization","name":"AL-Azher IT Hub","url":"https://al-azher-it-hub.vercel.app/","description":"منصة تعليمية لطلبة تكنولوجيا المعلومات - محاضرات فيديو، ملخصات، وملفات PDF","inLanguage":["ar","en"],"logo":"https://al-azher-it-hub.vercel.app/icon-512.png"}</script>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&family=Inter:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&family=Inter:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&family=Inter:wght@400;600;700&display=swap"></noscript>
+    <link rel="preconnect" href="https://wtetgxgtvqewveorfnwj.supabase.co" crossorigin>
+    <link rel="dns-prefetch" href="https://img.youtube.com">
+    <link rel="dns-prefetch" href="https://api.ipify.org">
+    <title>AL-Azher IT Hub</title>
+    <script>(function(){try{var l=sessionStorage.getItem('al_azher_lang')||'ar';document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr'}catch(e){}})();</script>
+    <script>
+      (function() {
+        try {
+          var theme = sessionStorage.getItem('al_azher_theme');
+          if (theme === 'dark' || theme === 'amoled') {
+            document.documentElement.classList.add('dark');
+          }
+          if (theme === 'amoled') {
+            document.documentElement.setAttribute('data-theme', 'amoled');
+          }
+        } catch(e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
