@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { getLectures, getFavorites, getRatings, getViewed, toggleFavorite, setRating, markViewed, addStudentLog } from '../services'
 import { sortLectures } from '../utils/sort'
 import toast from 'react-hot-toast'
@@ -16,11 +16,20 @@ export function useLectures(user, isArabic) {
   const [localRatings, setLocalRatings] = useState({})
   const [viewedIds, setViewedIds] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
+  const viewedIdsRef = useRef([])
+
+  const replaceViewedIds = useCallback((ids) => {
+    viewedIdsRef.current = Array.isArray(ids) ? ids : []
+    setViewedIds(viewedIdsRef.current)
+  }, [])
 
   useEffect(() => {
     let mounted = true
     async function load() {
       try {
+        setError(null)
         const l = await getLectures()
         if (mounted) setLectures(l)
         if (user && mounted) {
@@ -32,15 +41,18 @@ export function useLectures(user, isArabic) {
           if (mounted) {
             setLocalFavorites(favs)
             setLocalRatings(rats)
-            setViewedIds(Array.isArray(viewed) ? viewed : [])
+            replaceViewedIds(viewed)
           }
         }
-      } catch (err) { console.warn('useLectures load failed:', err?.message) }
+      } catch (err) {
+        console.warn('useLectures load failed:', err?.message)
+        if (mounted) setError(err)
+      }
       if (mounted) setLoading(false)
     }
     load()
     return () => { mounted = false }
-  }, [user])
+  }, [user, reloadKey, replaceViewedIds])
 
   const subjects = useMemo(() => {
     const set = new Set(lectures.map(l => isArabic ? l.subjectAr : l.subjectEn))
@@ -98,22 +110,23 @@ export function useLectures(user, isArabic) {
   }, [user, isArabic])
 
   const handleWatch = useCallback((id, lecture) => {
-    if (user) {
-      setViewedIds(prev => {
-        if (prev.includes(id)) return prev
-        markViewed(user.studentId, id)
-        addStudentLog({
-          studentId: user.studentId,
-          name: user.name,
-          type: 'VIEW_LECTURE',
-          detail: `مشاهدة: ${lecture?.titleAr || lecture?.titleEn || id}`,
-          ip: '',
-          device: navigator.userAgent,
-        }).catch(() => {})
-        return [...prev, id]
-      })
-    }
-  }, [user])
+    if (!user || viewedIdsRef.current.includes(id)) return
+    replaceViewedIds([...viewedIdsRef.current, id])
+    markViewed(user.studentId, id).catch(() => {})
+    addStudentLog({
+      studentId: user.studentId,
+      name: user.name,
+      type: 'VIEW_LECTURE',
+      detail: `مشاهدة: ${lecture?.titleAr || lecture?.titleEn || id}`,
+      ip: '',
+      device: navigator.userAgent,
+    }).catch(() => {})
+  }, [user, replaceViewedIds])
+
+  const reload = useCallback(() => {
+    setLoading(true)
+    setReloadKey(k => k + 1)
+  }, [])
 
   return {
     activeSubject, setActiveSubject,
@@ -125,7 +138,7 @@ export function useLectures(user, isArabic) {
     viewMode, setViewMode,
     lectures, subjects, filtered,
     localFavorites, localRatings, viewedIds,
-    loading,
+    loading, error, reload,
     handleToggleFavorite, handleRate, handleWatch,
   }
 }

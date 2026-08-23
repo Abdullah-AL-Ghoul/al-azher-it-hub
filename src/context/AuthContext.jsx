@@ -19,8 +19,8 @@ export function AuthProvider({ children }) {
    return s ? JSON.parse(s) : null
   } catch { return null }
  })()
- const [user, setUser] = useState(stored)
- const [loading, setLoading] = useState(false)
+  const [user, setUser] = useState(stored)
+  const [loading, setLoading] = useState(!stored)
 
  useEffect(() => {
   let mounted = true
@@ -58,42 +58,37 @@ export function AuthProvider({ children }) {
     }
    } catch (_e) { /* fallback to sessionStorage */ }
 
-   const stored = sessionStorage.getItem(STORAGE_KEY)
-   if (stored) {
+   if (stored?.studentId) {
+    setLoading(false)
     try {
-     const parsed = JSON.parse(stored)
-     if (parsed.studentId) {
-      setUser(parsed)
-      setLoading(false)
-      const dbUser = await getSessionUser(parsed.studentId)
-      if (!mounted) return
-      if (!dbUser) {
-       sessionStorage.removeItem(STORAGE_KEY)
-       setUser(null)
-      } else {
-       const corrected = {
-        ...parsed,
-        role: dbUser.role || 'student',
-        name: dbUser.name || parsed.name,
-        major: dbUser.major || parsed.major,
-        google: dbUser.google || parsed.google,
-        linkedin: dbUser.linkedin || parsed.linkedin,
-        whatsapp: dbUser.whatsapp || parsed.whatsapp,
-       }
-       setUser(corrected)
-       saveSession(corrected)
+     const dbUser = await getSessionUser(stored.studentId)
+     if (!mounted) return
+     if (!dbUser) {
+      sessionStorage.removeItem(STORAGE_KEY)
+      setUser(null)
+     } else {
+      const corrected = {
+       ...stored,
+       role: dbUser.role || 'student',
+       name: dbUser.name || stored.name,
+       major: dbUser.major || stored.major,
+       google: dbUser.google || stored.google,
+       linkedin: dbUser.linkedin || stored.linkedin,
+       whatsapp: dbUser.whatsapp || stored.whatsapp,
       }
+      setUser(corrected)
+      saveSession(corrected)
      }
-    } catch (_error) {
-     sessionStorage.removeItem(STORAGE_KEY)
-    }
+    } catch (_error) { /* keep cached session */ }
+    return
    }
    setLoading(false)
   }
 
   restoreSession()
   return () => { mounted = false }
- }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
  const login = useCallback(async (studentId, password) => {
   const loginAttempts = JSON.parse(sessionStorage.getItem('login_attempts') || '{}')

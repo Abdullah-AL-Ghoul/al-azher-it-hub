@@ -1,6 +1,14 @@
-import { vi } from 'vitest'
+import { vi, afterEach } from 'vitest'
 import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
 import { getSupabase, authRpc } from './mockSupabase'
+
+// globals are disabled, so React Testing Library cannot auto-register its
+// cleanup hook. Unmount explicitly after every test to keep the document
+// and provider state isolated between tests.
+afterEach(() => {
+  cleanup()
+})
 
 // Route @/services/supabase through the installable mock (see mockSupabase.js)
 // for every test file, so services and AuthProvider never hit the network.

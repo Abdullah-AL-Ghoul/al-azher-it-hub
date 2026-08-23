@@ -262,6 +262,18 @@ export function createMockSupabase(options = {}) {
   const user = options.user || DEFAULT_USER
   const session = options.session === null ? null : options.session || DEFAULT_SESSION
 
+  const authApi = {
+    getSession: async () => ({ data: { session }, error: null }),
+    getUser: async () => ({ data: { user }, error: null }),
+    signUp: async () => ({ data: { user: { id: 'mock-auth-id' }, session: null }, error: null }),
+    signInWithPassword: async () => ({ data: { user, session }, error: null }),
+    signInWithOAuth: async () => ({ data: { user, session }, error: null }),
+    signOut: async () => ({ error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    getToken: async () => ({ data: session?.access_token ?? null, error: null }),
+    updateUser: async () => ({ data: { user }, error: null }),
+  }
+
   const client = {
     _tables: tables,
     _onQuery: options.onQuery || null,
@@ -277,17 +289,8 @@ export function createMockSupabase(options = {}) {
       }
       return { data: null, error: null }
     },
-    auth: {
-      getSession: async () => ({ data: { session }, error: null }),
-      getUser: async () => ({ data: { user }, error: null }),
-      signUp: async () => ({ data: { user: { id: 'mock-auth-id' }, session: null }, error: null }),
-      signInWithPassword: async () => ({ data: { user, session }, error: null }),
-      signInWithOAuth: async () => ({ data: { user, session }, error: null }),
-      signOut: async () => ({ error: null }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-      getToken: async () => ({ data: session?.access_token ?? null, error: null }),
-      updateUser: async () => ({ data: { user }, error: null }),
-    },
+    // Per-method overrides: createMockSupabase({ auth: { signInWithPassword: async () => ... } })
+    auth: { ...authApi, ...(options.auth || {}) },
     storage: {
       from: (bucket) => ({
         bucket,

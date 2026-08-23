@@ -8,6 +8,7 @@ import { pageContainer, pageItem, modalOverlay, modalContent } from '../utils/mo
 import FilterBar from '../components/FilterBar'
 import CustomSelect from '../components/shared/CustomSelect'
 import VideoPlayer from '../components/shared/VideoPlayer'
+import ErrorState from '../components/feedback/ErrorState'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useScrollLock } from '../hooks/useScrollLock'
 import { FiPlay, FiHeart, FiStar, FiCalendar, FiFilter, FiGrid, FiList, FiCheck, FiSearch, FiInbox, FiX } from 'react-icons/fi'
@@ -32,7 +33,7 @@ export default function Lectures() {
 
  useEffect(() => {
   document.title = t('lectures.pageTitle')
- }, [isArabic])
+ }, [isArabic, t])
 
  const {
   activeSubject, setActiveSubject,
@@ -41,12 +42,12 @@ export default function Lectures() {
   dateTo, setDateTo,
   showAdvanced, setShowAdvanced,
   sortBy, setSortBy,
-  viewMode, setViewMode,
-  subjects, filtered,
-  localFavorites, localRatings, viewedIds,
-  loading,
-  handleToggleFavorite, handleRate, handleWatch,
- } = useLectures(user, isArabic)
+   viewMode, setViewMode,
+   lectures, subjects, filtered,
+   localFavorites, localRatings, viewedIds,
+   loading, error, reload,
+   handleToggleFavorite, handleRate, handleWatch,
+  } = useLectures(user, isArabic)
 
  if (loading) {
   return (
@@ -137,7 +138,14 @@ export default function Lectures() {
      </AnimatePresence>
     </motion.div>
 
-    {filtered.length === 0 ? (
+    {error && !loading && lectures.length === 0 ? (
+     <motion.div variants={itemVariants}>
+      <ErrorState
+       error={isArabic ? 'تعذر تحميل المحاضرات. تحقق من اتصالك وحاول مجدداً.' : 'Failed to load lectures. Check your connection and try again.'}
+       onRetry={reload}
+      />
+     </motion.div>
+    ) : filtered.length === 0 ? (
      <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -146,24 +154,24 @@ export default function Lectures() {
       <div className="w-16 h-16 bg-royal-500/10 dark:bg-cyan-500/10 border border-royal-500/20 dark:border-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-5">
        {search ? <FiSearch className="text-royal-400 dark:text-cyan-400" size={28} /> : <FiInbox className="text-royal-400 dark:text-cyan-400" size={28} />}
       </div>
-      <h3 className="text-lg font-bold text-navy-900 dark:text-white mb-2">
+      <h2 className="text-lg font-bold text-navy-900 dark:text-white mb-2">
        {search ? (isArabic ? 'لا توجد نتائج للبحث' : 'No search results') : (isArabic ? 'لا توجد محاضرات بعد' : 'No lectures yet')}
-      </h3>
-      <p className="text-sm text-slate-500 dark:text-white/50 max-w-md mx-auto mb-6">
-       {search
-        ? (isArabic ? 'جرّب كلمة بحث مختلفة أو افحص الفلاتر' : 'Try a different search term or check your filters')
-        : (isArabic ? 'سيتم إضافة المحاضرات قريباً من المدير' : 'Lectures will be added by the admin soon')}
-      </p>
-      {search && (
-       <button
-        onClick={() => { setSearch(''); setActiveSubject('all') }}
-        className="inline-flex items-center gap-2 px-5 py-2.5 bg-royal-500 hover:bg-royal-600 dark:bg-cyan-500 dark:hover:bg-cyan-600 text-white rounded-xl text-sm font-medium transition"
-       >
-        {isArabic ? 'مسح البحث' : 'Clear search'}
-       </button>
-      )}
-     </motion.div>
-     ) : viewMode === 'grid' ? (
+      </h2>
+       <p className="text-sm text-slate-500 dark:text-white/50 max-w-md mx-auto mb-6">
+        {search
+         ? (isArabic ? 'جرّب كلمة بحث مختلفة أو افحص الفلاتر' : 'Try a different search term or check your filters')
+         : (isArabic ? 'سيتم إضافة المحاضرات قريباً من المدير' : 'Lectures will be added by the admin soon')}
+       </p>
+       {search && (
+        <button
+         onClick={() => { setSearch(''); setActiveSubject('all') }}
+         className="inline-flex items-center gap-2 px-5 py-2.5 bg-royal-500 hover:bg-royal-600 dark:bg-cyan-500 dark:hover:bg-cyan-600 text-white rounded-xl text-sm font-medium transition"
+        >
+         {isArabic ? 'مسح البحث' : 'Clear search'}
+        </button>
+       )}
+      </motion.div>
+      ) : viewMode === 'grid' ? (
      <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" variants={containerVariants}>
       {filtered.map(lecture => (
        <LectureCard key={lecture.id} lecture={lecture} isArabic={isArabic} user={user} localFavorites={localFavorites} localRatings={localRatings} viewedIds={viewedIds} onToggleFavorite={handleToggleFavorite} onRate={handleRate} onWatch={handleWatch} onPlay={setActiveLecture} />
@@ -214,7 +222,7 @@ function VideoPlayerModal({ lecture, onClose, isArabic, onWatch }) {
       onClick={(e) => e.stopPropagation()}
      >
       <div className="flex items-center justify-between gap-3 mb-4">
-       <h3 className="text-base sm:text-lg font-bold text-navy-900 dark:text-white truncate">{isArabic ? lecture.titleAr : lecture.titleEn}</h3>
+        <h2 className="text-base sm:text-lg font-bold text-navy-900 dark:text-white truncate">{isArabic ? lecture.titleAr : lecture.titleEn}</h2>
        <button onClick={onClose} className="p-2 flex-shrink-0 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-500 dark:text-white/70 transition-colors" aria-label={isArabic ? 'إغلاق' : 'Close'}>
         <FiX size={20} />
        </button>
@@ -234,13 +242,14 @@ function VideoPlayerModal({ lecture, onClose, isArabic, onWatch }) {
 }
 
 function LectureCard({ lecture, isArabic, user, localFavorites, localRatings, viewedIds, onToggleFavorite, onRate, onWatch, onPlay }) {
- const { t } = useLanguage()
- const isViewed = viewedIds.includes(lecture.id)
- const videoId = lectureVideoId(lecture)
- return (
-   <motion.div variants={itemVariants}>
-    <Link to={`/lecture/${lecture.id}`} onClick={(e) => { onWatch(lecture.id, lecture) }} className="group glass glass-hover lift rounded-xl overflow-hidden block cursor-pointer">
-      <div className="relative aspect-video bg-black/30 flex items-center justify-center overflow-hidden">
+  const { t } = useLanguage()
+  const isViewed = viewedIds.includes(lecture.id)
+  const videoId = lectureVideoId(lecture)
+  const title = isArabic ? lecture.titleAr : lecture.titleEn
+  return (
+    <motion.div variants={itemVariants} className="relative group glass glass-hover lift rounded-xl overflow-hidden">
+      <Link to={`/lecture/${lecture.id}`} onClick={() => onWatch(lecture.id, lecture)} className="absolute inset-0 z-0 rounded-xl" aria-label={title} />
+      <div className="pointer-events-none relative aspect-video bg-black/30 flex items-center justify-center overflow-hidden">
       {videoId ? (
         <img src={lectureThumb(videoId, 'mq')} srcSet={`${lectureThumb(videoId, 'mq')} 320w, ${lectureThumb(videoId, 'hq')} 480w`} sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" alt="" width="320" height="180" loading="lazy" decoding="async" fetchPriority="low" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
       ) : (
@@ -248,7 +257,7 @@ function LectureCard({ lecture, isArabic, user, localFavorites, localRatings, vi
      )}
       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
      <div className="absolute inset-0 flex items-center justify-center">
-      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPlay(lecture) }} className="w-16 h-16 bg-rose-500/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white transition duration-300 group-hover:scale-110 shadow-xl shadow-rose-500/20 backdrop-blur-sm" aria-label={isArabic ? 'تشغيل داخل الموقع' : 'Play inside the site'}>
+      <button type="button" onClick={() => onPlay(lecture)} className="pointer-events-auto relative z-10 w-16 h-16 bg-rose-500/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white transition duration-300 group-hover:scale-110 shadow-xl shadow-rose-500/20 backdrop-blur-sm" aria-label={isArabic ? 'تشغيل داخل الموقع' : 'Play inside the site'}>
        <FiPlay size={28} className="ms-0.5" />
       </button>
      </div>
@@ -259,48 +268,48 @@ function LectureCard({ lecture, isArabic, user, localFavorites, localRatings, vi
       </div>
      )}
      {user && (
-      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavorite(lecture.id, lecture) }} className="absolute top-3 right-3 p-2 bg-black/30 backdrop-blur-sm rounded-full transition hover:bg-black/50" aria-label={localFavorites.includes(lecture.id) ? t('lectures.unfavorite') : t('lectures.favorite')}>
+      <button onClick={() => onToggleFavorite(lecture.id, lecture)} className="pointer-events-auto absolute top-3 right-3 z-10 p-2 bg-black/30 backdrop-blur-sm rounded-full transition hover:bg-black/50" aria-label={localFavorites.includes(lecture.id) ? t('lectures.unfavorite') : t('lectures.favorite')}>
        <FiHeart size={16} className={localFavorites.includes(lecture.id) ? 'fill-rose-500 text-rose-500' : 'text-white'} />
       </button>
      )}
     </div>
-    <div className="p-5">
+    <div className="relative p-5">
      <span className="inline-block text-xs bg-royal-500/10 dark:bg-cyan-500/10 border border-royal-500/20 dark:border-cyan-500/20 text-royal-500 dark:text-cyan-400 px-2.5 py-1 rounded-full mb-2">{isArabic ? lecture.subjectAr : lecture.subjectEn}</span>
-     <h3 className="font-semibold text-navy-900 dark:text-white mb-1 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">{isArabic ? lecture.titleAr : lecture.titleEn}</h3>
+     <h2 className="font-semibold text-navy-900 dark:text-white mb-1 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">{title}</h2>
      <div className="flex items-center justify-between mt-3">
       <span className="text-xs text-slate-500 dark:text-slate-400">{lecture.date}</span>
       <span className="text-sm font-medium text-royal-500 dark:text-cyan-400 group-hover:text-royal-600 dark:group-hover:text-cyan-300 transition-colors">{t('lectures.viewLink')} →</span>
      </div>
      {user && (
-      <div className="mt-3 pt-3 border-t border-black/5 dark:border-white/5 flex items-center gap-1">
+      <div className="relative z-10 mt-3 pt-3 border-t border-black/5 dark:border-white/5 flex items-center gap-1">
        {[1, 2, 3, 4, 5].map(star => (
-        <button key={star} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRate(lecture.id, star, lecture) }} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center transition-transform hover:scale-125" aria-label={`${t('lectures.rate')} ${star}`}>
+        <button key={star} onClick={() => onRate(lecture.id, star, lecture)} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center transition-transform hover:scale-125" aria-label={`${t('lectures.rate')} ${star}`}>
          <FiStar size={16} className={(localRatings[lecture.id] || 0) >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-white/60'} />
         </button>
        ))}
        </div>
       )}
      </div>
-    </Link>
-   </motion.div>
+    </motion.div>
   )
  }
 
 function LectureListItem({ lecture, isArabic, user, localFavorites, localRatings, viewedIds, onToggleFavorite, onRate, onWatch, onPlay }) {
- const { t } = useLanguage()
- const isViewed = viewedIds.includes(lecture.id)
- const videoId = lectureVideoId(lecture)
- return (
-   <motion.div variants={itemVariants}>
-    <Link to={`/lecture/${lecture.id}`} onClick={(e) => { onWatch(lecture.id, lecture) }} className="group glass glass-hover flex items-center gap-4 p-4 rounded-xl cursor-pointer">
-      <div className="relative w-32 h-20 flex-shrink-0 bg-black/30 rounded-xl overflow-hidden flex items-center justify-center">
+  const { t } = useLanguage()
+  const isViewed = viewedIds.includes(lecture.id)
+  const videoId = lectureVideoId(lecture)
+  const title = isArabic ? lecture.titleAr : lecture.titleEn
+  return (
+    <motion.div variants={itemVariants} className="relative group glass glass-hover flex items-center gap-4 p-4 rounded-xl">
+     <Link to={`/lecture/${lecture.id}`} onClick={() => onWatch(lecture.id, lecture)} className="absolute inset-0 z-0 rounded-xl" aria-label={title} />
+      <div className="pointer-events-none relative w-32 h-20 flex-shrink-0 bg-black/30 rounded-xl overflow-hidden flex items-center justify-center">
       {videoId ? (
          <img src={lectureThumb(videoId, 'mq')} srcSet={`${lectureThumb(videoId, 'mq')} 320w, ${lectureThumb(videoId, 'hq')} 480w`} sizes="128px" alt="" width="320" height="180" loading="lazy" decoding="async" fetchPriority="low" className="w-full h-full object-cover" />
       ) : (
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-violet-500/20" />
      )}
      <div className="absolute inset-0 flex items-center justify-center">
-      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPlay(lecture) }} className="w-10 h-10 bg-rose-500/80 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-sm" aria-label={isArabic ? 'تشغيل داخل الموقع' : 'Play inside the site'}>
+      <button type="button" onClick={() => onPlay(lecture)} className="pointer-events-auto relative z-10 w-10 h-10 bg-rose-500/80 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-sm" aria-label={isArabic ? 'تشغيل داخل الموقع' : 'Play inside the site'}>
         <FiPlay size={18} className="ms-0.5" />
       </button>
      </div>
@@ -310,20 +319,20 @@ function LectureListItem({ lecture, isArabic, user, localFavorites, localRatings
       </div>
      )}
     </div>
-    <div className="flex-1 min-w-0">
+    <div className="relative flex-1 min-w-0 pointer-events-none">
      <span className="inline-block text-xs bg-royal-500/10 dark:bg-white/5 border border-royal-500/20 dark:border-white/10 text-royal-500 dark:text-white/60 px-2 py-0.5 rounded-full mb-1">{isArabic ? lecture.subjectAr : lecture.subjectEn}</span>
-     <h3 className="font-semibold text-navy-900 dark:text-white text-sm group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors truncate">{isArabic ? lecture.titleAr : lecture.titleEn}</h3>
+     <h2 className="font-semibold text-navy-900 dark:text-white text-sm group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors truncate">{title}</h2>
      <span className="text-xs text-slate-500 dark:text-white/50">{lecture.date}</span>
     </div>
-    <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
+    <div className="relative z-10 flex items-center gap-1.5 flex-shrink-0 flex-wrap">
      {user && (
       <>
-       <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavorite(lecture.id, lecture) }} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors" aria-label={localFavorites.includes(lecture.id) ? t('lectures.unfavorite') : t('lectures.favorite')}>
+       <button onClick={() => onToggleFavorite(lecture.id, lecture)} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors" aria-label={localFavorites.includes(lecture.id) ? t('lectures.unfavorite') : t('lectures.favorite')}>
         <FiHeart size={16} className={localFavorites.includes(lecture.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-500 dark:text-white/60'} />
        </button>
 <div className="flex items-center gap-0.5 flex-wrap">
           {[1,2,3,4,5].map(star => (
-           <button key={star} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRate(lecture.id, star, lecture) }} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label={`${t('lectures.rate')} ${star}`}>
+           <button key={star} onClick={() => onRate(lecture.id, star, lecture)} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label={`${t('lectures.rate')} ${star}`}>
             <FiStar size={14} className={(localRatings[lecture.id] || 0) >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-white/60'} />
            </button>
           ))}
@@ -331,7 +340,6 @@ function LectureListItem({ lecture, isArabic, user, localFavorites, localRatings
        </>
       )}
      </div>
-    </Link>
-   </motion.div>
+    </motion.div>
   )
  }
