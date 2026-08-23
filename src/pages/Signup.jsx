@@ -176,10 +176,11 @@ export default function Signup() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.4 + i * 0.12, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
        >
-        <label className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
+        <label htmlFor={`signup-${field.key}`} className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
          {isArabic ? field.labelAr : field.labelEn}
         </label>
         <SpatialInput
+         id={`signup-${field.key}`}
          icon={field.icon}
          type={field.type}
          value={form[field.key]}
@@ -198,10 +199,11 @@ export default function Signup() {
        animate={{ opacity: 1, x: 0 }}
        transition={{ delay: 0.76, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
-       <label className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
+       <label htmlFor="signup-password" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
         {t('signup.password')}
        </label>
        <SpatialInput
+        id="signup-password"
         icon={FiLock}
         type={showPassword ? 'text' : 'password'}
         value={form.password}
@@ -230,11 +232,12 @@ export default function Signup() {
        animate={{ opacity: 1, x: 0 }}
        transition={{ delay: 0.88, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
-       <label className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
-        {t('signup.confirmPassword')}
-       </label>
-        <SpatialInput
-         icon={FiLock}
+        <label htmlFor="signup-confirm-password" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
+         {t('signup.confirmPassword')}
+        </label>
+         <SpatialInput
+          id="signup-confirm-password"
+          icon={FiLock}
          type={showConfirm ? 'text' : 'password'}
          value={form.confirmPassword}
          onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))}
@@ -248,7 +251,7 @@ export default function Signup() {
          required
         />
        {form.confirmPassword && form.password !== form.confirmPassword && (
-        <p className="text-xs text-red-400/80 mt-1 ml-1">
+        <p className="text-xs text-red-600 dark:text-red-400 mt-1 ml-1">
          {t('forgotPassword.passwordsDoNotMatch')}
         </p>
        )}

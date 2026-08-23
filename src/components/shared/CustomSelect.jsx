@@ -7,7 +7,12 @@ export default function CustomSelect({ value, options, onChange, isArabic, label
  const [open, setOpen] = useState(false)
  const [activeIndex, setActiveIndex] = useState(-1)
  const selected = options.find(o => o.value === value)
- const listId = `select-list-${label || 'default'}`
+ const listId = `select-list-${String(label || 'default').replace(/\s+/g, '-')}`
+
+ const commit = (opt) => {
+  onChange(opt.value)
+  setOpen(false)
+ }
 
  return (
   <div className="relative">
@@ -16,16 +21,36 @@ export default function CustomSelect({ value, options, onChange, isArabic, label
     onKeyDown={(e) => {
      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
-      setOpen(true)
-      setActiveIndex(e.key === 'ArrowDown' ? 0 : options.length - 1)
+      if (!open) {
+       setOpen(true)
+       setActiveIndex(e.key === 'ArrowDown' ? 0 : options.length - 1)
+      } else {
+       setActiveIndex(i => {
+        const next = e.key === 'ArrowDown' ? i + 1 : i - 1
+        return Math.max(0, Math.min(options.length - 1, next))
+       })
+      }
+     } else if (e.key === 'Enter' || e.key === ' ') {
+      if (open && activeIndex >= 0 && options[activeIndex]) {
+       e.preventDefault()
+       commit(options[activeIndex])
+      }
+     } else if (e.key === 'Escape') {
+      setOpen(false)
+     } else if (e.key === 'Home' && open) {
+      e.preventDefault()
+      setActiveIndex(0)
+     } else if (e.key === 'End' && open) {
+      e.preventDefault()
+      setActiveIndex(options.length - 1)
      }
-     if (e.key === 'Escape') setOpen(false)
     }}
     className="flex items-center gap-2 px-4 py-2 glass rounded-xl text-sm text-slate-600 dark:text-white/70 hover:text-navy-900 dark:hover:text-white transition min-w-[160px] justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500/50"
     role="combobox"
     aria-expanded={open}
+    aria-haspopup="listbox"
     aria-controls={listId}
-    aria-activedescendant={activeIndex >= 0 ? `${listId}-opt-${activeIndex}` : undefined}
+    aria-activedescendant={open && activeIndex >= 0 ? `${listId}-opt-${activeIndex}` : undefined}
     aria-label={label}
    >
     <span>{isArabic ? selected?.labelAr : selected?.labelEn}</span>
@@ -49,7 +74,7 @@ export default function CustomSelect({ value, options, onChange, isArabic, label
          id={`${listId}-opt-${i}`}
          role="option"
          aria-selected={value === opt.value}
-         onClick={() => { onChange(opt.value); setOpen(false) }}
+         onClick={() => commit(opt)}
          onMouseEnter={() => setActiveIndex(i)}
          className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
           value === opt.value

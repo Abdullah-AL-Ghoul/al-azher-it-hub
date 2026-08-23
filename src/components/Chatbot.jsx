@@ -920,6 +920,7 @@ export default function Chatbot() {
   <>
    <motion.button
      aria-label={t('chatbot.assistantLabel')}
+     aria-expanded={open}
      className={`fixed bottom-6 z-50 w-14 h-14 bg-gradient-to-br from-royal-500 to-cyan-400 text-white rounded-full shadow-lg shadow-royal-500/30 flex items-center justify-center ${isArabic ? 'left-6' : 'right-6'}`}
      onClick={() => setOpen(!open)}
     whileHover={prefersReduced ? {} : { boxShadow: '0 8px 30px rgba(99, 102, 241, 0.4)', scale: 1.1 }}

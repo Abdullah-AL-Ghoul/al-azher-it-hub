@@ -141,7 +141,7 @@ export default function AdminDashboard() {
        className="flex items-center gap-2 px-3 py-1.5 glass text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl text-sm font-medium transition"
       >
        <span>{isArabic ? 'تسجيل خروج' : 'Logout'}</span>
-       <span>✕</span>
+       <span aria-hidden="true">✕</span>
       </button>
      </div>
     </div>

@@ -264,9 +264,6 @@
     "submitCommentLabel": "إرسال التعليق",
     "noCommentsYet": "لا تعليقات بعد"
   },
-  "profile_section": {
-    "greeting": "مرحبًا يا {{name}}!"
-  },
   "admin": {
     "title": "لوحة التحكم",
     "subtitle": "إدارة المواد والمحاضرات والمصادر",

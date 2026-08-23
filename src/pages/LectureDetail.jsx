@@ -408,7 +408,7 @@ export default function LectureDetail() {
         <div className="glass rounded-2xl p-5 border border-white/10">
          <div className="flex items-center gap-2 mb-3">
           <FiFileText size={16} className="text-amber-500" />
-          <h3 className="text-sm font-bold text-navy-900 dark:text-white">{isArabic ? 'ملاحظاتي' : 'My notes'}</h3>
+          <h2 className="text-sm font-bold text-navy-900 dark:text-white">{isArabic ? 'ملاحظاتي' : 'My notes'}</h2>
           {noteSaved && <FiCheckCircle size={14} className="text-emerald-500 ms-auto" />}
          </div>
          <textarea
@@ -428,11 +428,11 @@ export default function LectureDetail() {
       {/* Rating */}
       {user && (
        <div className="glass rounded-2xl p-6 border border-white/10">
-        <h3 className="text-sm font-bold text-navy-900 dark:text-white mb-3">{isArabic ? 'قيّم هذه المحاضرة' : 'Rate this lecture'}</h3>
+        <h2 className="text-sm font-bold text-navy-900 dark:text-white mb-3">{isArabic ? 'قيّم هذه المحاضرة' : 'Rate this lecture'}</h2>
         <div className="flex items-center gap-1">
          {[1, 2, 3, 4, 5].map(star => (
           <button key={star} onClick={() => handleRate(star)} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center transition-transform hover:scale-125" aria-label={`${t('lectures.rate')} ${star}`}>
-           <FiStar size={22} className={(localRatings[id] || 0) >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-white/30'} />
+           <FiStar size={22} className={(localRatings[id] || 0) >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-400 dark:text-white/50'} />
           </button>
          ))}
         </div>

@@ -115,11 +115,12 @@ export default function Login() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.4 + i * 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
        >
-        <label className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
-         {isArabic ? field.labelAr : field.labelEn}
-        </label>
-        <SpatialInput
-         icon={field.icon}
+         <label htmlFor={`login-${field.key}`} className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
+          {isArabic ? field.labelAr : field.labelEn}
+         </label>
+         <SpatialInput
+          id={`login-${field.key}`}
+          icon={field.icon}
          type={field.type}
          value={form[field.key]}
          onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}

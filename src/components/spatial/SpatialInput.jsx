@@ -1,11 +1,14 @@
-﻿import { memo, useState, useRef } from 'react'
+﻿import { memo, useState, useRef, useId } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { FiEye, FiEyeOff } from 'react-icons/fi'
 
-function SpatialInput({ label, error, icon: Icon, type = 'text', className = '', value, onChange, placeholder, disabled, isArabic, showToggle, onToggle, showPassword, autoComplete, ...props }) {
+function SpatialInput({ label, error, icon: Icon, type = 'text', className = '', value, onChange, placeholder, disabled, isArabic, showToggle, onToggle, showPassword, autoComplete, id: idProp, ...props }) {
  const prefersReduced = useReducedMotion()
  const [focused, setFocused] = useState(false)
  const inputRef = useRef(null)
+ const generatedId = useId()
+ const inputId = idProp || generatedId
+ const errorId = `${inputId}-error`
 
  const iconPosition = isArabic ? 'right' : 'left'
  const togglePosition = isArabic ? 'left' : 'right'
@@ -24,12 +27,15 @@ function SpatialInput({ label, error, icon: Icon, type = 'text', className = '',
     )}
     <input
      ref={inputRef}
+     id={inputId}
      type={type}
      value={value}
      onChange={onChange}
      placeholder={placeholder}
      disabled={disabled}
      autoComplete={autoComplete}
+     aria-invalid={error ? true : undefined}
+     aria-describedby={error ? errorId : undefined}
      className="input-spatial w-full py-3.5 rounded-xl text-sm text-navy-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
      style={{
       [iconPosition]: Icon ? '44px' : '16px',
@@ -64,6 +70,7 @@ function SpatialInput({ label, error, icon: Icon, type = 'text', className = '',
     )}
     {label && (
      <motion.label
+      htmlFor={inputId}
       initial={false}
       animate={{
        y: focused || value ? -24 : 0,
@@ -81,6 +88,8 @@ function SpatialInput({ label, error, icon: Icon, type = 'text', className = '',
    <AnimatePresence>
     {error && (
      <motion.p
+      id={errorId}
+      role="alert"
       initial={{ opacity: 0, y: -5, height: 0 }}
       animate={{ opacity: 1, y: 0, height: 'auto' }}
       exit={{ opacity: 0, y: -5, height: 0 }}

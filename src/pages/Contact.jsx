@@ -193,17 +193,19 @@ export default function Contact() {
           onSubmit={handleSubmit}
           className="space-y-5"
          >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-           <div className="relative">
-            <SpatialInput
-             type="text"
-             name="name"
-             required
-             placeholder={t('contact.form.namePlaceholder')}
-             isArabic={isArabic}
-             onFocus={() => setFocusedField('name')}
-             onBlur={() => setFocusedField(null)}
-            />
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="relative">
+             <label htmlFor="contact-name" className="sr-only">{t('contact.form.namePlaceholder')}</label>
+             <SpatialInput
+              id="contact-name"
+              type="text"
+              name="name"
+              required
+              placeholder={t('contact.form.namePlaceholder')}
+              isArabic={isArabic}
+              onFocus={() => setFocusedField('name')}
+              onBlur={() => setFocusedField(null)}
+             />
             {focusedField === 'name' && (
              <motion.div
               layoutId="focus-indicator"
@@ -211,10 +213,12 @@ export default function Contact() {
              />
             )}
            </div>
-           <div className="relative">
-            <SpatialInput
-             type="email"
-             name="email"
+            <div className="relative">
+             <label htmlFor="contact-email" className="sr-only">{t('contact.form.emailPlaceholder')}</label>
+             <SpatialInput
+              id="contact-email"
+              type="email"
+              name="email"
              required
              placeholder={t('contact.form.emailPlaceholder')}
              isArabic={isArabic}
@@ -231,7 +235,9 @@ export default function Contact() {
           </div>
 
           <div className="relative">
+           <label htmlFor="contact-subject" className="sr-only">{t('contact.form.subjectPlaceholder')}</label>
            <SpatialInput
+            id="contact-subject"
             type="text"
             name="subject"
             required
@@ -249,7 +255,7 @@ export default function Contact() {
           </div>
 
           <div className="relative">
-           <label className="block text-sm font-medium text-slate-600 dark:text-white/70 mb-2">
+           <label htmlFor="contact-message" className="block text-sm font-medium text-slate-600 dark:text-white/70 mb-2">
             {t('contact.form.message')}
            </label>
            <div className="relative group">
@@ -259,6 +265,7 @@ export default function Contact() {
              size={16}
             />
             <textarea
+             id="contact-message"
              name="message"
              required
              rows="5"
@@ -271,15 +278,15 @@ export default function Contact() {
             />
            </div>
            <div className="flex justify-between items-center mt-2">
-            <div className="text-xs text-slate-400 dark:text-white/40">
+            <div className="text-xs text-slate-500 dark:text-white/60">
              {messageLen > 0 && (
-              <span className={messageLen > 500 ? 'text-amber-500' : ''}>
+              <span className={messageLen > 500 ? 'text-amber-600 dark:text-amber-400' : ''}>
                {messageLen} {isArabic ? 'حرف' : 'chars'}
               </span>
              )}
             </div>
             {messageLen > 500 && (
-             <span className="text-xs text-amber-500">{isArabic ? 'رسالة طويلة' : 'Long message'}</span>
+             <span className="text-xs text-amber-600 dark:text-amber-400">{isArabic ? 'رسالة طويلة' : 'Long message'}</span>
             )}
            </div>
           </div>

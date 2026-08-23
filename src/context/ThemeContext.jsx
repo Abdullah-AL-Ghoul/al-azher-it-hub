@@ -5,7 +5,10 @@ const THEMES = ['light', 'dark', 'amoled']
 
 export function ThemeProvider({ children }) {
  const [theme, setTheme] = useState(() => {
-  const stored = sessionStorage.getItem('al_azher_theme')
+  let stored = null
+  try {
+   stored = sessionStorage.getItem('al_azher_theme')
+  } catch (_e) { /* storage unavailable */ }
   if (stored && THEMES.includes(stored)) return stored
   if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
    return 'dark'

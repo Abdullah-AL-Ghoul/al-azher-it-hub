@@ -57,7 +57,7 @@ export default memo(function FilterBar({ subjects, activeSubject, onSubjectChang
       onClick={clearSearch}
       className="absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 hover:text-navy-900 dark:hover:text-white transition-colors"
       style={{ [isArabic ? 'left' : 'right']: '16px' }}
-      aria-label={t('common.search')}
+      aria-label={isArabic ? 'مسح البحث' : 'Clear search'}
      >
       <FiX size={16} />
      </button>

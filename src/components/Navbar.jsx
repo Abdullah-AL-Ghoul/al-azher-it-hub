@@ -1,4 +1,4 @@
-﻿ import { useState, useRef, useEffect, useMemo, memo } from 'react'
+ import { useState, useRef, useEffect, useMemo, memo } from 'react'
  import { Link, useLocation } from 'react-router-dom'
  import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
  import { useLanguage } from '../context/LanguageContext'
@@ -143,7 +143,7 @@
 
         <button
          onClick={toggleTheme}
-         className={`p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-xl transition duration-200 ${iconColor}`}
+         className={`p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition duration-200 ${iconColor}`}
          title={theme === 'light' ? t('theme.dark') : theme === 'dark' ? t('theme.amoled') : t('theme.light')}
          aria-label={theme === 'light' ? t('theme.dark') : theme === 'dark' ? t('theme.amoled') : t('theme.light')}
         >
@@ -154,7 +154,7 @@
          <div className="relative">
           <button
            onClick={() => { setShowNotifications(!showNotifications); if (!showNotifications) markAsRead() }}
-           className={`relative p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-xl transition duration-200 ${iconColor}`}
+           className={`relative p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition duration-200 ${iconColor}`}
            title={isArabic ? 'الإشعارات' : 'Notifications'}
            aria-label={isArabic ? 'الإشعارات' : 'Notifications'}
            aria-expanded={showNotifications}
@@ -224,7 +224,7 @@
 
         <button
          onClick={toggleLang}
-         className={`px-3 py-1.5 min-h-[36px] rounded-lg text-xs font-medium transition duration-200 border ${langBtnColor}`}
+         className={`px-3 py-1.5 min-h-[40px] rounded-lg text-xs font-medium transition duration-200 border ${langBtnColor}`}
          aria-label={isArabic ? 'Switch to English' : 'التبديل إلى العربية'}
         >
          {t('nav.language')}

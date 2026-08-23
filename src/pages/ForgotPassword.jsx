@@ -6,19 +6,18 @@ import { resetPassword, verifyStudent } from '../services'
 import { RateLimitService } from '../services/rateLimitService'
 import SpatialInput from '../components/spatial/SpatialInput'
 import SiteLogo from '../components/shared/SiteLogo'
-import { FiUser, FiLock, FiArrowLeft, FiCheckCircle, FiLoader, FiMail } from 'react-icons/fi'
+import { FiUser, FiLock, FiArrowLeft, FiCheckCircle, FiLoader } from 'react-icons/fi'
 
 export default function ForgotPassword() {
  const { lang, t } = useLanguage()
  const prefersReduced = useReducedMotion()
  const isArabic = lang === 'ar'
  const navigate = useNavigate()
- const [step, setStep] = useState(1)
- const [studentId, setStudentId] = useState('')
- const [studentName, setStudentName] = useState('')
- const [studentEmail, setStudentEmail] = useState('')
- const [verifyEmail, setVerifyEmail] = useState('')
- const [newPassword, setNewPassword] = useState('')
+  const [step, setStep] = useState(1)
+  const [studentId, setStudentId] = useState('')
+  const [studentName, setStudentName] = useState('')
+  const [studentEmail, setStudentEmail] = useState('')
+  const [newPassword, setNewPassword] = useState('')
  const [confirmPassword, setConfirmPassword] = useState('')
  const [showNew, setShowNew] = useState(false)
  const [showConfirm, setShowConfirm] = useState(false)
@@ -33,7 +32,7 @@ export default function ForgotPassword() {
 
  useEffect(() => {
   document.title = t('forgotPassword.documentTitle')
- }, [isArabic])
+ }, [isArabic, t])
 
  const handleVerify = async (e) => {
   e.preventDefault()
@@ -48,44 +47,24 @@ export default function ForgotPassword() {
    setLoading(false)
    return
   }
-  setLoading(true)
-  try {
-   const result = await verifyStudent(studentId.trim())
-   setLoading(false)
-   if (!result.exists) {
-    setError(t('forgotPassword.verifyNotFoundHint'))
-    return
-   }
-   setStudentName(result.name || '')
-   setStudentEmail(result.email || '')
-   if (result.email) {
-    setStep(2)
-   } else {
+   setLoading(true)
+   try {
+    const result = await verifyStudent(studentId.trim())
+    setLoading(false)
+    if (!result.exists) {
+     setError(t('forgotPassword.verifyNotFoundHint'))
+     return
+    }
+    setStudentName(result.name || '')
+    setStudentEmail(result.email || '')
     setStep(3)
+   } catch (err) {
+    setLoading(false)
+    setError(t('forgotPassword.error'))
    }
-  } catch (err) {
-   setLoading(false)
-   setError(t('forgotPassword.error'))
   }
- }
 
- const handleVerifyEmail = (e) => {
-  e.preventDefault()
-  setError('')
-  if (!verifyEmail.trim()) {
-   setError(t('forgotPassword.enterEmail'))
-   return
-  }
-  const storedEmail = studentEmail.toLowerCase().trim()
-  const inputEmail = verifyEmail.toLowerCase().trim()
-  if (storedEmail === inputEmail) {
-   setStep(3)
-  } else {
-   setError(t('forgotPassword.emailMismatch'))
-  }
- }
-
- const handleReset = async (e) => {
+  const handleReset = async (e) => {
   e.preventDefault()
   setError('')
   if (newPassword.length < 8) {
@@ -117,12 +96,6 @@ export default function ForgotPassword() {
    setError(t('forgotPassword.error'))
   }
  }
-
- const maskedEmail = studentEmail
-  ? studentEmail.length > 4
-   ? studentEmail[0] + '***' + studentEmail.slice(studentEmail.indexOf('@'))
-   : '***'
-  : ''
 
  return (
   <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-spatial-full">
@@ -197,6 +170,7 @@ export default function ForgotPassword() {
            value={studentId}
            onChange={e => setStudentId(e.target.value)}
            placeholder={t('forgotPassword.enterUniversityId')}
+           aria-label={t('forgotPassword.enterUniversityId')}
            isArabic={isArabic}
            autoComplete="username"
           />
@@ -219,42 +193,6 @@ export default function ForgotPassword() {
          </form>
         )}
 
-        {step === 2 && (
-         <form onSubmit={handleVerifyEmail} className="space-y-5">
-           <div className="text-center mb-2">
-            <p className="text-sm text-slate-600 dark:text-white/60">
-             {t('forgotPassword.hello')}, <span className="text-navy-900 dark:text-white font-medium">{studentName}</span>
-            </p>
-            <p className="text-xs text-slate-400 dark:text-white/40 mt-1">
-             {t('forgotPassword.enterRegisteredEmail')}
-            </p>
-           </div>
-          <SpatialInput
-           icon={FiMail}
-           type="email"
-           required
-           value={verifyEmail}
-           onChange={e => setVerifyEmail(e.target.value)}
-           placeholder={maskedEmail || t('forgotPassword.enterEmail')}
-           isArabic={isArabic}
-           autoComplete="email"
-          />
-          <motion.button
-           type="submit"
-           whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }}
-           whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }}
-           disabled={loading}
-           className="w-full btn-spatial text-white px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-           {t('forgotPassword.verify')}
-          </motion.button>
-           <button type="button" onClick={() => { setStep(1); setError(''); setVerifyEmail('') }}
-            className="w-full text-center text-sm text-slate-400 dark:text-white/40 hover:text-slate-500 dark:hover:text-white/60 transition-colors">
-           {t('forgotPassword.changeStudentId')}
-          </button>
-         </form>
-        )}
-
         {step === 3 && (
          <form onSubmit={handleReset} className="space-y-5">
            <div className="text-center mb-2">
@@ -269,6 +207,7 @@ export default function ForgotPassword() {
            value={newPassword}
            onChange={e => setNewPassword(e.target.value)}
            placeholder="••••••"
+           aria-label={t('forgotPassword.newPassword')}
            isArabic={isArabic}
            autoComplete="new-password"
            disabled={loading}
@@ -283,6 +222,7 @@ export default function ForgotPassword() {
            value={confirmPassword}
            onChange={e => setConfirmPassword(e.target.value)}
            placeholder="••••••"
+           aria-label={t('signup.confirmPassword')}
            isArabic={isArabic}
            autoComplete="new-password"
            disabled={loading}
