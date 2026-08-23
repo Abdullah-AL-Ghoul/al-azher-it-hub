@@ -1,4 +1,4 @@
-﻿import { useRef, useCallback } from 'react'
+﻿import { useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -10,6 +10,10 @@ export default function NotFound() {
  const prefersReduced = useReducedMotion()
  const navigate = useNavigate()
  const textRef = useRef(null)
+
+ useEffect(() => {
+  document.title = `${t('notFound.title')} - AL-Azher IT Hub`
+ }, [lang, t])
 
  const handleMouse = useCallback((e) => {
   if (!textRef.current || prefersReduced) return
@@ -44,6 +48,7 @@ export default function NotFound() {
      transition={prefersReduced ? {} : { delay: 0.4, duration: 0.5 }}
      className="text-slate-500 dark:text-white/60 text-xl md:text-2xl mb-8 font-light"
     >
+     <span className="sr-only">{t('notFound.title')} — </span>
      {t('notFound.message')}
     </motion.p>
     <motion.button

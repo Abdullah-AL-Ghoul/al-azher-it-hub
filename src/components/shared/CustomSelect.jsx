@@ -51,9 +51,11 @@ export default function CustomSelect({ value, options, onChange, isArabic, label
     aria-haspopup="listbox"
     aria-controls={listId}
     aria-activedescendant={open && activeIndex >= 0 ? `${listId}-opt-${activeIndex}` : undefined}
-    aria-label={label}
    >
-    <span>{isArabic ? selected?.labelAr : selected?.labelEn}</span>
+    <span>
+     <span className="sr-only">{label}: </span>
+     {isArabic ? selected?.labelAr : selected?.labelEn}
+    </span>
     <FiChevronDown size={14} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
    </button>
    <AnimatePresence>

@@ -225,7 +225,7 @@
         <button
          onClick={toggleLang}
          className={`px-3 py-1.5 min-h-[40px] rounded-lg text-xs font-medium transition duration-200 border ${langBtnColor}`}
-         aria-label={isArabic ? 'Switch to English' : 'التبديل إلى العربية'}
+         aria-label={`${t('nav.language')} — ${isArabic ? 'Switch to English' : 'التبديل إلى العربية'}`}
         >
          {t('nav.language')}
         </button>

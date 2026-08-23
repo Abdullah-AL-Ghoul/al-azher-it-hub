@@ -149,9 +149,9 @@ export default function WelcomeGate() {
       </span>
      </div>
      <div className="flex items-center gap-2">
-      <button onClick={toggleLang} className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-navy-900 dark:hover:text-white transition" aria-label={isArabic ? 'تبديل اللغة' : 'Toggle language'}>
-       {isArabic ? 'EN' : 'عربي'}
-      </button>
+       <button onClick={toggleLang} className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-navy-900 dark:hover:text-white transition" aria-label={isArabic ? 'تبديل اللغة: EN' : 'Switch language: عربي'}>
+        {isArabic ? 'EN' : 'عربي'}
+       </button>
       <button onClick={toggle} className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-navy-900 dark:hover:text-white transition" aria-label={isArabic ? 'تبديل المظهر' : 'Toggle theme'}>
        {theme === 'light' ? <FiMoon size={16} /> : theme === 'dark' ? <FiMonitor size={16} /> : <FiSun size={16} />}
       </button>
