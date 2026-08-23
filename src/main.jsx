@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+﻿import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { LanguageProvider } from './context/LanguageContext'
@@ -19,8 +19,8 @@ function Root() {
      <ThemeProvider>
       <AuthProvider>
        <ScrollProvider>
+        <App />
         {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
-        {splashDone && <App />}
        </ScrollProvider>
       </AuthProvider>
      </ThemeProvider>

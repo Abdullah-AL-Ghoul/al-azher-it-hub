@@ -1,9 +1,10 @@
 ﻿import { useState, useEffect, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiX, FiUser, FiMail, FiBookOpen, FiCalendar, FiEye, FiHeart, FiStar, FiClock, FiLinkedin, FiArrowRight, FiLogIn, FiMessageSquare, FiCpu } from 'react-icons/fi'
+import { FiX, FiUser, FiEye, FiHeart, FiStar, FiClock, FiLinkedin, FiArrowRight, FiLogIn, FiMessageSquare, FiCpu } from 'react-icons/fi'
 import { getUserStats, getFavorites, getRatings, getStudentLogs } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'
 import { useScrollLock } from '../../hooks/useScrollLock'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 const ACTION_CONFIG = {
  LOGIN: { icon: FiLogIn, color: 'text-emerald-500', bg: 'bg-emerald-500/10', labelAr: 'تسجيل دخول', labelEn: 'Login' },
@@ -27,6 +28,7 @@ function StudentProfileModal({ student, isOpen, onClose }) {
 
  useEffect(() => {
   if (!isOpen || !student?.studentId) return
+  let cancelled = false
   setLoading(true)
   Promise.all([
    getUserStats(student.studentId).catch(() => ({ viewed: [], lastVisit: null })),
@@ -34,15 +36,26 @@ function StudentProfileModal({ student, isOpen, onClose }) {
    getRatings(student.studentId).catch(() => ({})),
    getStudentLogs(student.studentId).catch(() => []),
   ]).then(([s, f, r, l]) => {
+   if (cancelled) return
    setStats(s)
    setFavorites(f)
    setRatings(r)
    setLogs(l)
    setLoading(false)
   })
+  return () => { cancelled = true }
  }, [isOpen, student?.studentId])
 
-  useScrollLock(isOpen)
+ useScrollLock(isOpen)
+
+ const trapRef = useFocusTrap(isOpen)
+
+ useEffect(() => {
+  if (!isOpen) return
+  const onKey = (e) => { if (e.key === 'Escape') onClose() }
+  window.addEventListener('keydown', onKey)
+  return () => window.removeEventListener('keydown', onKey)
+ }, [isOpen, onClose])
 
   const ratingsMap = ratings || {}
   const ratingsValues = Object.values(ratingsMap)
@@ -58,9 +71,13 @@ function StudentProfileModal({ student, isOpen, onClose }) {
      animate={{ opacity: 1 }}
      exit={{ opacity: 0 }}
      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-label={student.name || student.studentId}
     >
      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
      <motion.div
+      ref={trapRef}
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 20 }}

@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { getLectures, getSources, getAdditions } from '../services'
 import { modalOverlay, modalContent } from '../utils/motionTokens'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { FiSearch, FiFileText, FiGrid, FiHeart, FiArrowRight, FiX } from 'react-icons/fi'
 
 const navPages = [
@@ -38,99 +39,122 @@ export default function GlobalSearch() {
  const navigate = useNavigate()
  const isArabic = lang === 'ar'
 
- const [open, setOpen] = useState(false)
- const [query, setQuery] = useState('')
- const [results, setResults] = useState([])
- const [activeIndex, setActiveIndex] = useState(0)
- const [loading, setLoading] = useState(false)
- const inputRef = useRef(null)
- const listRef = useRef(null)
- const allItems = useRef([])
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const inputRef = useRef(null)
+  const listRef = useRef(null)
+  const allItems = useRef([])
+  const datasetRef = useRef(null)
+  const searchSeq = useRef(0)
+  const panelRef = useFocusTrap(open)
 
- const openModal = useCallback(() => {
-  if (!user) return
-  setOpen(true)
-  setQuery('')
-  setResults([])
-  setActiveIndex(0)
- }, [user])
+  const openModal = useCallback(() => {
+   if (!user) return
+   setOpen(true)
+   setQuery('')
+   setResults([])
+   setActiveIndex(0)
+   setLoading(false)
+   datasetRef.current = null
+  }, [user])
 
- const closeModal = useCallback(() => {
-  setOpen(false)
-  setQuery('')
-  setResults([])
-  setActiveIndex(0)
- }, [])
+  const closeModal = useCallback(() => {
+   setOpen(false)
+   setQuery('')
+   setResults([])
+   setActiveIndex(0)
+   setLoading(false)
+   searchSeq.current += 1
+   datasetRef.current = null
+  }, [])
 
- useEffect(() => {
-  const handler = (e) => {
-   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-    e.preventDefault()
-    if (open) closeModal()
-    else openModal()
+  useEffect(() => {
+   const handler = (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+     e.preventDefault()
+     if (open) closeModal()
+     else openModal()
+    }
    }
-  }
-  window.addEventListener('keydown', handler)
-  return () => window.removeEventListener('keydown', handler)
- }, [open, openModal, closeModal])
+   window.addEventListener('keydown', handler)
+   return () => window.removeEventListener('keydown', handler)
+  }, [open, openModal, closeModal])
 
- useEffect(() => {
-  if (open) {
+  useEffect(() => {
+   if (!open) return
    setTimeout(() => inputRef.current?.focus(), 100)
    const prev = document.body.style.overflow
    document.body.style.overflow = 'hidden'
-   return () => { document.body.style.overflow = prev }
-  }
- }, [open])
+   const onKey = (e) => {
+    if (e.key === 'Escape') closeModal()
+   }
+   document.addEventListener('keydown', onKey)
+   return () => {
+    document.body.style.overflow = prev
+    document.removeEventListener('keydown', onKey)
+   }
+  }, [open, closeModal])
 
- const performSearch = useCallback(async (q) => {
-  if (!q.trim()) { setResults([]); setActiveIndex(0); return }
-  setLoading(true)
-  try {
-   const lower = q.toLowerCase()
-   const [lectures, sources, additions] = await Promise.all([
-    getLectures().catch(() => []),
-    getSources().catch(() => []),
-    getAdditions().catch(() => []),
-   ])
-
-   const items = []
-
-   lectures.forEach(l => {
-    const title = isArabic ? l.titleAr : l.titleEn
-    const subject = isArabic ? l.subjectAr : l.subjectEn
-    if (title?.toLowerCase().includes(lower) || subject?.toLowerCase().includes(lower)) {
-     items.push({ type: 'lecture', title: title || '', subtitle: subject || '', id: l.id })
+  const performSearch = useCallback(async (q) => {
+   const seq = ++searchSeq.current
+   if (!q.trim()) { setResults([]); setActiveIndex(0); setLoading(false); return }
+   setLoading(true)
+   try {
+    const lower = q.toLowerCase()
+    let { lectures, sources, additions } = datasetRef.current || {}
+    if (!lectures) {
+     ;[lectures, sources, additions] = await Promise.all([
+      getLectures().catch(() => []),
+      getSources().catch(() => []),
+      getAdditions().catch(() => []),
+     ])
+     if (seq !== searchSeq.current) return
+     datasetRef.current = { lectures, sources, additions }
     }
-   })
 
-   sources.forEach(s => {
-    const title = isArabic ? s.titleAr : s.titleEn
-    const subject = isArabic ? s.subjectAr : s.subjectEn
-    if (title?.toLowerCase().includes(lower) || subject?.toLowerCase().includes(lower)) {
-     items.push({ type: 'source', title: title || '', subtitle: subject || '', id: s.id })
-    }
-   })
+    const items = []
 
-   additions.forEach(a => {
-    const title = isArabic ? a.titleAr : a.titleEn
-    if (title?.toLowerCase().includes(lower)) {
-     items.push({ type: 'addition', title: title || '', subtitle: '', id: a.id })
-    }
-   })
+    lectures.forEach(l => {
+     const title = isArabic ? l.titleAr : l.titleEn
+     const subject = isArabic ? l.subjectAr : l.subjectEn
+     if (title?.toLowerCase().includes(lower) || subject?.toLowerCase().includes(lower)) {
+      items.push({ type: 'lecture', title: title || '', subtitle: subject || '', id: l.id })
+     }
+    })
 
-   navPages.forEach(p => {
-    if (p.keys.some(k => k.toLowerCase().includes(lower))) {
-     items.push({ type: 'page', title: isArabic ? (p.keys[1] || p.keys[0]) : p.keys[0], subtitle: '', to: p.to })
-    }
-   })
+    sources.forEach(s => {
+     const title = isArabic ? s.titleAr : s.titleEn
+     const subject = isArabic ? s.subjectAr : s.subjectEn
+     if (title?.toLowerCase().includes(lower) || subject?.toLowerCase().includes(lower)) {
+      items.push({ type: 'source', title: title || '', subtitle: subject || '', id: s.id })
+     }
+    })
 
-   allItems.current = items
-   setResults(items.slice(0, 12))
-   setActiveIndex(0)
-  } catch { setResults([]) }
-  setLoading(false)
- }, [isArabic])
+    additions.forEach(a => {
+     const title = isArabic ? a.titleAr : a.titleEn
+     if (title?.toLowerCase().includes(lower)) {
+      items.push({ type: 'addition', title: title || '', subtitle: '', id: a.id })
+     }
+    })
+
+    navPages.forEach(p => {
+     if (p.keys.some(k => k.toLowerCase().includes(lower))) {
+      items.push({ type: 'page', title: isArabic ? (p.keys[1] || p.keys[0]) : p.keys[0], subtitle: '', to: p.to })
+     }
+    })
+
+    if (seq !== searchSeq.current) return
+    allItems.current = items
+    setResults(items.slice(0, 12))
+    setActiveIndex(0)
+   } catch {
+    if (seq === searchSeq.current) setResults([])
+   }
+   if (seq === searchSeq.current) setLoading(false)
+  }, [isArabic])
 
  useEffect(() => {
   const timer = setTimeout(() => performSearch(query), 200)
@@ -151,20 +175,18 @@ export default function GlobalSearch() {
    closeModal()
   }, [navigate, closeModal])
 
- const handleKeyDown = (e) => {
-  if (e.key === 'ArrowDown') {
-   e.preventDefault()
-   setActiveIndex(i => Math.min(i + 1, results.length - 1))
-  } else if (e.key === 'ArrowUp') {
-   e.preventDefault()
-   setActiveIndex(i => Math.max(i - 1, 0))
-  } else if (e.key === 'Enter' && results[activeIndex]) {
-   e.preventDefault()
-   handleSelect(results[activeIndex])
-  } else if (e.key === 'Escape') {
-   closeModal()
+  const handleKeyDown = (e) => {
+   if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    setActiveIndex(i => Math.min(i + 1, results.length - 1))
+   } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    setActiveIndex(i => Math.max(i - 1, 0))
+   } else if (e.key === 'Enter' && results[activeIndex]) {
+    e.preventDefault()
+    handleSelect(results[activeIndex])
+   }
   }
- }
 
  const scrollToItem = (index) => {
   const el = listRef.current?.children?.[index]
@@ -198,6 +220,7 @@ export default function GlobalSearch() {
      >
       <motion.div
        {...modalContent}
+       ref={panelRef}
        className="modal-spatial rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl"
        onClick={e => e.stopPropagation()}
       >
@@ -211,6 +234,11 @@ export default function GlobalSearch() {
          placeholder={isArabic ? 'ابحث عن محاضرة، مصدر، صفحة...' : 'Search lectures, sources, pages...'}
          className="flex-1 bg-transparent text-navy-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40 text-sm outline-none"
          autoComplete="off"
+         role="combobox"
+         aria-expanded="true"
+         aria-controls="global-search-results"
+         aria-autocomplete="list"
+         aria-label={isArabic ? 'بحث عالمي' : 'Global search'}
         />
         <button onClick={closeModal} className="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors" aria-label={t('common.close')}>
          <FiX size={16} className="text-slate-400 dark:text-white/40" />
@@ -247,7 +275,7 @@ export default function GlobalSearch() {
         )}
 
         {results.length > 0 && (
-         <div className="py-2">
+         <div id="global-search-results" role="listbox" aria-label={isArabic ? 'نتائج البحث' : 'Search results'} className="py-2">
           {results.map((item, i) => {
            const Icon = typeIcons[item.type]
            return (
@@ -283,7 +311,7 @@ export default function GlobalSearch() {
         )}
        </div>
 
-       <div className="flex items-center justify-between px-4 py-2 border-t border-slate-200 dark:border-white/10 text-[10px] text-slate-400 dark:text-white/30">
+       <div className="flex items-center justify-between px-4 py-2 border-t border-slate-200 dark:border-white/10 text-[10px] text-slate-500 dark:text-white/50">
         <div className="flex items-center gap-2">
          <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">↑↓</kbd> {isArabic ? 'تنقل' : 'navigate'}</span>
          <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">↵</kbd> {isArabic ? 'اختيار' : 'select'}</span>

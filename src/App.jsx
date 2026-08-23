@@ -90,10 +90,10 @@ function AppContent() {
   return <Navigate to={user.role === 'admin' ? '/admin' : '/home'} replace />
  }
 
- return (
-  <div className={`min-h-screen flex flex-col ${lang === 'ar' ? 'font-arabic' : 'font-english'}`}>
-   {!hideLayout && <SpatialBackground />}
-   <a
+  return (
+   <ErrorBoundary lang={lang}>
+   <div className={`min-h-screen flex flex-col ${lang === 'ar' ? 'font-arabic' : 'font-english'}`}>
+    {!hideLayout && <SpatialBackground />}   <a
     href="#main-content"
     className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-royal-500 focus:text-white focus:text-sm focus:font-medium focus:shadow-xl"
    >
@@ -103,8 +103,8 @@ function AppContent() {
    {!hideLayout && <Navbar />}
    <main id="main-content" className="flex-1" tabIndex={-1}>
      <ErrorBoundary lang={lang}>
-      <Suspense fallback={null}>
-       <AnimatePresence mode="sync" initial={false}>
+      <Suspense fallback={<PageLoader />}>
+       <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><WelcomeGate /></PageTransition>} />
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
@@ -152,17 +152,17 @@ function AppContent() {
       </AnimatePresence>
      </Suspense>
     </ErrorBoundary>
-   </main>
-   {!hideLayout && <Footer />}
-   {!hideLayout && <BackToTop />}
-    {!hideLayout && <WelcomeModal />}
-    {!hideLayout && <GlobalSearch />}
-    {!hideLayout && (
-    <Suspense fallback={null}>
-     <Chatbot />
-    </Suspense>
-   )}
-   <Toaster
+    </main>
+    {!hideLayout && <Footer />}
+    {!hideLayout && <BackToTop />}
+     {!hideLayout && <WelcomeModal />}
+     {!hideLayout && <GlobalSearch />}
+     {!hideLayout && (
+     <Suspense fallback={null}>
+      <Chatbot />
+     </Suspense>
+    )}
+    <Toaster
     position="top-center"
     containerStyle={{ top: 72 }}
     toastOptions={{
@@ -180,10 +180,11 @@ function AppContent() {
      success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
      error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
     }}
-   />
+    />
+    </div>
    </div>
-  </div>
- )
+   </ErrorBoundary>
+  )
 }
 
 export default function App() {

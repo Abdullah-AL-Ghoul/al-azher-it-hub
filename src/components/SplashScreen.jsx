@@ -12,12 +12,12 @@ export default function SplashScreen({ onComplete }) {
    onComplete()
    return
   }
-   let innerTimer = null
-   const timer = setTimeout(() => {
-    setShow(false)
-    sessionStorage.setItem('al_azher_splash', '1')
-    innerTimer = setTimeout(onComplete, 400)
-   }, 1500)
+    let innerTimer = null
+    const timer = setTimeout(() => {
+     setShow(false)
+     sessionStorage.setItem('al_azher_splash', '1')
+     innerTimer = setTimeout(onComplete, 300)
+    }, 900)
   return () => {
    clearTimeout(timer)
    if (innerTimer) clearTimeout(innerTimer)
