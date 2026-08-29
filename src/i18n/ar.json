@@ -35,8 +35,8 @@
       "title": "AL-Azher IT Hub",
       "subtitle": "منصتك التعليمية الشاملة",
       "description": "محاضرات فيديو، ملخصات، وملفات PDF — متاحة لكل طلبة تكنولوجيا المعلومات (جميع السنوات)",
-      "cta": "المحاضرات",
-      "ctaSecondary": "المصادر"
+      "cta": "استكشف المحاضرات",
+      "ctaSecondary": "تصفح المصادر"
     },
     "welcome": "مرحبًا بك، {{name}}!",
     "adminRole": "مدير النظام",
@@ -351,6 +351,10 @@
     "clearFailed": "فشل حذف السجلات!",
     "filterLogin": "تسجيل دخول",
     "filterViewLecture": "عرض محاضرة",
+    "filterViewSource": "عرض مصدر",
+    "filterAddFavorite": "إضافة مفضلة",
+    "filterRateLecture": "تقييم محاضرة",
+    "filterUseChatbot": "استخدام الشات بوت",
     "filterUpdateProfile": "تحديث ملف",
     "filterAddComment": "إضافة تعليق",
     "filterDeleteAddition": "حذف إضافة",
@@ -446,7 +450,23 @@
     "enterRegisteredEmail": "أدخل البريد الإلكتروني المسجل للتأكيد",
     "verify": "تأكيد",
     "changeStudentId": "تغيير الرقم الجامعي",
-    "greeting": "مرحباً"
+    "greeting": "مرحباً",
+    "sendResetLink": "إرسال رابط الاستعادة",
+    "sentTitle": "تحقق من بريدك الإلكتروني!",
+    "sentDesc": "إذا كان هذا البريد مسجلاً، أرسلنا لك رابطاً لإعادة تعيين كلمة المرور. افتح الرابط ثم أنشئ كلمة مرور جديدة.",
+    "enterName": "أدخل اسمك الكامل",
+    "nameMismatch": "الاسم غير مطابق للسجل"
+  },
+  "resetPassword": {
+    "title": "إعادة تعيين كلمة المرور",
+    "subtitle": "أنشئ كلمة مرور جديدة لحسابك",
+    "newPassword": "كلمة المرور الجديدة",
+    "reset": "تغيير كلمة المرور",
+    "success": "تم تغيير كلمة المرور بنجاح!",
+    "successDesc": "جارٍ تحويلك إلى صفحة تسجيل الدخول...",
+    "invalidTitle": "الرابط غير صالح",
+    "invalidDesc": "هذا الرابط غير صالح أو منتهي الصلاحية. اطلب رابطاً جديداً.",
+    "requestAgain": "اطلب رابطاً جديداً"
   },
   "welcomeGate": {
     "title": "مرحباً بك في",

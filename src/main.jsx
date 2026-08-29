@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { LanguageProvider } from './context/LanguageContext'
 import { AuthProvider } from './context/AuthContext'
+import { UserDataProvider } from './context/UserDataContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ScrollProvider } from './hooks/useScrollManager.jsx'
 import SplashScreen from './components/SplashScreen'
@@ -18,10 +19,12 @@ function Root() {
     <LanguageProvider>
      <ThemeProvider>
       <AuthProvider>
-       <ScrollProvider>
-        <App />
-        {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
-       </ScrollProvider>
+       <UserDataProvider>
+        <ScrollProvider>
+         <App />
+         {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
+        </ScrollProvider>
+       </UserDataProvider>
       </AuthProvider>
      </ThemeProvider>
     </LanguageProvider>

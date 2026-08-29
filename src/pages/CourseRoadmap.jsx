@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react'
+﻿import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
@@ -6,7 +6,9 @@ import { getCourses, getRoadmap, saveRoadmap } from '../services'
 import { pageContainer, pageItem } from '../utils/motionTokens'
 import { FiBookOpen, FiArrowRight, FiLayers, FiAward, FiPlus, FiTrash2, FiEdit2, FiSave, FiX, FiLink2 } from 'react-icons/fi'
 import ErrorState from '../components/feedback/ErrorState'
+import ConfirmDialog from '../components/shared/ConfirmDialog'
 import toast from 'react-hot-toast'
+import Skeleton from '../components/shared/Skeleton'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
@@ -20,14 +22,12 @@ const YEAR_COLORS = [
 
 export default function CourseRoadmap() {
  const { lang, t } = useLanguage()
- const { user, isAdmin } = useAuth()
+ const { isAdmin } = useAuth()
  const isArabic = lang === 'ar'
  const canEdit = isAdmin
 
- useEffect(() => {
-  document.title = t('roadmap.pageTitle')
- }, [isArabic])
- const [courses, setCourses] = useState([])
+  const [courses, setCourses] = useState([])
+ const [confirmDelete, setConfirmDelete] = useState(null)
  const [roadmap, setRoadmap] = useState([])
  const [loading, setLoading] = useState(true)
  const [selectedCourse, setSelectedCourse] = useState(null)
@@ -47,24 +47,30 @@ export default function CourseRoadmap() {
   url: '',
  })
  const [editingId, setEditingId] = useState(null)
+ const [editingIndex, setEditingIndex] = useState(null)
+
+ const mountedRef = useRef(true)
 
  const loadData = async () => {
   setLoading(true)
   try {
    const [c, r] = await Promise.all([getCourses(), getRoadmap()])
+   if (!mountedRef.current) return
    setCourses(c)
    setRoadmap(r)
    setEditData(r)
    setError(null)
   } catch (e) {
-   setError(e)
+   if (mountedRef.current) setError(e)
   } finally {
-   setLoading(false)
+   if (mountedRef.current) setLoading(false)
   }
  }
 
  useEffect(() => {
+  mountedRef.current = true
   loadData()
+  return () => { mountedRef.current = false }
  }, [])
 
  const handleRetry = () => {
@@ -87,6 +93,7 @@ export default function CourseRoadmap() {
  const resetForm = () => {
   setFormData({ nameAr: '', nameEn: '', year: 1, semester: 1, order: 0, prerequisites: [], url: '' })
   setEditingId(null)
+  setEditingIndex(null)
   setShowForm(false)
  }
 
@@ -106,6 +113,7 @@ export default function CourseRoadmap() {
    url: course.url || '',
   })
   setEditingId(course.nameAr || course.nameEn)
+  setEditingIndex(editData.indexOf(course))
   setShowForm(true)
  }
 
@@ -115,18 +123,19 @@ export default function CourseRoadmap() {
    return
   }
 
-  const next = editingId
-   ? editData.map(c => (c.nameAr === editingId || c.nameEn === editingId) ? { ...formData } : c)
-   : [...editData, { ...formData }]
+  const next = [...editData]
+  if (editingIndex != null && editingIndex >= 0) {
+   next[editingIndex] = { ...formData }
+  } else {
+   next.push({ ...formData })
+  }
   setEditData(next)
   resetForm()
-  if (!editingId) {
-   try {
-    await saveRoadmap(next)
-    toast.success(isArabic ? 'تم الحفظ' : 'Saved')
-   } catch (e) {
-    toast.error(isArabic ? 'فشل الحفظ' : 'Save failed')
-   }
+  try {
+   await saveRoadmap(next)
+   toast.success(isArabic ? 'تم الحفظ' : 'Saved')
+  } catch (e) {
+   toast.error(isArabic ? 'فشل الحفظ' : 'Save failed')
   }
  }
 
@@ -151,7 +160,7 @@ export default function CourseRoadmap() {
   resetForm()
  }
 
- const inputClass = "w-full glass rounded-xl px-3 py-2 text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-500/20"
+ const inputClass = "w-full glass rounded-xl px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-500/20"
 
  if (error) return <ErrorState error={error} onRetry={handleRetry} />
 
@@ -160,15 +169,15 @@ export default function CourseRoadmap() {
     <div className="min-h-screen pt-24 pb-16 bg-spatial-page">
      <div className="py-16 mb-12">
       <div className="max-w-7xl mx-auto px-4 text-center">
-       <div className="skeleton h-10 w-64 mx-auto mb-4 rounded-xl" />
-       <div className="skeleton h-5 w-80 mx-auto rounded-lg" />
+       <Skeleton className="h-10 w-64 mx-auto mb-4 rounded-xl" />
+       <Skeleton className="h-5 w-80 mx-auto rounded-lg" />
       </div>
      </div>
      <div className="max-w-7xl mx-auto px-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
        {[1,2,3,4].map(i => (
         <div key={i} className="glass p-6 rounded-xl">
-         <div className="skeleton h-6 w-3/4 rounded-lg mb-4" />
+         <Skeleton className="h-6 w-3/4 rounded-lg mb-4" />
          <div className="space-y-3">
           {[1,2,3].map(j => <div key={j} className="skeleton h-16 rounded-xl" />)}
          </div>
@@ -181,11 +190,11 @@ export default function CourseRoadmap() {
  }
 
  return (
-   <motion.div variants={containerVariants} initial={prefersReduced ? false : "hidden"} animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page grain">
+   <motion.div variants={containerVariants} initial={prefersReduced ? false : "hidden"} animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page ">
     <div className="py-16 mb-12">
-     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+     <div className="container-page text-center">
       <div className="inline-flex items-center gap-2 px-4 py-1.5 glass rounded-full mb-4">
-       <FiLayers size={14} className="text-royal-500 dark:text-cyan-400" />
+       <FiLayers size={14} className="text-accent" />
        <span className="text-slate-600 dark:text-white/60 text-xs font-medium">{t('roadmap.interactivePlan')}</span>
       </div>
       <h1 className="text-3xl md:text-5xl font-bold gradient-text-spatial mb-4">{t('roadmap.title')}</h1>
@@ -193,7 +202,7 @@ export default function CourseRoadmap() {
      </div>
     </div>
 
-   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   <div className="container-page">
     {canEdit && (
      <div className="flex justify-end gap-2 mb-6">
       {editing ? (
@@ -227,7 +236,7 @@ export default function CourseRoadmap() {
        className="mb-6 overflow-hidden"
       >
        <div className="glass rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-        <h3 className="text-sm font-semibold text-navy-900 dark:text-white mb-4">
+        <h3 className="text-sm font-semibold text-ink mb-4">
          {editingId ? (isArabic ? 'تعديل المادة' : 'Edit Course') : (isArabic ? 'إضافة مادة جديدة' : 'Add New Course')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -323,7 +332,17 @@ export default function CourseRoadmap() {
                 <motion.div
                  key={idx}
                  whileHover={prefersReduced ? {} : { scale: 1.02, x: 4 }}
-                 className={`relative p-3 rounded-xl border transition ${
+                 role="button"
+                 tabIndex={0}
+                 aria-expanded={selectedCourse === `${year}-${sem}-${idx}`}
+                 aria-label={isArabic ? `عرض تفاصيل ${rc.nameAr}` : `Show details for ${rc.nameEn || rc.nameAr}`}
+                 onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                   e.preventDefault()
+                   setSelectedCourse(selectedCourse === `${year}-${sem}-${idx}` ? null : `${year}-${sem}-${idx}`)
+                  }
+                 }}
+                 className={`relative p-3 rounded-xl border transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-royal-500 ${
                   selectedCourse === `${year}-${sem}-${idx}`
                    ? 'border-royal-500 bg-royal-50 dark:bg-royal-900/20 shadow-lg shadow-royal-500/10'
                    : 'border-slate-100 dark:border-slate-700 hover:border-royal-300 dark:hover:border-royal-700'
@@ -333,7 +352,7 @@ export default function CourseRoadmap() {
                  <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 min-w-0">
                    <div className={`w-2 h-2 rounded-full ${colors.dot} shrink-0`} />
-                   <span className="font-medium text-sm text-navy-900 dark:text-white truncate">
+                   <span className="font-medium text-sm text-ink truncate">
                     {isArabic ? rc.nameAr : rc.nameEn}
                    </span>
                   </div>
@@ -344,14 +363,14 @@ export default function CourseRoadmap() {
                     </a>
                    )}
                    {hasPrereq && (
-                    <FiArrowRight size={14} className="text-slate-500 dark:text-slate-400 rotate-180" />
+                    <FiArrowRight size={14} className={`text-slate-500 dark:text-slate-400 ${isArabic ? 'rotate-180' : ''}`} />
                    )}
                    {editing && (
                     <>
                      <button onClick={(e) => { e.stopPropagation(); handleEditCourse(rc) }} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-royal-500 hover:bg-royal-50 dark:hover:bg-royal-900/20 rounded-lg transition">
                       <FiEdit2 size={14} />
                      </button>
-                     <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(rc) }} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
+                     <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(rc) }} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
                       <FiTrash2 size={14} />
                      </button>
                     </>
@@ -398,6 +417,14 @@ export default function CourseRoadmap() {
      </div>
     )}
    </div>
+
+   <ConfirmDialog
+    isOpen={!!confirmDelete}
+    onClose={() => setConfirmDelete(null)}
+    onConfirm={() => { if (confirmDelete) handleDeleteCourse(confirmDelete) }}
+    title={isArabic ? 'حذف المادة' : 'Delete course'}
+    message={isArabic ? 'هل أنت متأكد من حذف هذه المادة من المسار الدراسي؟' : 'Are you sure you want to remove this course from the roadmap?'}
+   />
   </motion.div>
  )
 }

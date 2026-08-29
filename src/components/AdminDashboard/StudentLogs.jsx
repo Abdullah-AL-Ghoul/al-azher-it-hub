@@ -2,13 +2,14 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { FiSearch, FiFilter, FiUser, FiLogIn, FiEye, FiHeart, FiStar, FiMessageSquare, FiCpu, FiArrowRight } from 'react-icons/fi'
 import usePagination from '../../hooks/usePagination'
-import { pageContainer, pageItem, pageContainerReduced, pageItemReduced } from '../../utils/motionTokens'
+import { pageContainer, pageContainerReduced } from '../../utils/motionTokens'
 import SkeletonRow from './SkeletonRow'
 import Pagination from './Pagination'
 import StudentProfileModal from './StudentProfileModal'
 
 const ACTION_CONFIG = {
  LOGIN: { icon: FiLogIn, bgClass: 'bg-emerald-500/10', textClass: 'text-emerald-500', badgeBg: 'bg-emerald-500/10', badgeTextLight: 'text-emerald-600', badgeTextDark: 'dark:text-emerald-400', labelAr: 'تسجيل دخول', labelEn: 'Login' },
+ REGISTER: { icon: FiUser, bgClass: 'bg-cyan-500/10', textClass: 'text-cyan-500', badgeBg: 'bg-cyan-500/10', badgeTextLight: 'text-cyan-600', badgeTextDark: 'dark:text-cyan-400', labelAr: 'تسجيل جديد', labelEn: 'Registered' },
  VIEW_LECTURE: { icon: FiEye, bgClass: 'bg-violet-500/10', textClass: 'text-violet-500', badgeBg: 'bg-violet-500/10', badgeTextLight: 'text-violet-600', badgeTextDark: 'dark:text-violet-400', labelAr: 'مشاهدة محاضرة', labelEn: 'Viewed Lecture' },
  VIEW_SOURCE: { icon: FiEye, bgClass: 'bg-cyan-500/10', textClass: 'text-cyan-500', badgeBg: 'bg-cyan-500/10', badgeTextLight: 'text-cyan-600', badgeTextDark: 'dark:text-cyan-400', labelAr: 'مشاهدة مصدر', labelEn: 'Viewed Source' },
  ADD_FAVORITE: { icon: FiHeart, bgClass: 'bg-rose-500/10', textClass: 'text-rose-500', badgeBg: 'bg-rose-500/10', badgeTextLight: 'text-rose-600', badgeTextDark: 'dark:text-rose-400', labelAr: 'إضافة مفضلة', labelEn: 'Added Favorite' },
@@ -55,11 +56,11 @@ function StudentLogs({ logs, users, loading, isArabic }) {
     </p>
     <div className="flex gap-2 flex-wrap">
      <div className="relative">
-      <FiFilter className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 ${isArabic ? 'right-3' : 'left-3'}`} size={14} />
+      <FiFilter className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 start-3`} size={14} />
       <select
        value={filter}
        onChange={e => setFilter(e.target.value)}
-       className={`${isArabic ? 'pr-8 pl-3' : 'pl-8 pr-3'} py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50`}
+       className={`ps-8 pe-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50`}
       >
        <option value="all">{isArabic ? 'الكل' : 'All'}</option>
        {Object.entries(ACTION_CONFIG).map(([key, cfg]) => (
@@ -68,13 +69,13 @@ function StudentLogs({ logs, users, loading, isArabic }) {
       </select>
      </div>
      <div className="relative">
-      <FiSearch className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 ${isArabic ? 'right-3' : 'left-3'}`} size={14} />
+      <FiSearch className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 start-3`} size={14} />
       <input
        type="text"
        placeholder={isArabic ? 'بحث...' : 'Search...'}
        value={search}
        onChange={e => setSearch(e.target.value)}
-       className={`${isArabic ? 'pr-8 pl-3' : 'pl-8 pr-3'} py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48`}
+       className={`ps-8 pe-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48`}
       />
      </div>
     </div>
@@ -103,7 +104,7 @@ function StudentLogs({ logs, users, loading, isArabic }) {
              const student = users?.find(u => u.studentId === log.studentId)
              if (student) setProfileStudent(student)
             }}
-            className="font-semibold text-navy-900 dark:text-white text-sm hover:text-royal-500 dark:hover:text-royal-400 transition-colors cursor-pointer text-left"
+            className="font-semibold text-ink text-sm hover:text-royal-500 dark:hover:text-royal-400 transition-colors cursor-pointer text-left"
            >
             {log.name || log.studentId}
            </button>

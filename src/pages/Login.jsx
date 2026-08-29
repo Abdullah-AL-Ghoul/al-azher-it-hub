@@ -26,10 +26,7 @@ export default function Login() {
  const [showSuccess, setShowSuccess] = useState(false)
  const navigateTimer = useRef(null)
 
- useEffect(() => {
-  document.title = isArabic ? 'تسجيل دخول - AL-Azher IT Hub' : 'Login - AL-Azher IT Hub'
- }, [isArabic])
-
+ 
  useEffect(() => {
   return () => { if (navigateTimer.current) clearTimeout(navigateTimer.current) }
  }, [])
@@ -66,7 +63,7 @@ export default function Login() {
     const ipRes = await fetch('https://api.ipify.org?format=json')
     const ipData = await ipRes.json()
     try { updateLastVisit(ipData.ip, navigator.userAgent) } catch (e) { /* non-critical */ }
-    try { addStudentLog({ studentId: result.user.studentId, name: result.user.name, type: 'LOGIN', detail: t('nav.login'), ip: ipData.ip, device: navigator.userAgent }) } catch (e) { /* non-critical */ }
+    try { addStudentLog({ type: 'LOGIN', detail: '', device: navigator.userAgent }) } catch (e) { /* non-critical */ }
    } catch (e) { /* ip fetch failed, non-critical */ }
    navigateTimer.current = setTimeout(() => {
     navigate(result.user.role === 'admin' ? '/admin' : '/home')
@@ -162,7 +159,7 @@ export default function Login() {
       <p className="text-slate-500 dark:text-white/50 text-sm">
        {t('login.noAccount')}
        {' '}
-       <Link to="/signup" className="text-royal-500 dark:text-cyan-400 hover:text-royal-600 dark:hover:text-cyan-300 font-medium transition-colors relative group">
+       <Link to="/signup" className="text-accent hover:text-royal-600 dark:hover:text-cyan-300 font-medium transition-colors relative group">
         {t('login.createAccount')}
          <span className="absolute -bottom-0.5 start-0 w-0 h-0.5 bg-royal-400 group-hover:w-full transition duration-300" />
        </Link>

@@ -100,7 +100,7 @@ describe('AuthProvider login throttling', () => {
     )
   }
 
-  it('locks out after 5 consecutive failed attempts without calling the service again', async () => {
+  it('locks out after 10 consecutive failed attempts without calling the service again (mirrors the server 10/15min policy)', async () => {
     const spy = vi.fn(async () => ({ ok: false, error: 'INVALID_CREDENTIALS' }))
     const mock = createMockSupabase({
       auth: { signInWithPassword: spy },
@@ -112,7 +112,7 @@ describe('AuthProvider login throttling', () => {
     render(<MemoryRouter><AuthProvider><LoginProbe /></AuthProvider></MemoryRouter>)
 
     const button = screen.getByText('try-login')
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 11; i++) {
       await act(async () => {
         await user.click(button)
         await window.__pendingLogin
@@ -122,6 +122,8 @@ describe('AuthProvider login throttling', () => {
 
     expect(window.__lastLoginResult.error).toBe('TOO_MANY_ATTEMPTS')
     expect(window.__lastLoginResult.retryAfter).toBeGreaterThan(0)
+    // The service must not have been called again once the limit is hit.
+    expect(spy).toHaveBeenCalledTimes(10)
   })
 })
 

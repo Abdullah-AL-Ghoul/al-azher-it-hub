@@ -4,7 +4,7 @@ import { useLanguage } from '../../context/LanguageContext'
 
 const sizes = {
  sm: { box: 'w-9 h-9', icon: 16, radius: 'rounded-lg', shadow: 'shadow-lg shadow-royal-500/20 dark:shadow-royal-500/30' },
- md: { box: 'w-20 h-20', icon: 32, radius: 'rounded-[22px]', shadow: 'shadow-xl shadow-royal-500/20' },
+ md: { box: 'w-20 h-20', icon: 32, radius: 'rounded-2xl', shadow: 'shadow-xl shadow-royal-500/20' },
  lg: { box: 'w-24 h-24', icon: 40, radius: 'rounded-3xl', shadow: 'shadow-2xl shadow-royal-500/30' },
 }
 
@@ -18,7 +18,7 @@ function SiteLogo({ size = 'sm', showText = false, className = '' }) {
     <FiUser size={s.icon} />
    </div>
    {showText && (
-    <span className="font-bold text-lg text-navy-900 dark:text-white">
+    <span className="font-bold text-lg text-ink">
      {t('site.title')}
     </span>
    )}

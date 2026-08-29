@@ -10,8 +10,11 @@ function SpatialInput({ label, error, icon: Icon, type = 'text', className = '',
  const inputId = idProp || generatedId
  const errorId = `${inputId}-error`
 
- const iconPosition = isArabic ? 'right' : 'left'
- const togglePosition = isArabic ? 'left' : 'right'
+const iconPosition = isArabic ? 'right' : 'left'
+  const togglePosition = isArabic ? 'left' : 'right'
+
+  const padLeft = Icon && !isArabic ? '44px' : (showToggle && isArabic ? '44px' : '16px')
+  const padRight = Icon && isArabic ? '44px' : (showToggle && !isArabic ? '44px' : '16px')
 
  return (
   <div className={`relative ${className}`}>
@@ -20,7 +23,7 @@ function SpatialInput({ label, error, icon: Icon, type = 'text', className = '',
      <Icon
       size={18}
       className={`absolute top-1/2 -translate-y-1/2 transition-colors duration-300 ${
-       focused ? 'text-royal-500 dark:text-cyan-400' : 'text-slate-500 dark:text-white/50'
+       focused ? 'text-accent' : 'text-slate-500 dark:text-white/50'
       }`}
       style={{ [iconPosition]: '16px' }}
      />
@@ -36,10 +39,10 @@ function SpatialInput({ label, error, icon: Icon, type = 'text', className = '',
      autoComplete={autoComplete}
      aria-invalid={error ? true : undefined}
      aria-describedby={error ? errorId : undefined}
-     className="input-spatial w-full py-3.5 rounded-xl text-sm text-navy-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
+     className="input-spatial w-full py-3.5 rounded-xl text-sm text-ink placeholder:text-slate-500 dark:placeholder:text-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
      style={{
-      [iconPosition]: Icon ? '44px' : '16px',
-      [showToggle ? togglePosition : 'paddingRight']: showToggle ? '44px' : '16px',
+      paddingLeft: padLeft,
+      paddingRight: padRight,
      }}
      onFocus={() => setFocused(true)}
      onBlur={() => setFocused(false)}

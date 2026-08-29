@@ -2,29 +2,55 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// public/ files (like sw.js) are copied as-is and never processed by Vite,
+// so __BUILD_DATE__ stays as a literal. This plugin injects the real build
+// timestamp into dist/sw.js so the SW cache version changes every build
+// (fixes stale cache + never-updating service worker).
+function swVersionPlugin() {
+  return {
+    name: 'sw-version',
+    apply: 'build',
+    closeBundle() {
+      const file = path.resolve(__dirname, 'dist/sw.js')
+      if (!existsSync(file)) return
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+      const src = readFileSync(file, 'utf8')
+      writeFileSync(file, src.replace(/__BUILD_DATE__/g, `"${stamp}"`))
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), swVersionPlugin()],
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
     minify: 'esbuild',
     cssMinify: 'esbuild',
+    // Compression (gzip/brotli) is handled by Vercel/CDN at serve time;
+    // if self-hosting, add vite-plugin-compression to emit .gz/.br at build.
     chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-icons': ['react-icons'],
-          'vendor-toast': ['react-hot-toast'],
-          'vendor-supabase': ['@supabase/supabase-js'],
+        // Keep react-icons in its own chunk to avoid bloating vendor-react;
+        // order matters — vendor-icons check must stay before vendor-react.
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-icons')) return 'vendor-icons'
+            if (id.includes('framer-motion')) return 'vendor-motion'
+            if (id.includes('react-hot-toast')) return 'vendor-toast'
+            if (id.includes('@supabase')) return 'vendor-supabase'
+            if (id.includes('react-dom') || id.includes('react-router-dom') || id.includes('/react/')) return 'vendor-react'
+          }
         },
         assetFileNames: 'assets/[name]-[hash].[ext]',
         entryFileNames: 'js/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
         compact: true
       }
     },
@@ -40,7 +66,9 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     cors: {
-      origin: '*',
+      // Localhost origins only — a wildcard origin lets any page in a browser
+      // on the dev machine read responses from the Vite server.
+      origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization']
     }

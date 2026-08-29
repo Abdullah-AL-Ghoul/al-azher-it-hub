@@ -1,15 +1,28 @@
-﻿import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
+﻿import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 
 const ThemeContext = createContext()
 const THEMES = ['light', 'dark', 'amoled']
 
+const THEME_COLORS = {
+ light: '#f0f4f8',
+ dark: '#0f172a',
+ amoled: '#000000',
+}
+
+function readStoredTheme() {
+ try {
+  const s = sessionStorage.getItem('al_azher_theme')
+  if (s && THEMES.includes(s)) return s
+ } catch (_e) { /* storage unavailable */ }
+ return null
+}
+
 export function ThemeProvider({ children }) {
+ // A stored theme means the user manually chose it (we only persist manual choices).
+ const manualRef = useRef(readStoredTheme() !== null)
  const [theme, setTheme] = useState(() => {
-  let stored = null
-  try {
-   stored = sessionStorage.getItem('al_azher_theme')
-  } catch (_e) { /* storage unavailable */ }
-  if (stored && THEMES.includes(stored)) return stored
+  const stored = readStoredTheme()
+  if (stored) return stored
   if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
    return 'dark'
   }
@@ -18,41 +31,39 @@ export function ThemeProvider({ children }) {
 
  useEffect(() => {
   const root = document.documentElement
-  // Remove all theme classes/attributes first
   root.classList.remove('dark')
   root.removeAttribute('data-theme')
-  
-  // Apply theme: dark class for Tailwind dark: variants, data-theme for CSS vars
+
   if (theme === 'dark') {
    root.classList.add('dark')
   } else if (theme === 'amoled') {
    root.classList.add('dark')
    root.setAttribute('data-theme', 'amoled')
   }
-  // light: neither class nor attribute needed
-  
-  // Sync browser chrome + form controls with the active theme
+
+  // Sync browser chrome + form controls with the active theme.
   root.style.colorScheme = theme === 'light' ? 'light' : 'dark'
-  const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute('content', theme === 'light' ? '#f0f4f8' : theme === 'amoled' ? '#000000' : '#0f172a')
-  
-  sessionStorage.setItem('al_azher_theme', theme)
+  const color = THEME_COLORS[theme] || THEME_COLORS.light
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', color))
+
+  // Persist ONLY manual choices so the OS-preference listener keeps working.
+  if (manualRef.current) {
+   try { sessionStorage.setItem('al_azher_theme', theme) } catch (_e) { /* ignore */ }
+  }
  }, [theme])
 
- // Listen for system preference changes
+ // Follow OS theme changes unless the user picked a theme manually.
  useEffect(() => {
   const mq = window.matchMedia('(prefers-color-scheme: dark)')
   const handler = (e) => {
-   // Only auto-switch if user hasn't manually set a theme
-   if (!sessionStorage.getItem('al_azher_theme')) {
-    setTheme(e.matches ? 'dark' : 'light')
-   }
+   if (!manualRef.current) setTheme(e.matches ? 'dark' : 'light')
   }
   mq.addEventListener('change', handler)
   return () => mq.removeEventListener('change', handler)
  }, [])
 
  const toggle = useCallback(() => {
+  manualRef.current = true
   setTheme(t => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length])
  }, [])
 

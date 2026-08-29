@@ -1,9 +1,8 @@
-﻿// Track A (index.html) — to fully eliminate the RTL flash for en users, insert this
-// inline bootstrap in <head>, BEFORE the existing theme <script>, then remove the
-// hardcoded `lang="ar" dir="rtl"` from <html>:
-//   <script>(function(){try{var l=sessionStorage.getItem('al_azher_lang')||'ar';document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr'}catch(e){}})();</script>
-// This client-side path (below) already sets lang/dir synchronously in useState so the
-// flash is minimized even without it.
+﻿// Track A (index.html) — to fully eliminate the RTL flash for en users, the
+// synchronous lang/dir bootstrap lives in /public/boot.js (loaded in <head>
+// before first paint; the CSP whitelists only external scripts). The client
+// path below also sets lang/dir synchronously in useState so the flash is
+// minimized even without it.
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 import ar from '../i18n/ar.json'
 
@@ -49,11 +48,24 @@ function interpolate(str, params) {
   }, str)
 }
 
+// Follow the visitor's browser language when nothing is stored yet: an
+// explicit in-session toggle wins, otherwise the first browser preference
+// that is ar or en decides (Arabic is the fallback for everything else).
+function getBrowserLang() {
+  if (typeof navigator === 'undefined') return 'ar'
+  try {
+    const code = String(navigator.language || '').toLowerCase()
+    if (code.startsWith('en')) return 'en'
+    if (code.startsWith('ar')) return 'ar'
+  } catch (e) { /* ignore */ }
+  return 'ar'
+}
+
 function resolveInitialLang() {
-  let l = 'ar'
+  let l = getBrowserLang()
   if (typeof sessionStorage !== 'undefined') {
     try {
-      l = sessionStorage.getItem('al_azher_lang') || 'ar'
+      l = sessionStorage.getItem('al_azher_lang') || l
     } catch (e) { /* ignore */ }
   }
   if (typeof document !== 'undefined') {
@@ -97,7 +109,14 @@ export function LanguageProvider({ children }) {
 
   const t = useCallback((key, params) => {
     const value = resolveKey(dict, key)
-    if (value === undefined || value == null) return key
+    if (value === undefined || value == null) {
+      // Missing keys surface as the dotted path; warn in dev so drift between
+      // the dictionaries and the inline-string era is caught early.
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        console.warn(`[i18n] missing key: ${key}`)
+      }
+      return key
+    }
     if (typeof value !== 'string') return value
     return interpolate(value, params)
   }, [dict])

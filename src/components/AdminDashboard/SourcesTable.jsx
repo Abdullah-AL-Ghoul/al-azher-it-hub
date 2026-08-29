@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast'
 import { deleteSource } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'
 import usePagination from '../../hooks/usePagination'
-import { pageContainer, pageItem, pageContainerReduced, pageItemReduced } from '../../utils/motionTokens'
+import { pageContainer, pageContainerReduced } from '../../utils/motionTokens'
 import ConfirmDialog from '../shared/ConfirmDialog'
 import SkeletonRow from './SkeletonRow'
 import Pagination from './Pagination'
@@ -60,7 +60,7 @@ function SourcesTable({ sources, loading, isArabic, onEdit, onAdd, onRefresh }) 
      <select
       value={sortBy}
       onChange={e => setSortBy(e.target.value)}
-      className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50"
+      className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
      >
       <option value="default">{isArabic ? 'بدون ترتيب' : 'Default'}</option>
       <option value="nameAr">{isArabic ? 'الاسم عربي' : 'Name (AR)'}</option>
@@ -71,7 +71,7 @@ function SourcesTable({ sources, loading, isArabic, onEdit, onAdd, onRefresh }) 
       placeholder={t('admin.search')}
       value={search}
       onChange={e => setSearch(e.target.value)}
-      className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48"
+      className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48"
      />
      <button
       onClick={onAdd}
@@ -100,7 +100,7 @@ function SourcesTable({ sources, loading, isArabic, onEdit, onAdd, onRefresh }) 
           {source.fileData ? <FiFile size={20} className="text-emerald-500" /> : <FiLink size={20} className="text-cyan-500" />}
          </div>
          <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-navy-900 dark:text-white text-sm truncate">
+          <h3 className="font-semibold text-ink text-sm truncate">
            {isArabic ? source.titleAr : source.titleEn}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">

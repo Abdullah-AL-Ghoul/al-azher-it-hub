@@ -12,6 +12,7 @@ export default {
         english: ['Inter', 'sans-serif'],
       },
       colors: {
+        /* Brand */
         navy: {
           500: '#3B5283',
           600: '#2C4066',
@@ -45,6 +46,50 @@ export default {
         spatial: {
           bg: '#05060A',
         },
+        /* Semantic tokens — driven by CSS vars (light/dark/amoled) */
+        surface: 'var(--bg-surface)',
+        canvas: 'var(--bg-page)',
+        accent: 'var(--color-accent)',
+        ink: {
+          DEFAULT: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          muted: 'var(--text-muted)',
+        },
+        line: {
+          DEFAULT: 'var(--border-default)',
+          card: 'var(--border-card)',
+        },
+      },
+      fontSize: {
+        'display': ['clamp(2.5rem, 5vw, 3.75rem)', { lineHeight: '1.08', letterSpacing: '-0.02em' }],
+        'h1': ['2.25rem', { lineHeight: '1.15', letterSpacing: '-0.02em' }],
+        'h2': ['1.875rem', { lineHeight: '1.25', letterSpacing: '-0.01em' }],
+        'h3': ['1.5rem', { lineHeight: '1.3' }],
+        'h4': ['1.25rem', { lineHeight: '1.35' }],
+        'body-lg': ['1.125rem', { lineHeight: '1.6' }],
+        'body': ['1rem', { lineHeight: '1.6' }],
+        'body-sm': ['0.875rem', { lineHeight: '1.5' }],
+        'caption': ['0.8125rem', { lineHeight: '1.5' }],
+        'label': ['0.75rem', { lineHeight: '1.4', letterSpacing: '0.04em', textTransform: 'uppercase' }],
+        'btn': ['0.875rem', { lineHeight: '1.25', letterSpacing: '0.01em' }],
+      },
+      borderRadius: {
+        xs: '0.375rem',
+        sm: '0.5rem',
+        md: '0.625rem',
+        lg: '0.75rem',
+        xl: '1rem',
+        '2xl': '1.25rem',
+        '3xl': '1.5rem',
+        pill: '9999px',
+      },
+      boxShadow: {
+        card: 'var(--shadow-card)',
+        floating: 'var(--shadow-floating)',
+        glow: '0 0 0 3px var(--ring-color, rgba(37,99,235,0.12))',
+      },
+      transitionTimingFunction: {
+        'premium': 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
       animation: {
         'fade-in': 'fadeIn 0.6s ease-out',

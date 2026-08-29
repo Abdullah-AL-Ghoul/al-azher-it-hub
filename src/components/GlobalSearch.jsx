@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+﻿import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -47,8 +47,8 @@ export default function GlobalSearch() {
   const inputRef = useRef(null)
   const listRef = useRef(null)
   const allItems = useRef([])
-  const datasetRef = useRef(null)
   const searchSeq = useRef(0)
+  const datasetRef = useRef(null)
   const panelRef = useFocusTrap(open)
 
   const openModal = useCallback(() => {
@@ -201,7 +201,7 @@ export default function GlobalSearch() {
   <>
    <button
     onClick={openModal}
-    className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-600 dark:text-white/60 hover:text-navy-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition"
+    className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-600 dark:text-white/60 hover:text-ink hover:bg-black/5 dark:hover:bg-white/10 transition"
     title={isArabic ? 'بحث (Ctrl+K)' : 'Search (Ctrl+K)'}
     aria-label={isArabic ? 'بحث عالمي' : 'Global search'}
    >
@@ -232,7 +232,7 @@ export default function GlobalSearch() {
          onChange={e => setQuery(e.target.value)}
          onKeyDown={handleKeyDown}
          placeholder={isArabic ? 'ابحث عن محاضرة، مصدر، صفحة...' : 'Search lectures, sources, pages...'}
-         className="flex-1 bg-transparent text-navy-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40 text-sm outline-none"
+         className="flex-1 bg-transparent text-ink placeholder-slate-400 dark:placeholder-white/40 text-sm outline-none"
          autoComplete="off"
          role="combobox"
          aria-expanded="true"
@@ -281,14 +281,13 @@ export default function GlobalSearch() {
            return (
             <button
              key={`${item.type}-${item.id || item.to}-${i}`}
-             ref={el => { if (i === activeIndex) el?.focus() }}
              onClick={() => handleSelect(item)}
              onMouseEnter={() => setActiveIndex(i)}
-             className={`w-full flex items-center gap-3 px-4 py-3 text-right transition-colors ${
+             className={`w-full flex items-center gap-3 px-4 py-3 text-start transition-colors ${
               i === activeIndex
                ? 'bg-royal-500/10 dark:bg-cyan-500/10'
                : 'hover:bg-black/5 dark:hover:bg-white/5'
-             } ${isArabic ? 'text-right' : 'text-left'}`}
+             }`}
              role="option"
              aria-selected={i === activeIndex}
             >
@@ -296,7 +295,7 @@ export default function GlobalSearch() {
               <Icon size={14} />
              </div>
              <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-navy-900 dark:text-white truncate">{item.title}</p>
+              <p className="text-sm font-medium text-ink truncate">{item.title}</p>
               {item.subtitle && (
                <p className="text-xs text-slate-400 dark:text-white/40 truncate">{item.subtitle}</p>
               )}

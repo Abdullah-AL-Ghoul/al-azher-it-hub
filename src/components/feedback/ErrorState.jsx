@@ -41,7 +41,7 @@ export default function ErrorState({ error, onRetry, title, className = '', comp
    <div className="w-14 h-14 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
     <FiAlertCircle className="text-red-400" size={28} />
    </div>
-   <h3 className="text-lg font-bold text-navy-900 dark:text-white mb-2">
+   <h3 className="text-lg font-bold text-ink mb-2">
     {title || t('errorBoundary.title')}
    </h3>
    <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-md mx-auto">

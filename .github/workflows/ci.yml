@@ -26,8 +26,22 @@ jobs:
       - name: Unit tests
         run: npx vitest run
 
+      - name: Coverage gate
+        run: npx vitest run --coverage
+
       - name: Build
         run: npm run build
+
+      - name: E2E smoke tests (Playwright)
+        # Note: current smoke tests are public-route only and pass without
+        # Supabase env vars. Once authenticated e2e flows are added, add
+        # VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY as repository secrets.
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test
 
       - name: Security audit (moderate+)
         run: npm audit --audit-level=moderate

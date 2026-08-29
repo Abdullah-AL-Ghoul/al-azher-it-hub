@@ -22,6 +22,7 @@ const WelcomeGate = lazy(() => import('./pages/WelcomeGate'))
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Home = lazy(() => import('./pages/Home'))
 const Lectures = lazy(() => import('./pages/Lectures'))
 const LectureDetail = lazy(() => import('./pages/LectureDetail'))
@@ -67,6 +68,7 @@ function AppContent() {
  const { user } = useAuth()
  const location = useLocation()
  const [showSuccessRedirect, setShowSuccessRedirect] = useState(false)
+ const [chatbotReady, setChatbotReady] = useState(false)
 
  useSeo(location.pathname, lang)
 
@@ -74,7 +76,21 @@ function AppContent() {
   window.scrollTo({ top: 0, behavior: 'instant' })
  }, [location.pathname])
 
- const hideLayout = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/forgot-password'
+ const hideLayout = location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/reset-password'
+
+ // Defer Chatbot (heavy lazy chunk) until browser is idle to avoid blocking main thread / LCP
+ useEffect(() => {
+  if (hideLayout) return
+  const cb = () => setChatbotReady(true)
+  if ('requestIdleCallback' in window) {
+   const id = window.requestIdleCallback(cb, { timeout: 2500 })
+   return () => {
+    try { window.cancelIdleCallback(id) } catch (_) { /* ignore */ }
+   }
+  }
+  const t = setTimeout(cb, 1800)
+  return () => clearTimeout(t)
+ }, [hideLayout])
 
  useEffect(() => {
   if (user && hideLayout) {
@@ -113,6 +129,7 @@ function AppContent() {
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
         <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+        <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
 
         <Route path="/home" element={
          <ProtectedRoute><PageTransition><Home /></PageTransition></ProtectedRoute>
@@ -160,7 +177,7 @@ function AppContent() {
     {!hideLayout && <BackToTop />}
      {!hideLayout && <WelcomeModal />}
      {!hideLayout && <GlobalSearch />}
-     {!hideLayout && (
+{!hideLayout && chatbotReady && (
      <Suspense fallback={null}>
       <Chatbot />
      </Suspense>

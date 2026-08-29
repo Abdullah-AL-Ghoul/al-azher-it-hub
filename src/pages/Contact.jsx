@@ -45,10 +45,7 @@ export default function Contact() {
  const submitTimer = useRef(null)
  const resetTimer = useRef(null)
 
- useEffect(() => {
-  document.title = isArabic ? 'تواصل معنا - AL-Azher IT Hub' : 'Contact - AL-Azher IT Hub'
- }, [isArabic])
-
+ 
  useEffect(() => {
   return () => {
    if (submitTimer.current) clearTimeout(submitTimer.current)
@@ -61,7 +58,9 @@ export default function Contact() {
   setSubmitting(true)
   const form = e.target
   const subject = encodeURIComponent(form.subject.value)
-  const body = encodeURIComponent(`${t('contact.form.name')}: ${form.name.value}\n${t('contact.form.message')}:\n${form.message.value}`)
+  const body = encodeURIComponent(
+   `${t('contact.form.name')}: ${form.name.value}\n${t('contact.form.emailPlaceholder')}: ${form.email.value}\n${t('contact.form.message')}:\n${form.message.value}`
+  )
   submitTimer.current = setTimeout(() => {
    window.location.href = `mailto:abdallhalghoul200@gmail.com?subject=${subject}&body=${body}`
    setSent(true)
@@ -78,7 +77,7 @@ export default function Contact() {
  ]
 
  return (
-  <motion.div variants={containerVariants} initial="hidden" animate="visible" className="min-h-screen bg-spatial-page grain">
+  <motion.div variants={containerVariants} initial="hidden" animate="visible" className="min-h-screen bg-spatial-page ">
    {/* Hero Section */}
    <div className="relative pt-24 pb-16 overflow-hidden">
     {/* Background decorations */}
@@ -88,7 +87,7 @@ export default function Contact() {
      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-royal-500/5 to-cyan-500/5 rounded-full blur-3xl" />
     </div>
 
-    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div className="relative container-page text-center">
      <motion.div
       initial={prefersReduced ? {} : { opacity: 0, y: 20 }}
       animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
@@ -103,7 +102,7 @@ export default function Contact() {
       initial={prefersReduced ? {} : { opacity: 0, y: 20 }}
       animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.1 }}
-      className="text-4xl md:text-5xl lg:text-6xl font-bold text-navy-900 dark:text-white mb-4"
+      className="text-4xl md:text-5xl lg:text-6xl font-bold text-ink mb-4"
      >
       {isArabic ? 'تواصل' : 'Get in'}{' '}
       <span className="gradient-text-spatial">{isArabic ? 'معنا' : 'Touch'}</span>
@@ -127,9 +126,9 @@ export default function Contact() {
      >
       {responseTimes.map((item, idx) => (
        <div key={idx} className="flex items-center gap-2 px-4 py-2 glass rounded-xl text-sm">
-        <item.icon size={14} className="text-royal-500 dark:text-cyan-400" />
+        <item.icon size={14} className="text-accent" />
         <span className="text-slate-600 dark:text-white/60">{item.label}</span>
-        <span className="font-semibold text-navy-900 dark:text-white">{item.time}</span>
+        <span className="font-semibold text-ink">{item.time}</span>
        </div>
       ))}
      </motion.div>
@@ -137,7 +136,7 @@ export default function Contact() {
    </div>
 
    {/* Main Content */}
-   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+   <div className="container-page pb-20">
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
      {/* Form Section - Takes 3 columns */}
      <div className="lg:col-span-3">
@@ -151,7 +150,7 @@ export default function Contact() {
          <FiSend size={18} />
         </div>
         <div>
-         <h2 className="text-xl font-bold text-navy-900 dark:text-white">{t('contact.form.send')}</h2>
+         <h2 className="text-xl font-bold text-ink">{t('contact.form.send')}</h2>
          <p className="text-sm text-slate-500 dark:text-white/50">{isArabic ? 'نرد على رسائلك بسرعة!' : 'We respond quickly!'}</p>
         </div>
        </div>
@@ -168,7 +167,7 @@ export default function Contact() {
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-400/20 dark:to-teal-400/20 border border-emerald-200/30 dark:border-emerald-400/20 flex items-center justify-center">
            <FiCheck className="text-4xl text-emerald-500 dark:text-emerald-400" />
           </div>
-          <h3 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
+          <h3 className="text-2xl font-bold text-ink mb-2">
            {isArabic ? 'تم الإرسال بنجاح!' : 'Message Sent!'}
           </h3>
           <p className="text-slate-500 dark:text-white/50 max-w-md mx-auto">
@@ -178,7 +177,7 @@ export default function Contact() {
           </p>
           <button
            onClick={() => setSent(false)}
-           className="mt-6 inline-flex items-center gap-2 text-royal-500 dark:text-cyan-400 font-medium hover:underline"
+           className="mt-6 inline-flex items-center gap-2 text-accent font-medium hover:underline"
           >
            {isArabic ? 'إرسال رسالة أخرى' : 'Send another message'}
            {isArabic ? <FiArrowLeft size={16} /> : <FiArrowRight size={16} />}
@@ -208,7 +207,7 @@ export default function Contact() {
              />
             {focusedField === 'name' && (
              <motion.div
-              layoutId="focus-indicator"
+              layoutId="focus-indicator-name"
               className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-royal-500 to-cyan-500 rounded-full"
              />
             )}
@@ -227,7 +226,7 @@ export default function Contact() {
             />
             {focusedField === 'email' && (
              <motion.div
-              layoutId="focus-indicator"
+              layoutId="focus-indicator-email"
               className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-royal-500 to-cyan-500 rounded-full"
              />
             )}
@@ -248,7 +247,7 @@ export default function Contact() {
            />
            {focusedField === 'subject' && (
             <motion.div
-             layoutId="focus-indicator"
+             layoutId="focus-indicator-subject"
              className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-royal-500 to-cyan-500 rounded-full"
             />
            )}
@@ -261,7 +260,7 @@ export default function Contact() {
            <div className="relative group">
             <FiMessageSquare
              aria-hidden="true"
-             className={`absolute top-3.5 ${isArabic ? 'right-4' : 'left-4'} text-slate-400 dark:text-white/40 group-focus-within:text-royal-500 dark:group-focus-within:text-cyan-400 transition-colors`}
+             className="absolute top-3.5 start-4 text-slate-400 dark:text-white/40 group-focus-within:text-royal-500 dark:group-focus-within:text-cyan-400 transition-colors"
              size={16}
             />
             <textarea
@@ -269,11 +268,12 @@ export default function Contact() {
              name="message"
              required
              rows="5"
+             maxLength={1000}
              placeholder={t('contact.form.messagePlaceholder')}
              onChange={(e) => setMessageLen(e.target.value.length)}
              onFocus={() => setFocusedField('message')}
              onBlur={() => setFocusedField(null)}
-             className={`input-spatial w-full rounded-xl ${isArabic ? 'pr-11 pl-4' : 'pl-11 pr-4'} py-3.5 text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none resize-none transition-all duration-200 ${focusedField === 'message' ? 'ring-2 ring-royal-500/50 dark:ring-cyan-400/50' : ''}`}
+             className={`input-spatial w-full rounded-xl ps-11 pe-4 py-3.5 text-ink placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none resize-none transition-all duration-200 ${focusedField === 'message' ? 'ring-2 ring-royal-500/50 dark:ring-cyan-400/50' : ''}`}
              dir={isArabic ? 'rtl' : 'ltr'}
             />
            </div>
@@ -336,7 +336,7 @@ export default function Contact() {
            <Icon size={22} />
           </div>
           <div className="flex-1 min-w-0">
-           <p dir={info.text?.includes('+') ? 'ltr' : undefined} className="font-semibold text-navy-900 dark:text-white truncate">
+           <p dir={info.text?.includes('+') ? 'ltr' : undefined} className="font-semibold text-ink truncate">
             {info.text}
            </p>
            <p className="text-sm text-slate-500 dark:text-white/50">{info.sublabel}</p>
@@ -369,7 +369,7 @@ export default function Contact() {
          <FaWhatsapp size={26} />
         </div>
         <div className="flex-1 min-w-0">
-         <h3 className="font-bold text-navy-900 dark:text-white">{isArabic ? 'تواصل عبر واتساب' : 'WhatsApp Us'}</h3>
+         <h3 className="font-bold text-ink">{isArabic ? 'تواصل عبر واتساب' : 'WhatsApp Us'}</h3>
          <p className="text-sm text-slate-500 dark:text-white/60">{isArabic ? 'الرد الأسرع والأسهل — اضغط وابدأ المحادثة' : 'Fastest and easiest — tap to start chatting'}</p>
         </div>
         <a
@@ -389,7 +389,7 @@ export default function Contact() {
 
       {/* Social Links */}
       <motion.div variants={itemVariants} className="glass rounded-xl p-6">
-       <h3 className="text-lg font-bold text-navy-900 dark:text-white mb-4">
+       <h3 className="text-lg font-bold text-ink mb-4">
         {isArabic ? 'تابعنا' : 'Follow Us'}
        </h3>
        <div className="grid grid-cols-2 gap-3">
@@ -412,7 +412,7 @@ export default function Contact() {
 
       {/* Quick Response */}
       <motion.div variants={itemVariants} className="glass rounded-xl p-6">
-       <h3 className="text-lg font-bold text-navy-900 dark:text-white mb-4">
+       <h3 className="text-lg font-bold text-ink mb-4">
         {isArabic ? 'الاستجابة السريعة' : 'Quick Response'}
        </h3>
        <div className="space-y-3">

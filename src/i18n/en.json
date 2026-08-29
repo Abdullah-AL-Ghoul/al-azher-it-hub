@@ -35,8 +35,8 @@
       "title": "AL-Azher IT Hub",
       "subtitle": "Your Comprehensive Educational Platform",
       "description": "Video lectures, summaries, and PDF files — Available for all IT students (all years)",
-      "cta": "Lectures",
-      "ctaSecondary": "Sources"
+      "cta": "Browse Lectures",
+      "ctaSecondary": "Explore Sources"
     },
     "welcome": "Welcome, {{name}}!",
     "adminRole": "System Admin",
@@ -351,6 +351,10 @@
     "clearSuccess": "Activity logs cleared",
     "filterLogin": "LOGIN",
     "filterViewLecture": "VIEW_LECTURE",
+    "filterViewSource": "VIEW_SOURCE",
+    "filterAddFavorite": "ADD_FAVORITE",
+    "filterRateLecture": "RATE_LECTURE",
+    "filterUseChatbot": "USE_CHATBOT",
     "filterUpdateProfile": "UPDATE_PROFILE",
     "filterAddComment": "ADD_COMMENT",
     "filterDeleteAddition": "ADDITION_DELETE",
@@ -446,7 +450,23 @@
     "enterRegisteredEmail": "Enter your registered email to confirm",
     "verify": "Verify",
     "changeStudentId": "Change student ID",
-    "greeting": "Hello"
+    "greeting": "Hello",
+    "sendResetLink": "Send reset link",
+    "sentTitle": "Check your email!",
+    "sentDesc": "If this email is registered, we sent you a link to reset your password. Open the link and create a new password.",
+    "enterName": "Enter your full name",
+    "nameMismatch": "Name does not match the record"
+  },
+  "resetPassword": {
+    "title": "Reset Password",
+    "subtitle": "Create a new password for your account",
+    "newPassword": "New Password",
+    "reset": "Change Password",
+    "success": "Password changed successfully!",
+    "successDesc": "Redirecting you to sign in...",
+    "invalidTitle": "Invalid link",
+    "invalidDesc": "This link is invalid or has expired. Request a new one.",
+    "requestAgain": "Request a new link"
   },
   "welcomeGate": {
     "title": "Welcome to",

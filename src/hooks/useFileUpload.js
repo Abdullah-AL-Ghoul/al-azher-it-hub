@@ -1,12 +1,18 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
-import { uploadSourceFile, validateFiles } from '../services/sourceStorage'
+import { uploadSourceFile, validateFiles, validateMagicBytes } from '../services/sourceStorage'
 
 export function useFileUpload() {
   const [files, setFiles] = useState([])
   const [progress, setProgress] = useState({})
   const [errors, setErrors] = useState([])
   const [uploading, setUploading] = useState(false)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
 
   const reset = useCallback(() => {
     setFiles([])
@@ -44,20 +50,34 @@ export function useFileUpload() {
     const uploaded = []
 
     for (const file of valid) {
+      // Reject files whose content doesn't match their declared type (stored-XSS prevention).
+      const magicOk = await validateMagicBytes(file)
+      if (!mountedRef.current) return { ok: false, uploaded }
+      if (!magicOk) {
+        toast.error(isArabic ? `الملف "${file.name}" محتواه لا يتطابق مع نوعه` : `"${file.name}" content doesn't match its type`)
+        setProgress(prev => ({ ...prev, [file.name]: { progress: 0, status: 'failed' } }))
+        continue
+      }
       setProgress(prev => ({ ...prev, [file.name]: { progress: 0, status: 'uploading' } }))
       try {
         const result = await uploadSourceFile(file, ({ progress: p, status }) => {
+          // Guard against state updates after the component unmounts (React 18
+          // tolerates it, but it's wasted work and noisy in dev).
+          if (!mountedRef.current) return
           setProgress(prev => ({ ...prev, [file.name]: { progress: p, status } }))
         })
+        if (!mountedRef.current) return { ok: false, uploaded }
         uploaded.push(result)
         setFiles(prev => [...prev, result])
         toast.success(isArabic ? `تم رفع ${file.name}` : `${file.name} uploaded`)
       } catch (err) {
+        if (!mountedRef.current) return { ok: false, uploaded }
         setProgress(prev => ({ ...prev, [file.name]: { progress: 0, status: 'failed' } }))
         toast.error(isArabic ? `فشل رفع ${file.name}` : `Failed to upload ${file.name}`)
       }
     }
 
+    if (!mountedRef.current) return { ok: false, uploaded }
     setUploading(false)
     return { ok: true, uploaded }
   }, [])

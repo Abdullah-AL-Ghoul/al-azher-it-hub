@@ -1,4 +1,4 @@
-﻿import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
+﻿import { createContext, useContext, useEffect, useRef, useState } from 'react'
 
 const ScrollContext = createContext({ y: 0, progress: 0, scrolled: false })
 

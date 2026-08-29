@@ -11,17 +11,22 @@ const epochs = new Map()
 
 function bumpEpoch(collectionName) {
   epochs.set(collectionName, (epochs.get(collectionName) || 0) + 1)
-  cache.delete(collectionName)
+  // Drop every cache/in-flight entry for this table (any selectCols variant).
+  const prefix = `${collectionName}::`
+  for (const key of cache.keys()) if (key.startsWith(prefix)) cache.delete(key)
+  for (const key of inflight.keys()) if (key.startsWith(prefix)) inflight.delete(key)
 }
 
 export function createCrudService(collectionName, nameField = 'nameAr', maxItems = 100) {
   async function getAll(force = false, selectCols = '*') {
-    const cached = cache.get(collectionName)
+    const key = `${collectionName}::${selectCols}`
+    const cached = cache.get(key)
     if (!force && cached && Date.now() - cached.ts < 60000) {
-      return cached.data
+      return Array.isArray(cached.data) ? [...cached.data] : cached.data
     }
-    if (!force && inflight.has(collectionName)) {
-      return inflight.get(collectionName)
+    const inFlight = inflight.get(key)
+    if (!force && inFlight && (epochs.get(collectionName) || 0) === inFlight.epoch) {
+      return inFlight.promise
     }
     const startEpoch = epochs.get(collectionName) || 0
     const promise = (async () => {
@@ -34,15 +39,15 @@ export function createCrudService(collectionName, nameField = 'nameAr', maxItems
       // Only repopulate the cache if no write happened while this fetch was in
       // flight; otherwise the cache would hold pre-write data.
       if ((epochs.get(collectionName) || 0) === startEpoch) {
-        cache.set(collectionName, { data: data || [], ts: Date.now() })
+        cache.set(key, { data: data || [], ts: Date.now() })
       }
       return data || []
     })()
-    inflight.set(collectionName, promise)
+    inflight.set(key, { promise, epoch: startEpoch })
     try {
       return await promise
     } finally {
-      inflight.delete(collectionName)
+      inflight.delete(key)
     }
   }
 

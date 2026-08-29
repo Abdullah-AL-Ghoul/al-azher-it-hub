@@ -1,6 +1,12 @@
 import { getSupabase } from './supabase'
 import { nowISO } from '../utils/helpers'
 
+function isRpcMissing(error) {
+ if (!error) return false
+ const m = String(error.message || error.code || error.hint || error.details || '')
+ return /function .* does not exist|PGRST202|PGRST301/i.test(m)
+}
+
 export async function getUserStats(studentId) {
   const { data, error } = await getSupabase()
     .from('user_stats')
@@ -12,6 +18,16 @@ export async function getUserStats(studentId) {
 }
 
 export async function markViewed(studentId, lectureId) {
+  // Prefer the atomic RPC (dedup + lock, fixes concurrent lost updates).
+  try {
+    const { data, error } = await getSupabase()
+      .rpc('mark_viewed', { p_student_id: studentId, p_lecture_id: lectureId })
+    if (!error && Array.isArray(data)) return { viewed: data, lastVisit: nowISO() }
+    if (error && !isRpcMissing(error)) throw error
+  } catch (e) {
+    if (!isRpcMissing(e)) throw e
+  }
+  // Fallback: read-modify-write (RPC not deployed yet).
   const { data } = await getSupabase()
     .from('user_stats')
     .select('viewed')

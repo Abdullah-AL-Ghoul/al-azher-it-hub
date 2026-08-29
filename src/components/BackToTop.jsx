@@ -4,9 +4,8 @@ import { useScrollManager } from '../hooks/useScrollManager.jsx'
 import { useLanguage } from '../context/LanguageContext'
 
 export default function BackToTop() {
-const { lang, t } = useLanguage()
-  const isArabic = lang === 'ar'
-  const prefersReduced = useReducedMotion()
+const { t } = useLanguage()
+    const prefersReduced = useReducedMotion()
  const { scrolled, progress } = useScrollManager()
 
  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -24,7 +23,7 @@ const { lang, t } = useLanguage()
      exit={{ opacity: 0, scale: 0.5 }}
      onClick={scrollToTop}
      aria-label={t('common.backToTop')}
-      className={`fixed bottom-6 z-50 w-12 h-12 rounded-full bg-navy-800 border border-white/20 shadow-xl flex items-center justify-center hover:bg-navy-700 transition-colors duration-300 ${isArabic ? 'right-6' : 'left-6'}`}
+      className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-50 w-12 h-12 rounded-full bg-navy-800 border border-white/20 shadow-xl flex items-center justify-center hover:bg-navy-700 transition-colors duration-300 end-6"
     >
     <svg className="absolute inset-0 w-full h-full -rotate-90" aria-hidden="true">
      <circle cx="24" cy="24" r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />

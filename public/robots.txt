@@ -1,6 +1,15 @@
-﻿User-agent: *
+User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /profile
+# Content routes are auth-walled (crawlers get a redirect to /) — blocking
+# them avoids soft-duplicate URLs and wasted crawl budget.
+Disallow: /home
+Disallow: /lectures
+Disallow: /sources
+Disallow: /study-plan
+Disallow: /roadmap
+Disallow: /additions
+Disallow: /contact
 
 Sitemap: https://al-azher-it-hub.vercel.app/sitemap.xml

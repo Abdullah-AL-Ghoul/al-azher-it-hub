@@ -8,25 +8,31 @@ import {
  studentUpdateProfile, addActivity, addStudentLog, resetPassword, authenticateUser
 } from '../services'
 import { pageContainer, pageItem } from '../utils/motionTokens'
-import { FiUser, FiEdit2, FiSave, FiX, FiLinkedin, FiMail, FiPhone, FiGlobe, FiBookOpen, FiHeart, FiEye, FiArrowLeft, FiLink, FiLock } from 'react-icons/fi'
+import { FiUser, FiEdit2, FiSave, FiX, FiLinkedin, FiPhone, FiGlobe, FiBookOpen, FiHeart, FiEye, FiArrowLeft, FiLink, FiLock } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import motivationalQuotes from '../data/quotes'
 import ErrorState from '../components/feedback/ErrorState'
+import Skeleton from '../components/shared/Skeleton'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
 
+// Only allow http(s) links for the user's social profile fields. Anything else
+// (javascript:, data:, vbscript:) is dropped to prevent stored-XSS via href.
+function safeProfileUrl(value) {
+  const v = (value || '').trim()
+  if (!v) return ''
+  return /^https?:\/\/.+/i.test(v) ? v.slice(0, 500) : ''
+}
+
 export default function Profile() {
  const { lang, t } = useLanguage()
- const { user } = useAuth()
+ const { user, updateUser } = useAuth()
  const prefersReduced = useReducedMotion()
  const navigate = useNavigate()
  const isArabic = lang === 'ar'
 
- useEffect(() => {
-  document.title = isArabic ? 'الملف الشخصي - AL-Azher IT Hub' : 'Profile - AL-Azher IT Hub'
- }, [isArabic])
- const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(false)
  const [profileData, setProfileData] = useState({
   name: '',
   major: '',
@@ -88,22 +94,24 @@ export default function Profile() {
 
  const handleSave = async () => {
   try {
-   await studentUpdateProfile({
-    name: profileData.name,
-    major: profileData.major,
-    google: profileData.google,
-    linkedin: profileData.linkedin,
-    whatsapp: profileData.whatsapp,
-   })
+   // Client-side URL scheme guard (defense in depth — the DB also enforces it
+   // server-side via safe_social_url in student_update_profile).
+   const clean = {
+    name: profileData.name.trim(),
+    major: profileData.major.trim(),
+    google: safeProfileUrl(profileData.google),
+    linkedin: safeProfileUrl(profileData.linkedin),
+    whatsapp: profileData.whatsapp.replace(/[^0-9]/g, '').slice(0, 15),
+   }
+   await studentUpdateProfile(clean)
    try { await addActivity('users', 'PROFILE_UPDATE', user.studentId) } catch (e) { /* non-critical */ }
    addStudentLog({
-    studentId: user.studentId,
-    name: user.name,
     type: 'UPDATE_PROFILE',
-    detail: 'تحديث الملف الشخصي',
-    ip: '',
+    detail: '',
     device: navigator.userAgent,
    }).catch(() => {})
+   updateUser(clean)
+   setProfileData(clean)
    toast.success(isArabic ? 'تم حفظ المعلومات' : 'Profile updated')
    setEditing(false)
   } catch (e) {
@@ -116,8 +124,8 @@ export default function Profile() {
    toast.error(isArabic ? 'املأ جميع الحقول' : 'Fill all fields')
    return
   }
-  if (pwForm.newPw.length < 6) {
-   toast.error(isArabic ? 'كلمة المرور 6 أحرف على الأقل' : 'Password must be at least 6 characters')
+  if (pwForm.newPw.length < 8) {
+   toast.error(isArabic ? 'كلمة المرور 8 أحرف على الأقل' : 'Password must be at least 8 characters')
    return
   }
   if (pwForm.newPw !== pwForm.confirm) {
@@ -142,7 +150,7 @@ export default function Profile() {
   setPwSaving(false)
  }
 
- const inputClass = "w-full glass rounded-xl px-4 py-3 text-sm text-navy-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition"
+ const inputClass = "w-full glass rounded-xl px-4 py-3 text-sm text-ink placeholder:text-slate-500 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition"
 
  if (!user || user.role === 'admin') {
   return (
@@ -158,16 +166,16 @@ export default function Profile() {
   return (
    <div className="min-h-screen pt-24 pb-16 bg-spatial-page">
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-     <div className="skeleton h-48 rounded-2xl" />
-     <div className="skeleton h-64 rounded-2xl" />
-     <div className="skeleton h-48 rounded-2xl" />
+     <Skeleton className="h-48 rounded-2xl" />
+     <Skeleton className="h-64 rounded-2xl" />
+     <Skeleton className="h-48 rounded-2xl" />
     </div>
    </div>
   )
  }
 
  return (
-  <motion.div variants={containerVariants} initial="hidden" animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page grain">
+  <motion.div variants={containerVariants} initial="hidden" animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page ">
 
    {/* Motivational Quote Banner */}
    <motion.div variants={itemVariants} className="py-12 mb-8">
@@ -180,12 +188,12 @@ export default function Profile() {
      >
       {user.name?.charAt(0)?.toUpperCase()}
      </motion.div>
-      <h1 className="text-2xl md:text-3xl font-bold text-navy-900 dark:text-white mb-2">
+      <h1 className="text-2xl md:text-3xl font-bold text-ink mb-2">
       {t('profile.greeting', { name: user.name })}
      </h1>
       <p className="text-slate-500 dark:text-white/60 text-sm mb-4">{user.studentId}</p>
      <div className="inline-flex items-center gap-2 glass rounded-full px-5 py-2">
-       <span className="text-slate-500 dark:text-white/50 text-sm italic">"{quote}"</span>
+       <span className="text-slate-500 dark:text-white/50 text-sm italic">&ldquo;{quote}&rdquo;</span>
      </div>
     </div>
    </motion.div>
@@ -216,7 +224,7 @@ export default function Profile() {
           initial={prefersReduced ? {} : { opacity: 0, scale: 0.5 }}
           animate={prefersReduced ? {} : { opacity: 1, scale: 1 }}
           transition={prefersReduced ? {} : { duration: 0.6, delay: stat.delay + 0.3, type: 'spring' }}
-          className="font-bold text-navy-900 dark:text-white text-xl"
+          className="font-bold text-ink text-xl"
          >
           {stat.value}
          </motion.p>
@@ -230,21 +238,21 @@ export default function Profile() {
     {/* Profile Info */}
     <motion.div variants={itemVariants} className="glass rounded-xl p-6">
      <div className="flex items-center justify-between mb-6">
-       <h2 className="text-lg font-bold text-navy-900 dark:text-white flex items-center gap-2">
+       <h2 className="text-lg font-bold text-ink flex items-center gap-2">
        <FiUser size={18} />
        {t('profile.personalInfo')}
       </h2>
       {editing ? (
        <div className="flex gap-2">
-        <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 btn-spatial text-white rounded-xl text-sm font-medium">
+        <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial text-white rounded-xl text-sm font-medium">
          <FiSave size={14} /> {t('profile.save')}
         </button>
-        <button onClick={() => setEditing(false)} className="flex items-center gap-2 px-4 py-2 glass text-slate-600 dark:text-white/60 rounded-xl text-sm font-medium">
+        <button onClick={() => setEditing(false)} className="flex items-center gap-2 px-4 py-2 min-h-[44px] glass text-slate-600 dark:text-white/60 rounded-xl text-sm font-medium">
          <FiX size={14} /> {t('profile.cancel')}
         </button>
        </div>
       ) : (
-       <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 btn-spatial text-white rounded-xl text-sm font-medium">
+       <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial text-white rounded-xl text-sm font-medium">
         <FiEdit2 size={14} /> {t('profile.edit')}
        </button>
       )}
@@ -252,26 +260,26 @@ export default function Profile() {
 
      <div className="space-y-4">
       <div>
-        <label className="block text-xs text-slate-500 dark:text-white/60 mb-1">{t('profile.name')}</label>
+        <label htmlFor="profile-name" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{t('profile.name')}</label>
        {editing ? (
-        <input value={profileData.name} onChange={e => setProfileData(p => ({ ...p, name: e.target.value }))} className={inputClass} />
+        <input id="profile-name" name="name" autoComplete="name" value={profileData.name} onChange={e => setProfileData(p => ({ ...p, name: e.target.value }))} className={inputClass} />
        ) : (
-         <p className="text-navy-900 dark:text-white font-medium">{profileData.name || '—'}</p>
+         <p className="text-ink font-medium">{profileData.name || '—'}</p>
        )}
       </div>
       <div>
-        <label className="block text-xs text-slate-500 dark:text-white/60 mb-1">{t('profile.major')}</label>
+        <label htmlFor="profile-major" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{t('profile.major')}</label>
        {editing ? (
-        <input value={profileData.major} onChange={e => setProfileData(p => ({ ...p, major: e.target.value }))} placeholder={t('profile.majorPlaceholder')} className={inputClass} />
+        <input id="profile-major" name="major" value={profileData.major} onChange={e => setProfileData(p => ({ ...p, major: e.target.value }))} placeholder={t('profile.majorPlaceholder')} className={inputClass} />
        ) : (
-         <p className="text-navy-900 dark:text-white font-medium">{profileData.major || '—'}</p>
+         <p className="text-ink font-medium">{profileData.major || '—'}</p>
        )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
        <div>
-         <label className="block text-xs text-slate-500 dark:text-white/60 mb-1 flex items-center gap-1"><FiGlobe size={12} /> Google</label>
+         <label htmlFor="profile-google" className="block text-xs text-slate-500 dark:text-white/60 mb-1 flex items-center gap-1"><FiGlobe size={12} /> Google</label>
         {editing ? (
-         <input value={profileData.google} onChange={e => setProfileData(p => ({ ...p, google: e.target.value }))} placeholder="https://..." className={inputClass} />
+         <input id="profile-google" name="google" type="url" autoComplete="url" value={profileData.google} onChange={e => setProfileData(p => ({ ...p, google: e.target.value }))} placeholder="https://..." className={inputClass} />
         ) : (
          profileData.google ? (
            <a href={profileData.google} target="_blank" rel="noopener noreferrer" className="text-cyan-500 dark:text-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-300 text-sm underline">{t('profile.google')}</a>
@@ -279,9 +287,9 @@ export default function Profile() {
         )}
        </div>
        <div>
-         <label className="block text-xs text-slate-500 dark:text-white/60 mb-1 flex items-center gap-1"><FiLinkedin size={12} /> LinkedIn</label>
+         <label htmlFor="profile-linkedin" className="block text-xs text-slate-500 dark:text-white/60 mb-1 flex items-center gap-1"><FiLinkedin size={12} /> LinkedIn</label>
         {editing ? (
-         <input value={profileData.linkedin} onChange={e => setProfileData(p => ({ ...p, linkedin: e.target.value }))} placeholder="https://linkedin.com/in/..." className={inputClass} />
+         <input id="profile-linkedin" name="linkedin" type="url" autoComplete="url" value={profileData.linkedin} onChange={e => setProfileData(p => ({ ...p, linkedin: e.target.value }))} placeholder="https://linkedin.com/in/..." className={inputClass} />
         ) : (
          profileData.linkedin ? (
            <a href={profileData.linkedin} target="_blank" rel="noopener noreferrer" className="text-cyan-500 dark:text-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-300 text-sm underline">LinkedIn</a>
@@ -289,9 +297,9 @@ export default function Profile() {
         )}
        </div>
        <div>
-         <label className="block text-xs text-slate-500 dark:text-white/60 mb-1 flex items-center gap-1"><FiPhone size={12} /> {t('profile.whatsapp')}</label>
+         <label htmlFor="profile-whatsapp" className="block text-xs text-slate-500 dark:text-white/60 mb-1 flex items-center gap-1"><FiPhone size={12} /> {t('profile.whatsapp')}</label>
         {editing ? (
-         <input value={profileData.whatsapp} onChange={e => setProfileData(p => ({ ...p, whatsapp: e.target.value }))} placeholder="+970..." className={inputClass} />
+         <input id="profile-whatsapp" name="whatsapp" type="tel" autoComplete="tel" inputMode="numeric" value={profileData.whatsapp} onChange={e => setProfileData(p => ({ ...p, whatsapp: e.target.value }))} placeholder="+970..." className={inputClass} />
         ) : (
          profileData.whatsapp ? (
            <a href={`https://wa.me/${profileData.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-cyan-500 dark:text-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-300 text-sm underline">{profileData.whatsapp}</a>
@@ -305,12 +313,12 @@ export default function Profile() {
     {/* Password Change */}
     <motion.div variants={itemVariants} className="glass rounded-xl p-6">
      <div className="flex items-center justify-between mb-4">
-      <h2 className="text-lg font-bold text-navy-900 dark:text-white flex items-center gap-2">
+      <h2 className="text-lg font-bold text-ink flex items-center gap-2">
        <FiLock size={18} />
        {isArabic ? 'تغيير كلمة المرور' : 'Change Password'}
       </h2>
       {!showPasswordForm && (
-       <button onClick={() => setShowPasswordForm(true)} className="flex items-center gap-2 px-4 py-2 btn-spatial text-white rounded-xl text-sm font-medium">
+       <button onClick={() => setShowPasswordForm(true)} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial text-white rounded-xl text-sm font-medium">
         <FiLock size={14} /> {isArabic ? 'تغيير' : 'Change'}
        </button>
       )}
@@ -318,28 +326,28 @@ export default function Profile() {
      {showPasswordForm ? (
       <div className="space-y-4">
        <div>
-        <label className="block text-xs text-slate-500 dark:text-white/60 mb-1">{isArabic ? 'كلمة المرور الحالية' : 'Current Password'}</label>
-        <input type="password" value={pwForm.current} onChange={e => setPwForm(p => ({ ...p, current: e.target.value }))} className={inputClass} />
+        <label htmlFor="profile-current-password" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{isArabic ? 'كلمة المرور الحالية' : 'Current Password'}</label>
+        <input id="profile-current-password" name="currentPassword" type="password" autoComplete="current-password" value={pwForm.current} onChange={e => setPwForm(p => ({ ...p, current: e.target.value }))} className={inputClass} />
        </div>
        <div>
-        <label className="block text-xs text-slate-500 dark:text-white/60 mb-1">{isArabic ? 'كلمة المرور الجديدة' : 'New Password'}</label>
-        <input type="password" value={pwForm.newPw} onChange={e => setPwForm(p => ({ ...p, newPw: e.target.value }))} className={inputClass} />
-        {pwForm.newPw && pwForm.newPw.length < 6 && (
-         <p className="text-xs text-amber-500 mt-1">{isArabic ? '6 أحرف على الأقل' : 'At least 6 characters'}</p>
+        <label htmlFor="profile-new-password" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{isArabic ? 'كلمة المرور الجديدة' : 'New Password'}</label>
+        <input id="profile-new-password" name="newPassword" type="password" autoComplete="new-password" value={pwForm.newPw} onChange={e => setPwForm(p => ({ ...p, newPw: e.target.value }))} className={inputClass} />
+        {pwForm.newPw && pwForm.newPw.length < 8 && (
+         <p className="text-xs text-amber-500 mt-1">{isArabic ? '8 أحرف على الأقل' : 'At least 8 characters'}</p>
         )}
        </div>
        <div>
-        <label className="block text-xs text-slate-500 dark:text-white/60 mb-1">{isArabic ? 'تأكيد كلمة المرور' : 'Confirm Password'}</label>
-        <input type="password" value={pwForm.confirm} onChange={e => setPwForm(p => ({ ...p, confirm: e.target.value }))} className={inputClass} />
+        <label htmlFor="profile-confirm-password" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{isArabic ? 'تأكيد كلمة المرور' : 'Confirm Password'}</label>
+        <input id="profile-confirm-password" name="confirmPassword" type="password" autoComplete="new-password" value={pwForm.confirm} onChange={e => setPwForm(p => ({ ...p, confirm: e.target.value }))} className={inputClass} />
         {pwForm.confirm && pwForm.newPw !== pwForm.confirm && (
          <p className="text-xs text-red-500 mt-1">{isArabic ? 'غير متطابقة' : 'Passwords do not match'}</p>
         )}
        </div>
        <div className="flex gap-2">
-        <button onClick={handleChangePassword} disabled={pwSaving} className="flex items-center gap-2 px-4 py-2 btn-spatial text-white rounded-xl text-sm font-medium disabled:opacity-50">
+        <button onClick={handleChangePassword} disabled={pwSaving} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial text-white rounded-xl text-sm font-medium disabled:opacity-50">
          <FiSave size={14} /> {pwSaving ? (isArabic ? 'جاري الحفظ...' : 'Saving...') : (isArabic ? 'حفظ' : 'Save')}
         </button>
-        <button onClick={() => { setShowPasswordForm(false); setPwForm({ current: '', newPw: '', confirm: '' }) }} className="flex items-center gap-2 px-4 py-2 glass text-slate-600 dark:text-white/60 rounded-xl text-sm font-medium">
+        <button onClick={() => { setShowPasswordForm(false); setPwForm({ current: '', newPw: '', confirm: '' }) }} className="flex items-center gap-2 px-4 py-2 min-h-[44px] glass text-slate-600 dark:text-white/60 rounded-xl text-sm font-medium">
          <FiX size={14} /> {t('profile.cancel')}
         </button>
        </div>
@@ -351,7 +359,7 @@ export default function Profile() {
 
     {/* Back button */}
     <motion.div variants={itemVariants} className="text-center">
-      <button onClick={() => navigate('/home')} className="inline-flex items-center gap-2 text-royal-500 dark:text-cyan-400 hover:text-royal-600 dark:hover:text-cyan-300 font-medium text-sm transition-colors">
+      <button onClick={() => navigate('/home')} className="inline-flex items-center gap-2 min-h-[44px] px-3 py-2 text-accent hover:text-royal-600 dark:hover:text-cyan-300 font-medium text-sm transition-colors">
       <FiArrowLeft size={16} className={isArabic ? 'rotate-180' : ''} />
       {t('profile.backToHome')}
      </button>

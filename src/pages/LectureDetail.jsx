@@ -1,53 +1,18 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+﻿import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { getLectures, getSources, getFavorites, getRatings, getViewed, toggleFavorite, setRating, markViewed, addStudentLog } from '../services'
 import { pageContainer, pageItem, revealItem } from '../utils/motionTokens'
-import { lectureVideoId, lectureThumb } from '../utils/helpers'
+import { lectureVideoId, lectureThumb, downloadFile, getSourceFiles } from '../utils/helpers'
 import VideoPlayer from '../components/shared/VideoPlayer'
-import { FiPlay, FiHeart, FiStar, FiCheck, FiExternalLink, FiBookOpen, FiFileText, FiClock, FiUser, FiArrowRight, FiArrowLeft, FiLink, FiShare2, FiCopy, FiCheckCircle, FiDownload, FiFile } from 'react-icons/fi'
+import StarRating from '../components/shared/StarRating'
+import { FiPlay, FiHeart, FiCheck, FiExternalLink, FiBookOpen, FiFileText, FiClock, FiUser, FiArrowRight, FiArrowLeft, FiLink, FiCopy, FiCheckCircle, FiDownload, FiFile } from 'react-icons/fi'
 import { FaWhatsapp, FaTelegramPlane } from 'react-icons/fa'
 import ErrorState from '../components/feedback/ErrorState'
 import { toast } from 'react-hot-toast'
-
-async function downloadFile(url, name) {
- const fallback = () => {
-  const a = document.createElement('a')
-  a.href = url
-  a.download = name || 'file'
-  a.target = '_blank'
-  a.rel = 'noopener noreferrer'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
- }
- try {
-  const res = await fetch(url, { mode: 'cors' })
-  if (!res.ok) return fallback()
-  const blob = await res.blob()
-  if (!blob || blob.size === 0) return fallback()
-  const blobUrl = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = blobUrl
-  a.download = name || 'file'
-  a.rel = 'noopener'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  setTimeout(() => URL.revokeObjectURL(blobUrl), 4000)
- } catch (e) {
-  fallback()
- }
-}
-
-function sourceFiles(src) {
- const files = []
- if (Array.isArray(src.files) && src.files.length > 0) files.push(...src.files.filter(f => f?.url))
- if (src.fileData && !files.some(f => f.url === src.fileData)) files.unshift({ url: src.fileData, name: src.fileName || 'file' })
- return files
-}
+import Skeleton from '../components/shared/Skeleton'
 
 export default function LectureDetail() {
  const { id } = useParams()
@@ -55,7 +20,6 @@ export default function LectureDetail() {
  const { user } = useAuth()
  const isArabic = lang === 'ar'
  const prefersReduced = useReducedMotion()
- const navigate = useNavigate()
 
  const [lectures, setLectures] = useState([])
  const [sources, setSources] = useState([])
@@ -83,12 +47,26 @@ export default function LectureDetail() {
  const saveNote = useCallback(() => {
   if (!lecture) return
   try {
-   localStorage.setItem(`lecture_note_${lecture.id}`, note.trim())
+   const trimmed = note.trim()
+   localStorage.setItem(`lecture_note_${lecture.id}`, trimmed)
    setNoteSaved(true)
-   toast.success(isArabic ? 'تم حفظ ملاحظتك' : 'Note saved')
-   setTimeout(() => setNoteSaved(false), 2000)
+   const t = setTimeout(() => setNoteSaved(false), 2500)
+   return () => clearTimeout(t)
   } catch (e) { /* silent */ }
- }, [lecture, note, isArabic])
+ }, [lecture, note])
+
+ // Auto-save with debounce
+ useEffect(() => {
+  if (!lecture || !note) return
+  const timer = setTimeout(() => {
+   try {
+    localStorage.setItem(`lecture_note_${lecture.id}`, note.trim())
+    setNoteSaved(true)
+    setTimeout(() => setNoteSaved(false), 2500)
+   } catch (e) { /* silent */ }
+  }, 2000)
+  return () => clearTimeout(timer)
+ }, [lecture, note])
 
  const shareLink = useCallback((channel) => {
   if (!lecture) return
@@ -107,10 +85,7 @@ export default function LectureDetail() {
   }
  }, [lecture, isArabic])
 
- useEffect(() => {
-  document.title = isArabic ? 'تفاصيل المحاضرة - AL-Azher IT Hub' : 'Lecture - AL-Azher IT Hub'
- }, [isArabic])
-
+ 
  useEffect(() => {
   let mounted = true
   async function load() {
@@ -188,9 +163,9 @@ export default function LectureDetail() {
    const newFavs = await toggleFavorite(user.studentId, id)
    setLocalFavorites(newFavs)
    addStudentLog({
-    studentId: user.studentId, name: user.name, type: 'ADD_FAVORITE',
-    detail: `${newFavs.includes(id) ? 'إضافة' : 'إزالة'} مفضلة: ${lecture.titleAr || lecture.titleEn || id}`,
-    ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    type: 'ADD_FAVORITE',
+    detail: lecture.titleAr || lecture.titleEn || id,
+    device: typeof navigator !== 'undefined' ? navigator.userAgent : '',
    }).catch(() => {})
   } catch (e) { /* silent */ }
  }, [user, lecture, id])
@@ -202,7 +177,7 @@ export default function LectureDetail() {
    setLocalRatings(newRatings)
    addStudentLog({
     studentId: user.studentId, name: user.name, type: 'RATE_LECTURE',
-    detail: `تقييم ${rating} نجوم: ${lecture.titleAr || lecture.titleEn || id}`,
+    detail: `${rating}/5 · ${lecture.titleAr || lecture.titleEn || id}`,
     ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '',
    }).catch(() => {})
   } catch (e) { /* silent */ }
@@ -215,7 +190,7 @@ export default function LectureDetail() {
    markViewed(user.studentId, id)
    addStudentLog({
     studentId: user.studentId, name: user.name, type: 'VIEW_LECTURE',
-    detail: `مشاهدة: ${lecture.titleAr || lecture.titleEn || id}`,
+    detail: lecture.titleAr || lecture.titleEn || id,
     ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '',
    }).catch(() => {})
   }
@@ -225,10 +200,10 @@ export default function LectureDetail() {
   return (
    <div className="min-h-screen pt-24 pb-16 bg-spatial-page">
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-     <div className="skeleton h-6 w-64 rounded-lg mb-6" />
+     <Skeleton className="h-6 w-64 rounded-lg mb-6" />
      <div className="grid lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 skeleton h-96 rounded-2xl" />
-      <div className="skeleton h-96 rounded-2xl" />
+      <Skeleton className="h-96 rounded-2xl" />
      </div>
     </div>
    </div>
@@ -239,12 +214,12 @@ export default function LectureDetail() {
 
  if (!lecture) {
   return (
-   <div className="min-h-screen pt-24 pb-16 bg-spatial-page grain flex items-center justify-center">
+   <div className="min-h-screen pt-24 pb-16 bg-spatial-page  flex items-center justify-center">
     <div className="glass rounded-2xl p-10 text-center max-w-md mx-4">
      <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-5">
       <FiFileText className="text-rose-400" size={28} />
      </div>
-     <h1 className="text-xl font-bold text-navy-900 dark:text-white mb-2">{isArabic ? 'المحاضرة غير موجودة' : 'Lecture not found'}</h1>
+     <h1 className="text-xl font-bold text-ink mb-2">{isArabic ? 'المحاضرة غير موجودة' : 'Lecture not found'}</h1>
      <p className="text-sm text-slate-500 dark:text-white/50 mb-6">{isArabic ? 'ربما تم حذف هذه المحاضرة' : 'This lecture may have been removed'}</p>
      <Link to="/lectures" className="inline-flex items-center gap-2 px-6 py-3 btn-primary rounded-xl font-semibold text-sm">
       <FiArrowRight className={isArabic ? 'rotate-180' : ''} /> {isArabic ? 'العودة للمحاضرات' : 'Back to lectures'}
@@ -255,7 +230,7 @@ export default function LectureDetail() {
  }
 
  return (
-  <motion.div variants={prefersReduced ? { hidden: {}, visible: {} } : pageContainer} initial="hidden" animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page grain">
+  <motion.div variants={prefersReduced ? { hidden: {}, visible: {} } : pageContainer} initial="hidden" animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page ">
    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
     {/* Breadcrumb */}
@@ -283,19 +258,19 @@ export default function LectureDetail() {
        <motion.div variants={revealItem} className="glass rounded-2xl p-5 border border-white/10 mt-6">
         <div className="flex items-center gap-2 mb-4">
          <FiBookOpen size={18} className="text-amber-500" />
-         <h2 className="font-bold text-navy-900 dark:text-white">{isArabic ? 'مصادر المادة' : 'Subject sources'}</h2>
+         <h2 className="font-bold text-ink">{isArabic ? 'مصادر المادة' : 'Subject sources'}</h2>
          <span className="text-xs text-slate-500 dark:text-white/50 ms-auto">{relatedSources.length}</span>
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
          {relatedSources.slice(0, 6).map(src => {
-          const files = sourceFiles(src)
+          const files = getSourceFiles(src)
           return (
            <div key={src.id} className="flex items-start gap-3 p-3 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/10 dark:hover:bg-royal-500/10 border border-transparent hover:border-royal-500/30 transition group">
             <div className={`p-2 rounded-lg flex-shrink-0 ${src.fileData ? 'bg-emerald-500/10 text-emerald-500' : 'bg-cyan-500/10 text-cyan-500'}`}>
              {src.fileData ? <FiFileText size={16} /> : <FiLink size={16} />}
             </div>
             <div className="min-w-0 flex-1">
-             <p className="text-sm font-medium text-navy-900 dark:text-white truncate group-hover:text-royal-500 dark:group-hover:text-cyan-400 transition-colors">{isArabic ? src.titleAr : src.titleEn}</p>
+             <p className="text-sm font-medium text-ink truncate group-hover:text-royal-500 dark:group-hover:text-cyan-400 transition-colors">{isArabic ? src.titleAr : src.titleEn}</p>
              {files.length > 0 ? (
               <div className="mt-1.5 space-y-1">
                {files.slice(0, 3).map((f, i) => (
@@ -309,7 +284,7 @@ export default function LectureDetail() {
                {files.length > 3 && <p className="text-[10px] text-slate-500 dark:text-white/40">+{files.length - 3} {isArabic ? 'ملفات' : 'files'}</p>}
               </div>
              ) : src.url ? (
-              <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-xs text-royal-500 dark:text-cyan-400 hover:underline inline-flex items-center gap-1">{isArabic ? 'فتح الرابط' : 'Open link'} <FiExternalLink size={10} /></a>
+              <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline inline-flex items-center gap-1">{isArabic ? 'فتح الرابط' : 'Open link'} <FiExternalLink size={10} /></a>
              ) : null}
             </div>
            </div>
@@ -317,7 +292,7 @@ export default function LectureDetail() {
          })}
         </div>
         {relatedSources.length > 6 && (
-         <Link to="/sources" className="inline-flex items-center gap-1 text-xs text-royal-500 dark:text-cyan-400 hover:underline mt-3">
+         <Link to="/sources" className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-3">
           {isArabic ? `عرض كل ${relatedSources.length} مصادر` : `View all ${relatedSources.length} sources`} <FiArrowRight className={isArabic ? 'rotate-180' : ''} size={12} />
          </Link>
         )}
@@ -329,7 +304,7 @@ export default function LectureDetail() {
      <motion.div variants={revealItem} className="space-y-4">
       <div className="glass rounded-2xl p-6 border border-white/10">
        <div className="flex items-start justify-between gap-3 mb-3">
-        <span className="inline-block text-xs bg-royal-500/10 dark:bg-cyan-500/10 border border-royal-500/20 dark:border-cyan-500/20 text-royal-500 dark:text-cyan-400 px-2.5 py-1 rounded-full">
+        <span className="inline-block text-xs bg-royal-500/10 dark:bg-cyan-500/10 border border-royal-500/20 dark:border-cyan-500/20 text-accent px-2.5 py-1 rounded-full">
          {isArabic ? lecture.subjectAr : lecture.subjectEn}
         </span>
         <div className="flex items-center gap-1">
@@ -341,21 +316,21 @@ export default function LectureDetail() {
         </div>
        </div>
 
-       <h1 className="text-xl md:text-2xl font-bold text-navy-900 dark:text-white mb-4">{isArabic ? lecture.titleAr : lecture.titleEn}</h1>
+       <h1 className="text-xl md:text-2xl font-bold text-ink mb-4">{isArabic ? lecture.titleAr : lecture.titleEn}</h1>
 
        <div className="space-y-3 text-sm">
         <div className="flex items-center gap-3">
          <span className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-500 flex-shrink-0"><FiUser size={14} /></span>
          <div>
           <p className="text-xs text-slate-500 dark:text-white/50">{isArabic ? 'المادة' : 'Subject'}</p>
-          <p className="text-navy-900 dark:text-white font-medium">{isArabic ? lecture.subjectAr : lecture.subjectEn}</p>
+          <p className="text-ink font-medium">{isArabic ? lecture.subjectAr : lecture.subjectEn}</p>
          </div>
         </div>
         <div className="flex items-center gap-3">
          <span className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-500 flex-shrink-0"><FiClock size={14} /></span>
          <div>
           <p className="text-xs text-slate-500 dark:text-white/50">{isArabic ? 'التاريخ' : 'Date'}</p>
-          <p className="text-navy-900 dark:text-white font-medium">{lecture.date || '—'}</p>
+          <p className="text-ink font-medium">{lecture.date || '—'}</p>
          </div>
         </div>
         {lecture.doctorAr || lecture.doctorEn ? (
@@ -363,7 +338,7 @@ export default function LectureDetail() {
           <span className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0"><FiUser size={14} /></span>
           <div>
            <p className="text-xs text-slate-500 dark:text-white/50">{isArabic ? 'الدكتور' : 'Doctor'}</p>
-           <p className="text-navy-900 dark:text-white font-medium">{isArabic ? lecture.doctorAr : lecture.doctorEn}</p>
+           <p className="text-ink font-medium">{isArabic ? lecture.doctorAr : lecture.doctorEn}</p>
           </div>
          </div>
         ) : null}
@@ -377,7 +352,7 @@ export default function LectureDetail() {
 
         <div className="mt-5 space-y-3">
          {lecture.url && (
-          <a href={lecture.url} target="_blank" rel="noopener noreferrer" onClick={handleWatch} className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 btn-primary rounded-xl font-semibold text-sm">
+          <a href={lecture.url} target="_blank" rel="noopener noreferrer" onClick={handleWatch} className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 btn-secondary rounded-xl font-semibold text-sm">
            <FiExternalLink size={16} /> {isArabic ? 'فتح على YouTube' : 'Open on YouTube'}
           </a>
          )}
@@ -396,7 +371,7 @@ export default function LectureDetail() {
           <button onClick={() => shareLink('telegram')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/25 transition" aria-label={isArabic ? 'مشاركة عبر تيليجرام' : 'Share on Telegram'}>
            <FaTelegramPlane size={16} />
           </button>
-          <button onClick={() => shareLink('copy')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-royal-500/10 hover:bg-royal-500/20 text-royal-500 dark:text-cyan-400 border border-royal-500/25 dark:border-cyan-500/25 transition" aria-label={isArabic ? 'نسخ الرابط' : 'Copy link'}>
+          <button onClick={() => shareLink('copy')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-royal-500/10 hover:bg-royal-500/20 text-accent border border-royal-500/25 dark:border-cyan-500/25 transition" aria-label={isArabic ? 'نسخ الرابط' : 'Copy link'}>
            <FiCopy size={16} />
           </button>
          </div>
@@ -408,18 +383,32 @@ export default function LectureDetail() {
         <div className="glass rounded-2xl p-5 border border-white/10">
          <div className="flex items-center gap-2 mb-3">
           <FiFileText size={16} className="text-amber-500" />
-          <h2 className="text-sm font-bold text-navy-900 dark:text-white">{isArabic ? 'ملاحظاتي' : 'My notes'}</h2>
-          {noteSaved && <FiCheckCircle size={14} className="text-emerald-500 ms-auto" />}
+          <h2 className="text-sm font-bold text-ink">{isArabic ? 'ملاحظاتي' : 'My notes'}</h2>
+          <span className="ms-auto flex items-center gap-1.5">
+           {noteSaved && <FiCheckCircle size={14} className="text-emerald-500" />}
+           <span className={`text-[10px] font-medium ${noteSaved ? 'text-emerald-500' : 'text-slate-400 dark:text-white/40'}`}>
+            {noteSaved ? (isArabic ? 'تم الحفظ تلقائياً' : 'Auto-saved') : (isArabic ? 'يُحفظ تلقائياً' : 'Auto-saves')}
+           </span>
+          </span>
          </div>
          <textarea
           value={note}
           onChange={e => setNote(e.target.value)}
           rows="4"
           placeholder={isArabic ? 'اكتب ملاحظاتك عن هذه المحاضرة...' : 'Write your notes about this lecture...'}
-          className="input-spatial w-full rounded-xl px-3 py-2.5 text-sm text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none resize-none"
+          className="input-spatial w-full rounded-xl px-3 py-2.5 text-sm text-ink placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none resize-none"
           dir={isArabic ? 'rtl' : 'ltr'}
+          onKeyDown={(e) => {
+           if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault()
+            saveNote()
+           }
+          }}
          />
-         <button onClick={saveNote} className="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition">
+         <p className="mt-1 text-[10px] text-slate-400 dark:text-white/40 text-end">
+          {note.length} {isArabic ? 'حرف' : 'chars'}
+         </p>
+         <button onClick={saveNote} className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition">
           <FiCheck size={14} /> {isArabic ? 'حفظ الملاحظة' : 'Save note'}
          </button>
         </div>
@@ -428,14 +417,8 @@ export default function LectureDetail() {
       {/* Rating */}
       {user && (
        <div className="glass rounded-2xl p-6 border border-white/10">
-        <h2 className="text-sm font-bold text-navy-900 dark:text-white mb-3">{isArabic ? 'قيّم هذه المحاضرة' : 'Rate this lecture'}</h2>
-        <div className="flex items-center gap-1">
-         {[1, 2, 3, 4, 5].map(star => (
-          <button key={star} onClick={() => handleRate(star)} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center transition-transform hover:scale-125" aria-label={`${t('lectures.rate')} ${star}`}>
-           <FiStar size={22} className={(localRatings[id] || 0) >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-400 dark:text-white/50'} />
-          </button>
-         ))}
-        </div>
+        <h2 className="text-sm font-bold text-ink mb-3">{isArabic ? 'قيّم هذه المحاضرة' : 'Rate this lecture'}</h2>
+        <StarRating value={localRatings[id] || 0} onRate={handleRate} size={22} />
         <p className="text-xs text-slate-500 dark:text-white/50 mt-2">{isArabic ? 'اضغط على النجوم للتقييم' : 'Tap the stars to rate'}</p>
        </div>
       )}
@@ -446,7 +429,7 @@ export default function LectureDetail() {
     {subjectLectures.length > 1 && (
      <motion.div variants={revealItem} className="mt-8">
       <div className="flex items-center justify-between mb-4">
-       <h2 className="text-lg md:text-xl font-bold text-navy-900 dark:text-white">{isArabic ? `محاضرات المادة (${subjectLectures.length})` : `Subject lectures (${subjectLectures.length})`}</h2>
+       <h2 className="text-lg md:text-xl font-bold text-ink">{isArabic ? `محاضرات المادة (${subjectLectures.length})` : `Subject lectures (${subjectLectures.length})`}</h2>
        {subjectLectures.length > 1 && (
         <div className="flex items-center gap-1.5">
          {prevNext.prev && (
@@ -489,7 +472,7 @@ export default function LectureDetail() {
            </div>
           </div>
           <div className="flex-1 min-w-0">
-           <p className={`text-sm font-medium truncate ${isCurrent ? 'text-royal-600 dark:text-cyan-400' : 'text-navy-900 dark:text-white group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors'}`}>
+           <p className={`text-sm font-medium truncate ${isCurrent ? 'text-royal-600 dark:text-cyan-400' : 'text-ink group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors'}`}>
             {isArabic ? sl.titleAr : sl.titleEn}
            </p>
            <p className="text-xs text-slate-500 dark:text-white/50">{sl.date || ''}</p>

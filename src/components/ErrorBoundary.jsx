@@ -2,14 +2,7 @@
 import { motion } from 'framer-motion'
 import { FiAlertTriangle, FiRefreshCw } from 'react-icons/fi'
 import ar from '../i18n/ar.json'
-
-const enFallback = {
- errorBoundary: {
-  title: 'Something went wrong',
-  message: 'An unexpected error occurred. Please reload the page.',
-  retry: 'Reload',
- },
-}
+import en from '../i18n/en.json'
 
 export default class ErrorBoundary extends Component {
  constructor(props) {
@@ -46,7 +39,7 @@ export default class ErrorBoundary extends Component {
  render() {
   const { lang = 'ar' } = this.props
   const isArabic = lang === 'ar'
-  const t = isArabic ? ar : enFallback
+  const t = isArabic ? ar : en
 
   if (this.state.hasError) {
    return (
@@ -60,7 +53,7 @@ export default class ErrorBoundary extends Component {
       <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
        <FiAlertTriangle className="text-red-500" size={32} />
       </div>
-      <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
+      <h1 className="text-2xl font-bold text-ink mb-2">
        {t.errorBoundary.title}
       </h1>
       <p className="text-slate-500 dark:text-white/50 mb-6">

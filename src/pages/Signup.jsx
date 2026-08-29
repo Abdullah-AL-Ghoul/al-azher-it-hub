@@ -83,10 +83,7 @@ export default function Signup() {
  const [needsConfirmation, setNeedsConfirmation] = useState(false)
  const navigateTimer = useRef(null)
 
- useEffect(() => {
-  document.title = isArabic ? 'إنشاء حساب - AL-Azher IT Hub' : 'Sign Up - AL-Azher IT Hub'
- }, [isArabic])
-
+ 
  useEffect(() => {
   return () => { if (navigateTimer.current) clearTimeout(navigateTimer.current) }
  }, [])
@@ -104,6 +101,11 @@ export default function Signup() {
   setError('')
   if (!form.name.trim() || !form.studentId.trim()) {
    setError(isArabic ? 'أدخل الاسم الكامل والرقم الجامعي' : 'Enter your full name and university ID')
+   return
+  }
+  const normalizedId = form.studentId.trim()
+  if (normalizedId.length < 3) {
+   setError(isArabic ? 'الرقم الجامعي قصير جداً (3 أحرف على الأقل)' : 'University ID is too short (min 3 characters)')
    return
   }
   if (form.password !== form.confirmPassword) {
@@ -138,6 +140,14 @@ export default function Signup() {
    setError(t('signup.error.exists'))
   } else if (result.error === 'EMAIL_RATE_LIMIT') {
    setError(t('signup.error.rateLimit'))
+  } else if (result.error === 'EMAIL_EXISTS') {
+   setError(isArabic
+    ? 'هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول أو استخدم بريداً آخر.'
+    : 'This email is already registered. Try signing in or use a different email.')
+  } else if (result.error === 'PASSWORD_TOO_SHORT') {
+   setError(t('forgotPassword.passwordMin8'))
+  } else if (result.error === 'REGISTER_FAILED') {
+   setError(isArabic ? 'حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.' : 'An error occurred while creating the account. Try again.')
   } else {
    setError(t('signup.error.generic'))
   }
@@ -277,7 +287,7 @@ export default function Signup() {
       <p className="text-slate-500 dark:text-white/50 text-sm">
        {t('signup.hasAccount')}
        {' '}
-       <Link to="/login" className="text-royal-500 dark:text-cyan-400 hover:text-royal-600 dark:hover:text-cyan-300 font-medium transition-colors relative group">
+       <Link to="/login" className="text-accent hover:text-royal-600 dark:hover:text-cyan-300 font-medium transition-colors relative group">
         {t('signup.login')}
          <span className="absolute -bottom-0.5 start-0 w-0 h-0.5 bg-royal-400 group-hover:w-full transition duration-300" />
        </Link>

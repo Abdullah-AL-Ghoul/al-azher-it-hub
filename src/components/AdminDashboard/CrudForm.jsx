@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { FiX } from 'react-icons/fi'
 import { formSlideVariant, modalContent } from '../../utils/motionTokens'
 
-export default function CrudForm({ show, formRef, title, onClose, children, isArabic }) {
+export default function CrudForm({ show, formRef, title, onClose, children }) {
  const prefersReduced = useReducedMotion()
  const slideTransition = prefersReduced ? { duration: 0 } : formSlideVariant.transition
  const exitVariant = prefersReduced ? { opacity: 0 } : modalContent.exit
@@ -27,7 +27,7 @@ export default function CrudForm({ show, formRef, title, onClose, children, isAr
     >
      <div className="glass rounded-xl p-6 border border-white/10">
       <div className="flex items-center justify-between mb-4">
-       <h3 className="font-bold text-navy-900 dark:text-white">
+       <h3 className="font-bold text-ink">
         {title}
        </h3>
        <button onClick={onClose} className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg">

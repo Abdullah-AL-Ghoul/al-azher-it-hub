@@ -1,10 +1,15 @@
 import { getSupabase } from './supabase'
-import { nowISO } from '../utils/helpers'
 
 export async function addStudentLog(log) {
-  const { error } = await getSupabase()
-    .from('student_logs')
-    .insert({ ...log, timestamp: nowISO() })
+  // SECURITY DEFINER RPC: studentId/name are derived from the session
+  // server-side, so a client can never forge log rows attributed to another
+  // user. Client-supplied studentId/name/ip fields are ignored.
+  const { error } = await getSupabase().rpc('add_student_log', {
+    p_type: log?.type || 'EVENT',
+    p_detail: log?.detail || '',
+    p_device: log?.device || '',
+    p_ip: log?.ip || null,
+  })
   if (error) throw error
 }
 

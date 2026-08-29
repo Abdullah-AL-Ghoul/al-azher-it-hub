@@ -1,12 +1,13 @@
 ﻿import { useState, useEffect, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'react-hot-toast'
-import { FiPlus, FiTrash2, FiSave, FiLink, FiBook, FiGrid } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiSave, FiLink, FiGrid, FiEdit2 } from 'react-icons/fi'
 import { saveAdditions, saveStudyPlan, saveRoadmap, deleteAddition } from '../../services'
 import ConfirmDialog from '../shared/ConfirmDialog'
 import { INPUT_CLASS } from '../../utils/adminShared'
+import { uid } from '../../utils/helpers'
 
-function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, isArabic, onRefresh }) {
+function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], isArabic, onRefresh }) {
  const [showAdditionForm, setShowAdditionForm] = useState(false)
  const [additionEdit, setAdditionEdit] = useState([])
 
@@ -38,7 +39,7 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, 
 
  const addNewAddition = () => {
   const item = {
-   id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+   id: uid(),
    type: 'post',
    subjectAr: '',
    subjectEn: '',
@@ -75,9 +76,37 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, 
   }
  }
 
- const handleDeleteAddition = async (id) => {
-  setConfirmDeleteId(id)
- }
+const handleDeleteAddition = async (id) => {
+   setConfirmDeleteId(id)
+  }
+
+  const handleEditAddition = (item) => {
+   setAdditionEdit([{ ...item }])
+   setShowAdditionForm(true)
+   window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleDeletePlanLink = (index) => {
+   const next = [...planEdit]
+   next.splice(index, 1)
+   setPlanEdit(next)
+  }
+
+  const handleDeletePlanLinkFromList = async (index) => {
+   const remaining = (studyPlan?.links || []).filter((_, i) => i !== index)
+   try {
+    await saveStudyPlan({ links: remaining })
+    toast.success(isArabic ? 'تم حذف الرابط' : 'Link deleted')
+    if (onRefresh) onRefresh()
+   } catch (error) {
+    toast.error(isArabic ? 'فشل الحذف' : 'Failed to delete')
+   }
+  }
+
+  const handleEditPlanLinks = () => {
+   setPlanEdit([...(studyPlan?.links || [])])
+   setShowPlanForm(true)
+  }
 
  const confirmDeleteAddition = async () => {
   if (!confirmDeleteId) return
@@ -93,7 +122,7 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, 
 
  const addStudyPlanLink = () => {
   const existing = (studyPlan?.links || []).filter(x => (x.titleAr || '').trim() || (x.titleEn || '').trim())
-  setPlanEdit([...existing, { id: Date.now().toString() + Math.random().toString(36).slice(2, 6), titleAr: '', titleEn: '', url: '' }])
+  setPlanEdit([...existing, { id: uid(), titleAr: '', titleEn: '', url: '' }])
   setShowPlanForm(true)
  }
 
@@ -154,7 +183,7 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, 
    {/* ========== ADDITIONS ========== */}
    <div className="glass rounded-xl p-5 border border-white/10">
     <div className="flex justify-between items-center mb-4">
-     <h3 className="font-bold text-sm text-navy-900 dark:text-white uppercase tracking-wider">{isArabic ? 'الإضافات' : 'Additions'}</h3>
+     <h3 className="font-bold text-sm text-ink uppercase tracking-wider">{isArabic ? 'الإضافات' : 'Additions'}</h3>
      <button onClick={addNewAddition} className="flex items-center gap-2 px-3 py-1.5 bg-royal-500 hover:bg-royal-600 text-white rounded-lg text-sm font-medium transition">
       <FiPlus size={14} /> {isArabic ? 'إضافة جديدة' : 'Add New'}
      </button>
@@ -230,12 +259,17 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, 
       {additions.map(a => (
        <div key={a.id} className="flex items-center justify-between p-3 bg-black/5 dark:bg-white/5 rounded-lg">
         <div className="min-w-0 flex-1">
-         <p className="text-sm font-medium text-navy-900 dark:text-white truncate">{isArabic ? a.titleAr : a.titleEn}</p>
+         <p className="text-sm font-medium text-ink truncate">{isArabic ? a.titleAr : a.titleEn}</p>
          <p className="text-xs text-slate-500 dark:text-slate-400 ">{isArabic ? a.subjectAr : a.subjectEn}</p>
         </div>
-        <button onClick={() => handleDeleteAddition(a.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={isArabic ? 'حذف الإضافة' : 'Delete addition'}>
-         <FiTrash2 size={14} />
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+         <button onClick={() => handleEditAddition(a)} className="p-2 text-royal-500 hover:bg-royal-500/10 rounded-lg transition-colors" aria-label={isArabic ? 'تعديل الإضافة' : 'Edit addition'}>
+          <FiEdit2 size={14} />
+         </button>
+         <button onClick={() => handleDeleteAddition(a.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={isArabic ? 'حذف الإضافة' : 'Delete addition'}>
+          <FiTrash2 size={14} />
+         </button>
+        </div>
        </div>
       ))}
      </div>
@@ -247,7 +281,7 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, 
    {/* ========== STUDY PLAN ========== */}
    <div className="glass rounded-xl p-5 border border-white/10">
     <div className="flex justify-between items-center mb-4">
-     <h3 className="font-bold text-sm text-navy-900 dark:text-white uppercase tracking-wider">{isArabic ? 'الخطة الدراسية' : 'Study Plan'}</h3>
+     <h3 className="font-bold text-sm text-ink uppercase tracking-wider">{isArabic ? 'الخطة الدراسية' : 'Study Plan'}</h3>
      <button onClick={addStudyPlanLink} className="flex items-center gap-2 px-3 py-1.5 bg-royal-500 hover:bg-royal-600 text-white rounded-lg text-sm font-medium transition">
       <FiPlus size={14} /> {isArabic ? 'إضافة رابط' : 'Add Link'}
      </button>
@@ -264,10 +298,13 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, 
       >
        <div className="space-y-3 p-4 bg-black/5 dark:bg-white/5 rounded-lg">
         {planEdit.map((item, idx) => (
-         <div key={item.id} className="grid grid-cols-1 md:grid-cols-3 gap-3">
+         <div key={item.id || idx} className="flex items-center gap-2">
           <input value={item.titleAr} onChange={e => updatePlanField(idx, 'titleAr', e.target.value)} className={INPUT_CLASS} placeholder={isArabic ? 'العنوان (عربي)' : 'Title (AR)'} />
           <input value={item.titleEn} onChange={e => updatePlanField(idx, 'titleEn', e.target.value)} className={INPUT_CLASS} placeholder={isArabic ? 'العنوان (إنجليزي)' : 'Title (EN)'} />
           <input value={item.url} onChange={e => updatePlanField(idx, 'url', e.target.value)} className={INPUT_CLASS} placeholder="URL" />
+          <button onClick={() => handleDeletePlanLink(idx)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={isArabic ? 'حذف الرابط' : 'Delete link'}>
+           <FiTrash2 size={14} />
+          </button>
          </div>
         ))}
         <div className="flex gap-3">
@@ -289,9 +326,15 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, 
        <div key={link.id || i} className="flex items-center gap-3 p-3 bg-black/5 dark:bg-white/5 rounded-lg">
         <FiLink size={14} className="text-royal-500 flex-shrink-0" />
         <div className="min-w-0 flex-1">
-         <p className="text-sm text-navy-900 dark:text-white truncate">{isArabic ? link.titleAr : link.titleEn}</p>
+         <p className="text-sm text-ink truncate">{isArabic ? link.titleAr : link.titleEn}</p>
          {link.url && <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-xs text-royal-500 hover:underline truncate block">{link.url}</a>}
         </div>
+        <button onClick={handleEditPlanLinks} className="p-2 text-royal-500 hover:bg-royal-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={isArabic ? 'تعديل الروابط' : 'Edit links'}>
+         <FiEdit2 size={14} />
+        </button>
+        <button onClick={() => handleDeletePlanLinkFromList(i)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={isArabic ? 'حذف الرابط' : 'Delete link'}>
+         <FiTrash2 size={14} />
+        </button>
        </div>
       ))}
      </div>
@@ -303,7 +346,7 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, 
    {/* ========== ROADMAP ========== */}
    <div className="glass rounded-xl p-5 border border-white/10">
     <div className="flex justify-between items-center mb-4">
-     <h3 className="font-bold text-sm text-navy-900 dark:text-white uppercase tracking-wider">{isArabic ? 'المسار الدراسي' : 'Course Roadmap'}</h3>
+     <h3 className="font-bold text-sm text-ink uppercase tracking-wider">{isArabic ? 'المسار الدراسي' : 'Course Roadmap'}</h3>
      <button onClick={addRoadmapItem} className="flex items-center gap-2 px-3 py-1.5 bg-royal-500 hover:bg-royal-600 text-white rounded-lg text-sm font-medium transition">
       <FiPlus size={14} /> {isArabic ? 'إضافة مادة' : 'Add Course'}
      </button>
@@ -378,7 +421,7 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], loading, 
        <div key={i} className="flex items-center gap-3 p-3 bg-black/5 dark:bg-white/5 rounded-lg">
         <FiGrid size={14} className="text-cyan-500 flex-shrink-0" />
         <div className="min-w-0 flex-1">
-         <p className="text-sm font-medium text-navy-900 dark:text-white truncate">{isArabic ? item.nameAr : item.nameEn}</p>
+         <p className="text-sm font-medium text-ink truncate">{isArabic ? item.nameAr : item.nameEn}</p>
          <p className="text-xs text-slate-500 dark:text-slate-400 ">
           {isArabic ? `السنة ${item.year} - الفصل ${item.semester}` : `Year ${item.year} - Semester ${item.semester}`}
           {item.prerequisites?.length > 0 && ` • ${isArabic ? 'متطلبات' : 'Prereqs'}: ${item.prerequisites.length}`}

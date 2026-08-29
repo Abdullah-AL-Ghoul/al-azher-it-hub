@@ -1,6 +1,7 @@
-﻿import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
+﻿import { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { authenticateUser, registerUser, addStudentLog, getSessionUser, findOrCreateOAuthUser, signOut as supabaseSignOut } from '../services'
 import { getSupabase } from '../services/supabase'
+import { RateLimitService } from '../services/rateLimitService'
 
 const STORAGE_KEY = 'al_azher_session'
 
@@ -19,8 +20,10 @@ export function AuthProvider({ children }) {
    return s ? JSON.parse(s) : null
   } catch { return null }
  })()
-  const [user, setUser] = useState(stored)
-  const [loading, setLoading] = useState(!stored)
+   const [user, setUser] = useState(null)
+   const [loading, setLoading] = useState(true)
+   const userRef = useRef(null)
+   useEffect(() => { userRef.current = user }, [user])
 
  useEffect(() => {
   let mounted = true
@@ -59,7 +62,6 @@ export function AuthProvider({ children }) {
    } catch (_e) { /* fallback to sessionStorage */ }
 
    if (stored?.studentId) {
-    setLoading(false)
     try {
      const dbUser = await getSessionUser(stored.studentId)
      if (!mounted) return
@@ -75,11 +77,20 @@ export function AuthProvider({ children }) {
        google: dbUser.google || stored.google,
        linkedin: dbUser.linkedin || stored.linkedin,
        whatsapp: dbUser.whatsapp || stored.whatsapp,
+       email: dbUser.email || stored.email || '',
       }
       setUser(corrected)
       saveSession(corrected)
      }
-    } catch (_error) { /* keep cached session */ }
+    } catch (_error) {
+     if (!mounted) return
+     // Network failure: keep the cached identity for offline browsing, but
+     // never restore the admin role from cache — it must be re-verified
+     // online, or a suspended/demoted admin would keep the admin UI.
+     setUser({ ...stored, role: stored.role === 'admin' ? 'student' : stored.role })
+    } finally {
+     if (mounted) setLoading(false)
+    }
     return
    }
    setLoading(false)
@@ -90,66 +101,97 @@ export function AuthProvider({ children }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Keep React state in sync with the real Supabase session. When the token
+  // expires, is revoked, or the user signs out elsewhere, clear the local user
+  // so ProtectedRoute stops trusting a stale/privileged cached session.
+  useEffect(() => {
+   let sub
+   try {
+    const { data: { subscription } } = getSupabase().auth.onAuthStateChange((_event, session) => {
+     if (!session) {
+      setUser(null)
+      setLoading(false)
+      try { sessionStorage.removeItem(STORAGE_KEY) } catch (_e) { /* ignore */ }
+     }
+    })
+    sub = subscription
+   } catch (_e) { /* supabase may not be configured */ }
+   return () => { if (sub) { try { sub.unsubscribe() } catch (_e) { /* ignore */ } } }
+  }, [])
+
  const login = useCallback(async (studentId, password) => {
+  // Client-side soft limiter mirrors the server policy (10 attempts / 15 min
+  // per account) so the UX and the DB agree on the retry window.
   const loginAttempts = JSON.parse(sessionStorage.getItem('login_attempts') || '{}')
   const now = Date.now()
-  const attemptData = loginAttempts[studentId] || { count: 0, resetTime: now + 60000 }
+  const WINDOW_MS = 15 * 60 * 1000
+  const MAX_ATTEMPTS = 10
+  const attemptData = loginAttempts[studentId] || { count: 0, resetTime: now + WINDOW_MS }
 
   if (now > attemptData.resetTime) {
    attemptData.count = 0
-   attemptData.resetTime = now + 60000
+   attemptData.resetTime = now + WINDOW_MS
   }
 
-  if (attemptData.count >= 5) {
+  if (attemptData.count >= MAX_ATTEMPTS) {
    const retryAfter = Math.ceil((attemptData.resetTime - now) / 1000)
    return { ok: false, error: 'TOO_MANY_ATTEMPTS', retryAfter }
   }
 
-  try {
-   const result = await authenticateUser(studentId, password)
+   try {
+    const result = await authenticateUser(studentId, password)
 
-   if (result.ok) {
-    const { role } = result.user
+    if (result.ok) {
+     const { role } = result.user
 
-    if (role === 'admin') {
-     const adminUser = {
-      role: 'admin',
-      name: result.user.name,
-      studentId: result.user.studentId,
+     if (role === 'admin') {
+      const adminUser = {
+       role: 'admin',
+       name: result.user.name,
+       studentId: result.user.studentId,
+      }
+      setUser(adminUser)
+      saveSession(adminUser)
+      delete loginAttempts[studentId]
+      sessionStorage.setItem('login_attempts', JSON.stringify(loginAttempts))
+      return { ok: true, user: adminUser }
+     } else {
+      const studentUser = {
+       role: 'student',
+       name: result.user.name,
+       studentId: result.user.studentId,
+       major: result.user.major || '',
+       google: result.user.google || '',
+       linkedin: result.user.linkedin || '',
+       whatsapp: result.user.whatsapp || '',
+       lastVisit: result.user.lastVisit || null,
+       lastIP: result.user.lastIP || null,
+      }
+      setUser(studentUser)
+      saveSession(studentUser)
+      delete loginAttempts[studentId]
+      sessionStorage.setItem('login_attempts', JSON.stringify(loginAttempts))
+      return { ok: true, user: studentUser }
      }
-     setUser(adminUser)
-     saveSession(adminUser)
-     delete loginAttempts[studentId]
-     sessionStorage.setItem('login_attempts', JSON.stringify(loginAttempts))
-     return { ok: true, user: adminUser }
-    } else {
-     const studentUser = {
-      role: 'student',
-      name: result.user.name,
-      studentId: result.user.studentId,
-      major: result.user.major || '',
-      google: result.user.google || '',
-      linkedin: result.user.linkedin || '',
-      whatsapp: result.user.whatsapp || '',
-      lastVisit: result.user.lastVisit || null,
-      lastIP: result.user.lastIP || null,
-     }
-     setUser(studentUser)
-     saveSession(studentUser)
-     delete loginAttempts[studentId]
-     sessionStorage.setItem('login_attempts', JSON.stringify(loginAttempts))
-     return { ok: true, user: studentUser }
     }
+
+    if (result.error === 'TOO_MANY_ATTEMPTS') {
+     // Server-side throttle enforced; surface without double-counting.
+     // Both client and server use the same 15-minute window.
+     return { ok: false, error: 'TOO_MANY_ATTEMPTS', retryAfter: 900 }
+    }
+
+    attemptData.count += 1
+    loginAttempts[studentId] = attemptData
+    sessionStorage.setItem('login_attempts', JSON.stringify(loginAttempts))
+
+    return result
+   } catch (error) {
+    if (String(error?.message || error?.code || '').includes('TOO_MANY_ATTEMPTS')) {
+     return { ok: false, error: 'TOO_MANY_ATTEMPTS', retryAfter: 900 }
+    }
+    return { ok: false, error: 'LOGIN_ERROR' }
    }
-
-   attemptData.count += 1
-   loginAttempts[studentId] = attemptData
-   sessionStorage.setItem('login_attempts', JSON.stringify(loginAttempts))
-
-   return result
-  } catch (error) {
-   return { ok: false, error: 'LOGIN_ERROR' }
-  }
  }, [])
 
  const signup = useCallback(async (name, studentId, password, major = '', email = '') => {
@@ -168,25 +210,35 @@ export function AuthProvider({ children }) {
     setUser(studentUser)
     saveSession(studentUser)
     addStudentLog({
-     studentId: result.user.studentId,
-     name: result.user.name,
      type: 'REGISTER',
-     detail: 'تسجيل جديد',
-     ip: '',
+     detail: '',
      device: navigator.userAgent,
     }).catch(() => {})
    }
    return result
   } catch (error) {
-   return { ok: false, error: 'SIGNUP_ERROR' }
+   // Signup failures are returned in `result` and surfaced generically by the
+   // page; never log the raw error (may contain server internals).
+   return { ok: false, error: 'SIGNUP_ERROR', detail: error?.message }
   }
  }, [])
 
+ const updateUser = useCallback((fields) => {
+  setUser(prev => {
+   const next = { ...(prev || {}), ...fields }
+   if (next.studentId) saveSession(next)
+   return next
+  })
+ }, [])
+
  const logout = useCallback(async () => {
+  const sid = userRef.current?.studentId
   setUser(null)
   sessionStorage.removeItem(STORAGE_KEY)
   sessionStorage.removeItem('login_attempts')
-  await supabaseSignOut()
+  sessionStorage.removeItem('al_azher_just_auth')
+  if (sid) RateLimitService.cleanup(sid)
+  try { await supabaseSignOut() } catch (_e) { /* session may already be gone */ }
  }, [])
 
 const value = useMemo(() => ({
@@ -195,8 +247,9 @@ const value = useMemo(() => ({
    login,
    signup,
    logout,
+   updateUser,
    isAdmin: user?.role === 'admin'
-  }), [user, loading, login, signup, logout])
+  }), [user, loading, login, signup, logout, updateUser])
 
  return (
   <AuthContext.Provider value={value}>

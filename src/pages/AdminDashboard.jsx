@@ -9,6 +9,7 @@ import SiteLogo from '../components/shared/SiteLogo'
 
 import { getCourses, getLectures, getSources, getUsers, getActivity, getAllStudentLogs, getAdditions, getStudyPlan, getRoadmap } from '../services'
 import AdminDashboardContent from '../components/AdminDashboard/AdminDashboardContent'
+import AdminSearch from '../components/AdminDashboard/AdminSearch'
 
 const TABS = [
  { key: 'overview', icon: FiLayout, labelAr: 'ملخص', labelEn: 'Overview' },
@@ -38,10 +39,7 @@ export default function AdminDashboard() {
  const navigate = useNavigate()
  const isArabic = lang === 'ar'
 
- useEffect(() => {
-  document.title = isArabic ? 'لوحة التحكم - AL-Azher IT Hub' : 'Dashboard - AL-Azher IT Hub'
- }, [isArabic])
-
+ 
  const [tab, setTab] = useState('overview')
  const [courses, setCourses] = useState([])
  const [lectures, setLectures] = useState([])
@@ -85,6 +83,11 @@ export default function AdminDashboard() {
 
    if (generation !== loadGeneration.current) return
 
+   const failed = results.some(r => r.status === 'rejected')
+   if (failed) {
+    toast.error(isArabic ? 'تعذر تحميل بعض البيانات' : 'Some data failed to load')
+   }
+
    const setters = {
     courses: setCourses,
     lectures: setLectures,
@@ -116,39 +119,60 @@ export default function AdminDashboard() {
   loadTabData(tab)
  }, [tab, loadTabData])
 
- const handleRefresh = useCallback(() => {
-  loadedTabs.current.delete(tab)
-  loadTabData(tab, true)
- }, [tab, loadTabData])
+  const handleRefresh = useCallback((invalidateOverview = true) => {
+   loadedTabs.current.delete(tab)
+   if (invalidateOverview) loadedTabs.current.delete('overview')
+   loadTabData(tab, true)
+  }, [tab, loadTabData])
 
   return (
-   <div className="relative min-h-screen bg-spatial-page grain">
+   <div className="relative min-h-screen bg-spatial-page ">
    <div className="navbar-spatial sticky top-0 z-50 border-b border-black/5 dark:border-white/10">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+    <div className="container-page py-3">
      <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
        <SiteLogo size="sm" />
        <button
         onClick={() => navigate('/home')}
-        className="flex items-center gap-2 px-3 py-2 glass text-slate-600 dark:text-white/70 hover:text-navy-900 dark:hover:text-white rounded-xl text-sm font-medium transition"
+        className="flex items-center gap-2 px-3 py-2 glass text-slate-600 dark:text-white/70 hover:text-ink rounded-xl text-sm font-medium transition"
        >
         <FiHome size={16} /> {isArabic ? 'الرئيسية' : 'Home'}
        </button>
        <h1 className="text-xl md:text-2xl font-bold gradient-text-spatial">{isArabic ? 'لوحة التحكم' : 'Admin Dashboard'}</h1>
       </div>
-      <button
-       onClick={logout}
-       className="flex items-center gap-2 px-3 py-1.5 glass text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl text-sm font-medium transition"
-      >
-       <span>{isArabic ? 'تسجيل خروج' : 'Logout'}</span>
-       <span aria-hidden="true">✕</span>
-      </button>
+      <div className="flex items-center gap-2">
+       <AdminSearch
+        courses={courses}
+        lectures={lectures}
+        sources={sources}
+        users={users}
+        isArabic={isArabic}
+        onNavigate={setTab}
+       />
+       <button
+        onClick={async () => { await logout(); navigate('/') }}
+        className="flex items-center gap-2 px-3 py-1.5 glass text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl text-sm font-medium transition"
+       >
+        <span>{isArabic ? 'تسجيل خروج' : 'Logout'}</span>
+        <span aria-hidden="true">✕</span>
+       </button>
+      </div>
      </div>
     </div>
    </div>
 
-   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <div className="flex items-center gap-2 mb-6 p-2 glass rounded-xl overflow-x-auto scrollbar-thin" role="tablist" aria-label={isArabic ? 'أقسام لوحة التحكم' : 'Dashboard tabs'}>
+   <div className="container-page py-6">
+    <div className="flex items-center gap-2 mb-6 p-2 glass rounded-xl overflow-x-auto scrollbar-thin" role="tablist" aria-label={isArabic ? 'أقسام لوحة التحكم' : 'Dashboard tabs'}
+     onKeyDown={e => {
+      const dir = isArabic ? -1 : 1
+      let idx = TABS.findIndex(t => t.key === tab)
+      if (e.key === 'ArrowRight') { idx = Math.min(idx + dir, TABS.length - 1); e.preventDefault() }
+      if (e.key === 'ArrowLeft') { idx = Math.max(idx - dir, 0); e.preventDefault() }
+      if (e.key === 'Home') { idx = 0; e.preventDefault() }
+      if (e.key === 'End') { idx = TABS.length - 1; e.preventDefault() }
+      if (idx !== TABS.findIndex(t => t.key === tab)) setTab(TABS[idx].key)
+     }}
+    >
      {TABS.map(t => {
       const Icon = t.icon
       return (

@@ -17,7 +17,7 @@ export default function SplashScreen({ onComplete }) {
      setShow(false)
      sessionStorage.setItem('al_azher_splash', '1')
      innerTimer = setTimeout(onComplete, 300)
-    }, 900)
+    }, 400)
   return () => {
    clearTimeout(timer)
    if (innerTimer) clearTimeout(innerTimer)
@@ -47,14 +47,14 @@ export default function SplashScreen({ onComplete }) {
        <SiteLogo size="lg" />
       </motion.div>
 
-      <motion.h1
+      <motion.div
        initial={prefersReduced ? {} : { opacity: 0, y: 20 }}
        animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
        transition={prefersReduced ? {} : { delay: 0.5, duration: 0.6 }}
        className="text-4xl md:text-5xl font-bold text-white mb-3"
       >
        AL-Azher IT Hub
-      </motion.h1>
+      </motion.div>
 
       <motion.p
        initial={prefersReduced ? {} : { opacity: 0, y: 20 }}

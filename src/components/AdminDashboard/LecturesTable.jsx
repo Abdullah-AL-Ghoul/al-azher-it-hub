@@ -6,7 +6,7 @@ import { deleteLecture, updateLecture } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'
 import usePagination from '../../hooks/usePagination'
 import { pageContainer, pageItem, pageContainerReduced, pageItemReduced } from '../../utils/motionTokens'
-import { lectureVideoId, lectureThumb } from '../../utils/helpers'
+import { lectureVideoId, lectureThumb, extractYouTubeId } from '../../utils/helpers'
 import { exportToJson } from '../../utils/adminShared'
 import ConfirmDialog from '../shared/ConfirmDialog'
 import SkeletonRow from './SkeletonRow'
@@ -67,31 +67,31 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
   }
  }
 
- const handleFixThumbnails = async () => {
-  const missing = lectures.filter(l => !lectureVideoId(l) && l.url)
-  if (missing.length === 0) {
-   toast.success(isArabic ? 'لا توجد محاضرات تحتاج إصلاح' : 'No lectures need fixing')
-   return
-  }
-  setFixing(true)
-  let ok = 0
-  try {
-   for (const l of missing) {
-    const vid = lectureVideoId(l)
-    if (vid) {
-     await updateLecture(l.id, { ...l, videoId: vid })
-     ok += 1
-    }
+  const handleFixThumbnails = async () => {
+   const missing = lectures.filter(l => !l.videoId && extractYouTubeId(l.url))
+   if (missing.length === 0) {
+    toast.success(isArabic ? 'لا توجد محاضرات تحتاج إصلاح' : 'No lectures need fixing')
+    return
    }
-   toast.success(isArabic
-    ? `تم إصلاح ${ok} من ${missing.length} محاضرة`
-    : `Fixed ${ok} of ${missing.length} lectures`)
-  } catch (error) {
-   toast.error(isArabic ? 'فشل إصلاح الصور المصغرة' : 'Failed to fix thumbnails')
+   setFixing(true)
+   let ok = 0
+   try {
+    for (const l of missing) {
+     const vid = extractYouTubeId(l.url)
+     if (vid) {
+      await updateLecture(l.id, { videoId: vid })
+      ok += 1
+     }
+    }
+    toast.success(isArabic
+     ? `تم إصلاح ${ok} من ${missing.length} محاضرة`
+     : `Fixed ${ok} of ${missing.length} lectures`)
+   } catch (error) {
+    toast.error(isArabic ? 'فشل إصلاح الصور المصغرة' : 'Failed to fix thumbnails')
+   }
+   setFixing(false)
+   if (ok > 0 && onRefresh) onRefresh()
   }
-  setFixing(false)
-  if (ok > 0 && onRefresh) onRefresh()
- }
 
  if (loading) {
   return <SkeletonRow count={6} widths={['70%']} />
@@ -122,7 +122,7 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
      <select
       value={filterCourse}
       onChange={e => setFilterCourse(e.target.value)}
-      className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50"
+      className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
      >
       <option value="all">{t('admin.allTypes')}</option>
       {courses.map(c => (
@@ -132,7 +132,7 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
      <select
       value={sortBy}
       onChange={e => setSortBy(e.target.value)}
-      className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50"
+      className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
      >
       <option value="order">{isArabic ? 'حسب الترتيب اليدوي' : 'Manual order'}</option>
       <option value="dateNew">{isArabic ? 'الأحدث أولاً' : 'Newest first'}</option>
@@ -147,7 +147,7 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
        value={search}
        onChange={e => { setSearch(e.target.value); setPage(1) }}
        aria-label={isArabic ? 'بحث في المحاضرات' : 'Search lectures'}
-       className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48"
+       className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48"
       />
      <button
       onClick={onAdd}
@@ -189,7 +189,7 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
           </div>
          </div>
          <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-navy-900 dark:text-white text-sm truncate">
+          <h3 className="font-semibold text-ink text-sm truncate">
            {isArabic ? lecture.titleAr : lecture.titleEn}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2 flex-wrap">

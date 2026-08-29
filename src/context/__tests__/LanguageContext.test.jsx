@@ -5,6 +5,14 @@ import { __resetSupabaseMock } from '../../test-utils/mockSupabase'
 
 beforeEach(() => {
   __resetSupabaseMock()
+  // jsdom defaults to 'en-US', but the app's fallback is Arabic. Restore the
+  // browser-language detection to 'ar' so tests that expect Arabic pass.
+  Object.defineProperty(window.navigator, 'language', {
+    value: 'ar',
+    configurable: true,
+    writable: true,
+  })
+  window.sessionStorage?.clear()
 })
 
 function renderUseLanguage() {
@@ -13,6 +21,26 @@ function renderUseLanguage() {
 
 describe('LanguageContext', () => {
   it('provides default lang ar', () => {
+    const { result } = renderUseLanguage()
+    expect(result.current.lang).toBe('ar')
+  })
+
+  it('follows the browser language when nothing is stored', () => {
+    Object.defineProperty(window.navigator, 'language', {
+      value: 'en-US',
+      configurable: true,
+      writable: true,
+    })
+    const { result } = renderUseLanguage()
+    expect(result.current.lang).toBe('en')
+  })
+
+  it('falls back to ar for non-English browser languages', () => {
+    Object.defineProperty(window.navigator, 'language', {
+      value: 'fr-FR',
+      configurable: true,
+      writable: true,
+    })
     const { result } = renderUseLanguage()
     expect(result.current.lang).toBe('ar')
   })

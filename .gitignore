@@ -16,3 +16,7 @@ dist/
 
 # Test coverage output
 coverage/
+
+# Test artifacts (Playwright)
+test-results/
+playwright-report/

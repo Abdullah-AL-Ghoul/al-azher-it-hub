@@ -11,10 +11,11 @@
     --bg-glass-fallback: rgba(255,255,255,0.94);
     --text-primary: #0f172a;
     --text-secondary: rgba(71,85,105,0.85);
-    --text-muted: rgba(71,85,105,0.85);
+    --text-muted: rgba(71,85,105,0.62);
     --border-default: rgba(0,0,0,0.08);
     --border-card: rgba(0,0,0,0.1);
     --color-accent: #2563eb;
+    --ring-color: rgba(37,99,235,0.14);
     --shadow-card: 0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);
     --shadow-floating: 0 20px 60px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.95);
     --glass-blur: 12px;
@@ -40,6 +41,7 @@
     --border-default: rgba(255,255,255,0.08);
     --border-card: rgba(255,255,255,0.1);
     --color-accent: #06b6d4;
+    --ring-color: rgba(6,182,212,0.18);
     --shadow-card: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
     --shadow-floating: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(37,99,235,0.08), inset 0 1px 0 rgba(255,255,255,0.15);
     --glass-border: rgba(255,255,255,0.08);
@@ -63,6 +65,7 @@
     --border-default: rgba(255,255,255,0.05);
     --border-card: rgba(255,255,255,0.06);
     --color-accent: #0891b2;
+    --ring-color: rgba(6,182,212,0.12);
     --shadow-card: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
     --shadow-floating: 0 40px 80px rgba(0,0,0,0.5), 0 0 120px rgba(37,99,235,0.05);
     --glass-blur: 8px;
@@ -109,9 +112,7 @@
 
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-royal-500;
-  }
-  .dark *:focus-visible {
-    outline-color: #06b6d4;
+    outline-color: var(--color-accent);
   }
 
 @media (prefers-reduced-motion: reduce) {
@@ -138,8 +139,10 @@
 }
 
 @layer components {
+  /* @deprecated - prefer .glass or .surface-card (uses --bg-glass token); kept for legacy */
   .card {
-    @apply bg-white rounded-2xl shadow-lg;
+    background: var(--bg-glass);
+    @apply rounded-2xl shadow-lg;
     box-shadow: var(--shadow-card);
   }
   .card:hover {
@@ -166,6 +169,30 @@
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.5) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.5);
+    border-radius: 9999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 
@@ -265,18 +292,15 @@ html[data-theme="amoled"] .spatial-bg {
 }
 
 .glass {
-  background: var(--bg-glass);
+  background: var(--bg-glass-fallback);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass { background: var(--bg-glass-fallback); }
 }
 .glass-hover {
   transition: box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: box-shadow, transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
@@ -297,7 +321,6 @@ html[data-theme="amoled"] .spatial-bg {
   border: 1px solid var(--btn-border);
   transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-  will-change: box-shadow, transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   user-select: none;
@@ -346,8 +369,8 @@ html[data-theme="amoled"] .spatial-bg {
 
 .modal-spatial {
   background: var(--bg-surface);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.4);
   border: 1px solid var(--border-default);
   box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 120px rgba(37,99,235,0.05);
   overscroll-behavior: contain;
@@ -359,8 +382,8 @@ html[data-theme="amoled"] .spatial-bg {
 
 .navbar-spatial {
   background: var(--navbar-glass);
-  backdrop-filter: blur(16px) saturate(1.5);
-  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.5);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.5);
   border-bottom: 1px solid var(--border-default);
   transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -415,25 +438,17 @@ html[data-theme="amoled"] .gradient-text-spatial {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .spatial-bg, .glass-hover, .btn-spatial, .input-spatial {
+  .spatial-bg, .glass-hover, .btn-spatial, .input-spatial, .marquee-track, .lift, .spotlight-card, .img-shimmer {
     animation: none !important;
     transition-duration: 0.01ms !important;
   }
+  .marquee-track { animation: none !important; }
 }
 
 /* ============ PREMIUM REFINEMENTS ============ */
 
-/* Subtle film grain / noise overlay for atmosphere */
-.grain::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.028;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-html[data-theme="amoled"] .grain::before { opacity: 0.05; }
+/* Subtle film grain / noise overlay for atmosphere — REMOVED for performance */
+/* (was causing constant repaints on every scroll/animation) */
 
 /* Gradient border cards - premium edge glow */
 .gradient-border {
@@ -565,9 +580,44 @@ html[data-theme="amoled"] .grain::before { opacity: 0.05; }
 
 /* Glass panel for hero cards with inner highlight */
 .glass-panel {
-  background: var(--bg-glass);
+  background: var(--bg-glass-fallback);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.08);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 }
+
+/* ============ DESIGN SYSTEM UTILITIES ============ */
+
+/* Page container — consistent max-width + breathing room */
+.container-page {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+@media (min-width: 640px) {
+  .container-page { padding-inline: 1.5rem; }
+}
+@media (min-width: 1024px) {
+  .container-page { padding-inline: 2rem; }
+}
+
+/* Section rhythm */
+.section-space {
+  padding-block: clamp(3rem, 8vw, 6rem);
+}
+
+/* Card baseline for the shared Card component */
+.surface-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+  border-radius: 1rem;
+}
+
+/* Visible focus ring using the active ring token */
+.ring-focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  outline-style: solid;
+}
+

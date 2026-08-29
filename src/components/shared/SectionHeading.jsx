@@ -1,10 +1,7 @@
-import { motion, useReducedMotion } from 'framer-motion'
-import { revealItem, revealContainer } from '../../utils/motionTokens'
-import Reveal from './Reveal'
+﻿import Reveal from './Reveal'
 
 export default function SectionHeading({ eyebrow, title, subtitle, center = true, className = '' }) {
- const prefersReduced = useReducedMotion()
-
+ 
  return (
   <Reveal className={`${center ? 'text-center mx-auto' : ''} max-w-2xl mb-12 ${className}`}>
    {eyebrow && (

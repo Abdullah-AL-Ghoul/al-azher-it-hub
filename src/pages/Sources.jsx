@@ -8,19 +8,16 @@ import { useFileUpload } from '../hooks/useFileUpload'
 import { useScrollLock } from '../hooks/useScrollLock'
 import { formatBytes } from '../services/sourceStorage'
 import { pageContainer, pageItem } from '../utils/motionTokens'
+import { SORT_OPTIONS, downloadFile, getSourceFiles } from '../utils/helpers'
 import toast from 'react-hot-toast'
 import FilterBar from '../components/FilterBar'
 import CustomSelect from '../components/shared/CustomSelect'
 import ErrorState from '../components/feedback/ErrorState'
 import EmptyState from '../components/shared/EmptyState'
 import { FiExternalLink, FiFile, FiLink, FiFileText, FiImage, FiVideo, FiUpload, FiX, FiLoader, FiTrash2, FiCheck, FiAlertCircle, FiSearch, FiDownload, FiFolder } from 'react-icons/fi'
+import Skeleton from '../components/shared/Skeleton'
 
-const sortOptions = [
- { value: 'date-desc', labelAr: 'الأحدث أولاً', labelEn: 'Newest first' },
- { value: 'date-asc', labelAr: 'الأقدم أولاً', labelEn: 'Oldest first' },
- { value: 'created-desc', labelAr: 'الأحدث إضافةً', labelEn: 'Recently added' },
- { value: 'title', labelAr: 'أبجدي', labelEn: 'Alphabetical' },
-]
+const sortOptions = SORT_OPTIONS
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
@@ -46,36 +43,6 @@ function isRecentlyAdded(dateStr) {
  return diff < 7 * 24 * 60 * 60 * 1000
 }
 
-async function downloadFile(url, name) {
- const fallback = () => {
-  const a = document.createElement('a')
-  a.href = url
-  a.download = name || 'file'
-  a.target = '_blank'
-  a.rel = 'noopener noreferrer'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
- }
- try {
-  const res = await fetch(url, { mode: 'cors' })
-  if (!res.ok) return fallback()
-  const blob = await res.blob()
-  if (!blob || blob.size === 0) return fallback()
-  const blobUrl = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = blobUrl
-  a.download = name || 'file'
-  a.rel = 'noopener'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  setTimeout(() => URL.revokeObjectURL(blobUrl), 4000)
- } catch (e) {
-  fallback()
- }
-}
-
 async function downloadAllFiles(files, isArabic) {
  for (let i = 0; i < files.length; i++) {
   const f = files[i]
@@ -89,17 +56,6 @@ async function downloadAllFiles(files, isArabic) {
  if (files.length > 1) {
   toast.success(isArabic ? `بدأ تحميل ${files.length} ملفات` : `Started downloading ${files.length} files`)
  }
-}
-
-function getAllFiles(source) {
- const files = []
- if (Array.isArray(source.files) && source.files.length > 0) {
-  files.push(...source.files.filter(f => f?.url))
- }
- if (source.fileData && !files.some(f => f.url === source.fileData)) {
-  files.unshift({ url: source.fileData, name: source.fileName || 'file', size: 0 })
- }
- return files
 }
 
 function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
@@ -223,65 +179,72 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
      onClick={e => e.stopPropagation()}
     >
      <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-      <h3 className="text-lg font-bold text-navy-900 dark:text-white">{t('sources.uploadFile')}</h3>
+      <h3 className="text-lg font-bold text-ink">{t('sources.uploadFile')}</h3>
       <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors" aria-label={isArabic ? 'إغلاق' : 'Close'}>
        <FiX size={18} className="text-slate-500" />
       </button>
      </div>
 
-     <form onSubmit={handleSubmit} className="p-4 space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-       <div>
-        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'العنوان (عربي)' : 'Title (AR)'}</label>
-        <input
-         value={titleAr}
-         onChange={e => setTitleAr(e.target.value)}
-         className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50"
-         placeholder={isArabic ? 'عنوان المصدر' : 'Source title'}
-        />
+      <form onSubmit={handleSubmit} className="p-4 space-y-4">
+       <div className="grid grid-cols-2 gap-3">
+        <div>
+         <label htmlFor="sources-title-ar" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'العنوان (عربي)' : 'Title (AR)'}</label>
+         <input
+          id="sources-title-ar"
+          value={titleAr}
+          onChange={e => setTitleAr(e.target.value)}
+          className="w-full px-3 py-3 min-h-[44px] bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
+          placeholder={isArabic ? 'عنوان المصدر' : 'Source title'}
+         />
+        </div>
+        <div>
+         <label htmlFor="sources-title-en" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'العنوان (إنجليزي)' : 'Title (EN)'}</label>
+         <input
+          id="sources-title-en"
+          value={titleEn}
+          onChange={e => setTitleEn(e.target.value)}
+          className="w-full px-3 py-3 min-h-[44px] bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
+          placeholder="Source title"
+         />
+        </div>
        </div>
-       <div>
-        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'العنوان (إنجليزي)' : 'Title (EN)'}</label>
-        <input
-         value={titleEn}
-         onChange={e => setTitleEn(e.target.value)}
-         className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50"
-         placeholder="Source title"
-        />
-       </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-3">
-       <div>
-        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة (عربي)' : 'Subject (AR)'}</label>
-        <input
-         value={subjectAr}
-         onChange={e => setSubjectAr(e.target.value)}
-         className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50"
-         placeholder={isArabic ? 'اسم المادة' : 'Subject name'}
-        />
+       <div className="grid grid-cols-2 gap-3">
+        <div>
+         <label htmlFor="sources-subject-ar" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة (عربي)' : 'Subject (AR)'}</label>
+         <input
+          id="sources-subject-ar"
+          value={subjectAr}
+          onChange={e => setSubjectAr(e.target.value)}
+          className="w-full px-3 py-3 min-h-[44px] bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
+          placeholder={isArabic ? 'اسم المادة' : 'Subject name'}
+         />
+        </div>
+        <div>
+         <label htmlFor="sources-subject-en" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة (إنجليزي)' : 'Subject (EN)'}</label>
+         <input
+          id="sources-subject-en"
+          value={subjectEn}
+          onChange={e => setSubjectEn(e.target.value)}
+          className="w-full px-3 py-3 min-h-[44px] bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
+          placeholder="Subject name"
+         />
+        </div>
        </div>
-       <div>
-        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة (إنجليزي)' : 'Subject (EN)'}</label>
-        <input
-         value={subjectEn}
-         onChange={e => setSubjectEn(e.target.value)}
-         className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50"
-         placeholder="Subject name"
-        />
-       </div>
-      </div>
 
-      <div>
-       <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'رابط (اختياري)' : 'URL (optional)'}</label>
-       <input
-        value={url}
-        onChange={e => setUrl(e.target.value)}
-        className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50"
-        placeholder="https://..."
-        disabled={upload.files.length > 0}
-       />
-      </div>
+       <div>
+        <label htmlFor="sources-url" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'رابط (اختياري)' : 'URL (optional)'}</label>
+        <input
+         id="sources-url"
+         value={url}
+         onChange={e => setUrl(e.target.value)}
+         className="w-full px-3 py-3 min-h-[44px] bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
+         placeholder="https://..."
+         type="url"
+         inputMode="url"
+         disabled={upload.files.length > 0}
+        />
+       </div>
 
       <div
        onDragOver={handleDragOver}
@@ -402,25 +365,27 @@ export default function Sources() {
  const [showUpload, setShowUpload] = useState(false)
  const prefersReduced = useReducedMotion()
 
- useEffect(() => {
-  document.title = t('sources.pageTitle')
- }, [isArabic])
+ 
+ const mountedRef = useRef(true)
 
  const loadSources = async () => {
   setLoading(true)
   try {
    const s = await getSources(true)
+   if (!mountedRef.current) return
    setSources(s)
    setError(null)
   } catch (err) {
-   setError(err)
+   if (mountedRef.current) setError(err)
   } finally {
-   setLoading(false)
+   if (mountedRef.current) setLoading(false)
   }
  }
 
  useEffect(() => {
+  mountedRef.current = true
   loadSources()
+  return () => { mountedRef.current = false }
  }, [])
 
  const handleRetry = () => {
@@ -467,18 +432,18 @@ export default function Sources() {
   return (
    <div className="min-h-screen pt-24 pb-16 bg-spatial-page">
     <div className="py-16 mb-12">
-     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <div className="skeleton h-10 w-48 mx-auto mb-4 rounded-xl" />
-      <div className="skeleton h-5 w-64 mx-auto rounded-lg" />
+     <div className="container-page text-center">
+      <Skeleton className="h-10 w-48 mx-auto mb-4 rounded-xl" />
+      <Skeleton className="h-5 w-64 mx-auto rounded-lg" />
      </div>
     </div>
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="container-page">
      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {[1,2,3,4,5,6].map(i => (
        <div key={i} className="glass rounded-xl p-6">
-        <div className="skeleton h-4 w-1/3 rounded-full mb-3" />
-        <div className="skeleton h-5 w-3/4 rounded-lg mb-3" />
-        <div className="skeleton h-3 w-1/4 rounded-full" />
+        <Skeleton className="h-4 w-1/3 rounded-full mb-3" />
+        <Skeleton className="h-5 w-3/4 rounded-lg mb-3" />
+        <Skeleton className="h-3 w-1/4 rounded-full" />
        </div>
       ))}
      </div>
@@ -487,31 +452,16 @@ export default function Sources() {
   )
  }
 
- if (error && sources.length === 0) {
   return (
-   <div className="min-h-screen pt-24 pb-16 bg-spatial-page">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-     <ErrorState
-      error={error}
-      onRetry={handleRetry}
-      title={t('sources.title')}
-      className="max-w-md mx-auto"
-     />
-    </div>
-   </div>
-  )
- }
-
-  return (
-   <motion.div variants={containerVariants} initial={prefersReduced ? false : "hidden"} animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page grain">
+   <motion.div variants={containerVariants} initial={prefersReduced ? false : "hidden"} animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page ">
    <div className="py-16 mb-12">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div className="container-page text-center">
      <h1 className="text-3xl md:text-5xl font-bold gradient-text-spatial mb-4">{t('sources.title')}</h1>
      <p className="text-slate-500 dark:text-white/50 text-lg">{t('sources.subtitle')}</p>
     </div>
    </div>
 
-   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   <div className="container-page">
     <motion.div variants={itemVariants} className="mb-10">
      <FilterBar
       subjects={subjects}
@@ -523,17 +473,17 @@ export default function Sources() {
       allLabel={t('sources.allSubjects')}
       resultCount={filtered.length}
      />
-     <div className="mt-4 flex items-center gap-3 flex-wrap">
-      <CustomSelect value={sortBy} options={sortOptions} onChange={setSortBy} isArabic={isArabic} label={t('sources.sortLabel')} />
-      {isAdmin && (
-       <button
-        onClick={() => setShowUpload(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-royal-500 to-cyan-500 hover:from-royal-600 hover:to-cyan-600 text-white rounded-xl text-sm font-medium transition shadow-sm"
-       >
-        <FiUpload size={16} /> {t('sources.uploadFile')}
-       </button>
-      )}
-     </div>
+      <div className="mt-4 flex items-center gap-3 flex-wrap">
+       <CustomSelect value={sortBy} options={sortOptions} onChange={setSortBy} isArabic={isArabic} label={t('sources.sortLabel')} />
+       {isAdmin && (
+        <button
+         onClick={() => setShowUpload(true)}
+         className="flex items-center gap-2 px-4 py-2 min-h-[44px] bg-gradient-to-r from-royal-500 to-cyan-500 hover:from-royal-600 hover:to-cyan-600 text-white rounded-xl text-sm font-medium transition shadow-sm"
+        >
+         <FiUpload size={16} /> {t('sources.uploadFile')}
+        </button>
+       )}
+      </div>
     </motion.div>
 
     {filtered.length === 0 ? (
@@ -542,19 +492,19 @@ export default function Sources() {
       color="amber"
       title={search ? (isArabic ? 'لا توجد نتائج للبحث' : 'No search results') : (isArabic ? 'لا توجد مصادر بعد' : 'No sources yet')}
       description={search ? (isArabic ? 'جرّب كلمة بحث مختلفة أو افحص الفلاتر' : 'Try a different search term or check your filters') : (isArabic ? 'سيتم إضافة المصادر قريباً أو يمكنك رفع ملفات' : 'Sources will be added soon, or you can upload files')}
-      action={
-       search ? (
-        <button
-         onClick={() => { setSearch(''); setActiveSubject('all') }}
-         className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-medium transition"
-        >
-         {isArabic ? 'مسح البحث' : 'Clear search'}
-        </button>
-       ) : isAdmin ? (
-        <button
-         onClick={() => setShowUpload(true)}
-         className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-royal-500 to-cyan-500 hover:from-royal-600 hover:to-cyan-600 text-white rounded-xl text-sm font-medium transition"
-        >
+       action={
+        search ? (
+         <button
+          onClick={() => { setSearch(''); setActiveSubject('all') }}
+          className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-medium transition"
+         >
+          {isArabic ? 'مسح البحث' : 'Clear search'}
+         </button>
+        ) : isAdmin ? (
+         <button
+          onClick={() => setShowUpload(true)}
+          className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-royal-500 to-cyan-500 hover:from-royal-600 hover:to-cyan-600 text-white rounded-xl text-sm font-medium transition"
+         >
          <FiUpload size={16} /> {t('sources.uploadFile')}
         </button>
        ) : null
@@ -565,90 +515,90 @@ export default function Sources() {
       <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" variants={containerVariants}>
       {filtered.map(source => (
        <motion.div key={source.id} variants={itemVariants}>
-        {source.fileData ? (
-         <div className="group glass glass-hover lift rounded-xl p-6 block relative overflow-hidden">
-          {isRecentlyAdded(source.date) && (
-           <div className="absolute top-3 right-3 px-2 py-0.5 bg-emerald-500/80 backdrop-blur-sm text-white text-xs font-medium rounded-full animate-pulse">
-            {t('sources.newBadge')}
-           </div>
-          )}
+         {source.fileData ? (
+          <div className="group glass glass-hover lift rounded-xl p-6 block relative overflow-hidden">
+           {isRecentlyAdded(source.date) && (
+            <div className={`absolute top-3 end-3 px-2 py-0.5 bg-emerald-500/80 backdrop-blur-sm text-white text-xs font-medium rounded-full animate-pulse`}>
+             {t('sources.newBadge')}
+            </div>
+           )}
           <div className="flex items-start gap-3 mb-3">
            <div className="p-2 bg-black/5 dark:bg-white/5 border border-black/8 dark:border-white/10 rounded-lg">
             {getFileIcon('', source.fileName)}
            </div>
            <span className="inline-block text-xs bg-royal-50 dark:bg-cyan-900/20 border border-royal-200/30 dark:border-cyan-400/20 text-royal-600 dark:text-cyan-300 px-2.5 py-1 rounded-full">{isArabic ? source.subjectAr : source.subjectEn}</span>
           </div>
-          <h3 className="font-semibold text-navy-900 dark:text-white mb-3 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">{isArabic ? source.titleAr : source.titleEn}</h3>
+           <h2 className="font-semibold text-ink mb-3 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors text-base">{isArabic ? source.titleAr : source.titleEn}</h2>
 
-          {(() => {
-           const allFiles = getAllFiles(source)
-           if (allFiles.length === 0) return null
-           return (
-            <div className="space-y-2 mb-4">
-             {allFiles.slice(0, 6).map((f, fi) => (
-              <div key={fi} className="flex items-center gap-2 p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
-               <FiFile size={14} className="text-emerald-500 flex-shrink-0" />
-               <span className="flex-1 min-w-0 text-xs text-navy-900 dark:text-white/80 truncate">{f.name || 'file'}</span>
-               <a
-                href={f.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — ${f.name}`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}
-                className="p-1.5 rounded-lg text-cyan-500 hover:bg-cyan-500/10 transition"
-                title={isArabic ? 'فتح' : 'Open'}
-                aria-label={isArabic ? `فتح ${f.name}` : `Open ${f.name}`}
-               >
-                <FiExternalLink size={14} />
-               </a>
+           {(() => {
+            const allFiles = getSourceFiles(source)
+            if (allFiles.length === 0) return null
+            return (
+             <div className="space-y-2 mb-4">
+              {allFiles.slice(0, 6).map((f, fi) => (
+               <div key={fi} className="flex items-center gap-2 p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
+                <FiFile size={14} className="text-emerald-500 flex-shrink-0" />
+                <span className="flex-1 min-w-0 text-xs text-navy-900 dark:text-white/80 truncate">{f.name || 'file'}</span>
+                <a
+                 href={f.url}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — ${f.name}`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}
+                 className="p-1.5 rounded-lg text-cyan-500 hover:bg-cyan-500/10 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                 title={isArabic ? 'فتح' : 'Open'}
+                 aria-label={isArabic ? `فتح ${f.name}` : `Open ${f.name}`}
+                >
+                 <FiExternalLink size={14} />
+                </a>
+                <button
+                 onClick={() => downloadFile(f.url, f.name)}
+                 className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-500/10 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                 title={isArabic ? 'تحميل' : 'Download'}
+                 aria-label={isArabic ? `تحميل ${f.name}` : `Download ${f.name}`}
+                >
+                 <FiDownload size={14} />
+               </button>
+               </div>
+              ))}
+              {allFiles.length > 6 && (
+               <p className="text-xs text-slate-500 dark:text-white/50">+{allFiles.length - 6} {isArabic ? 'ملفات أخرى' : 'more files'}</p>
+              )}
+              {allFiles.length > 1 && (
                <button
-                onClick={() => downloadFile(f.url, f.name)}
-                className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-500/10 transition"
-                title={isArabic ? 'تحميل' : 'Download'}
-                aria-label={isArabic ? `تحميل ${f.name}` : `Download ${f.name}`}
+                onClick={() => { downloadAllFiles(allFiles, isArabic); if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — download all`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}
+                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-xs font-medium transition min-h-[44px]"
                >
-                <FiDownload size={14} />
-              </button>
-              </div>
-             ))}
-             {allFiles.length > 6 && (
-              <p className="text-xs text-slate-500 dark:text-white/50">+{allFiles.length - 6} {isArabic ? 'ملفات أخرى' : 'more files'}</p>
-             )}
-             {allFiles.length > 1 && (
-              <button
-               onClick={() => { downloadAllFiles(allFiles, isArabic); if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — download all`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}
-               className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-xs font-medium transition"
-              >
-               <FiDownload size={13} /> {isArabic ? `تحميل الكل (${allFiles.length})` : `Download all (${allFiles.length})`}
-              </button>
-             )}
-            </div>
-           )
-          })()}
+                <FiDownload size={13} /> {isArabic ? `تحميل الكل (${allFiles.length})` : `Download all (${allFiles.length})`}
+               </button>
+              )}
+             </div>
+            )
+           })()}
 
+           <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-500 dark:text-white/50">{source.date?.split('T')[0]}</span>
+            <span className="flex items-center gap-1 text-sm font-medium text-accent transition-colors">
+             {(() => { const n = getSourceFiles(source).length; return n > 0 ? (isArabic ? `${n} ملف` : `${n} files`) : t('sources.downloadFile') })()} <FiFolder size={14} />
+            </span>
+           </div>
+          </div>
+         ) : (
+          <a href={source.url} target="_blank" rel="noopener noreferrer" className="group glass glass-hover rounded-xl p-6 block relative overflow-hidden" onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: source.titleAr || source.titleEn || source.id, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}>
+           {isRecentlyAdded(source.date) && (
+            <div className={`absolute top-3 end-3 px-2 py-0.5 bg-emerald-500/80 backdrop-blur-sm text-white text-xs font-medium rounded-full animate-pulse`}>
+             {t('sources.newBadge')}
+            </div>
+           )}
+           <div className="flex items-start gap-3 mb-3">
+            <div className="p-2 bg-black/5 dark:bg-white/5 border border-black/8 dark:border-white/10 rounded-lg">
+             {getFileIcon(source.url)}
+            </div>
+            <span className="inline-block text-xs bg-royal-50 dark:bg-cyan-900/20 border border-royal-200/30 dark:border-cyan-400/20 text-royal-600 dark:text-cyan-300 px-2.5 py-1 rounded-full">{isArabic ? source.subjectAr : source.subjectEn}</span>
+           </div>
+           <h2 className="font-semibold text-ink mb-3 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors text-base">{isArabic ? source.titleAr : source.titleEn}</h2>
           <div className="flex items-center justify-between">
            <span className="text-xs text-slate-500 dark:text-white/50">{source.date?.split('T')[0]}</span>
-           <span className="flex items-center gap-1 text-sm font-medium text-royal-500 dark:text-cyan-400 transition-colors">
-            {(() => { const n = getAllFiles(source).length; return n > 0 ? (isArabic ? `${n} ملف` : `${n} files`) : t('sources.downloadFile') })()} <FiFolder size={14} />
-           </span>
-          </div>
-         </div>
-        ) : (
-         <a href={source.url} target="_blank" rel="noopener noreferrer" className="group glass glass-hover rounded-xl p-6 block relative overflow-hidden" onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: source.titleAr || source.titleEn || source.id, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}>
-          {isRecentlyAdded(source.date) && (
-           <div className="absolute top-3 right-3 px-2 py-0.5 bg-emerald-500/80 backdrop-blur-sm text-white text-xs font-medium rounded-full animate-pulse">
-            {t('sources.newBadge')}
-           </div>
-          )}
-          <div className="flex items-start gap-3 mb-3">
-           <div className="p-2 bg-black/5 dark:bg-white/5 border border-black/8 dark:border-white/10 rounded-lg">
-            {getFileIcon(source.url)}
-           </div>
-           <span className="inline-block text-xs bg-royal-50 dark:bg-cyan-900/20 border border-royal-200/30 dark:border-cyan-400/20 text-royal-600 dark:text-cyan-300 px-2.5 py-1 rounded-full">{isArabic ? source.subjectAr : source.subjectEn}</span>
-          </div>
-          <h3 className="font-semibold text-navy-900 dark:text-white mb-3 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">{isArabic ? source.titleAr : source.titleEn}</h3>
-          <div className="flex items-center justify-between">
-           <span className="text-xs text-slate-500 dark:text-white/50">{source.date?.split('T')[0]}</span>
-           <span className="flex items-center gap-1 text-sm font-medium text-royal-500 dark:text-cyan-400 group-hover:text-royal-600 dark:group-hover:text-cyan-300 transition-colors">
+           <span className="flex items-center gap-1 text-sm font-medium text-accent group-hover:text-royal-600 dark:group-hover:text-cyan-300 transition-colors">
             {t('sources.view')} <FiExternalLink size={14} />
            </span>
           </div>

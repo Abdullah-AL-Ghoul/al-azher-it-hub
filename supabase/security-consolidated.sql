@@ -54,9 +54,17 @@ create policy "users_admin_read" on public.users
 -- RPCs (get_password_salt / verify_password), which are SECURITY
 -- DEFINER and bypass RLS, so nothing here breaks login.
 -- Inserting a new student during signup is handled by the
--- register_user() RPC (section 7), which validates the role.
--- Inline (non-RPC) inserts are no longer allowed for anon/auth:
-revoke insert on public.users from anon, authenticated;
+-- register_user() RPC (section 7), which validates the role and
+-- always forces role='student'. For the transitional OAuth flow
+-- the client may still insert directly; that path is constrained
+-- below so it can never create an admin/manager row:
+drop policy if exists "users_student_insert" on public.users;
+create policy "users_student_insert" on public.users
+  for insert with check (
+    auth.role() = 'authenticated'
+    and role = 'student'
+    and status = 'active'
+  );
 revoke update on public.users from anon, authenticated;
 revoke delete on public.users from anon, authenticated;
 
@@ -197,15 +205,15 @@ create policy "activity_auth_insert" on public.activity
 -- SECURITY DEFINER so it bypasses the admin-only RLS on `activity` while
 -- still excluding PII columns (studentId/name/ip/device are never selected).
 create or replace function public.get_notifications_feed(p_limit integer default 30)
-returns table (id text, type text, action text, detail text, timestamp timestamptz)
+returns table (id text, type text, action text, detail text, "timestamp" timestamptz)
 language sql
 stable
 security definer
 set search_path = public
 as $$
-  select id, type, action, detail, timestamp
+  select id, type, action, detail, "timestamp"
   from public.activity
-  order by timestamp desc
+  order by "timestamp" desc
   limit greatest(1, least(coalesce(p_limit, 30), 100))
 $$;
 
@@ -367,7 +375,348 @@ $$;
 grant execute on function public.admin_manage_user(text, jsonb) to anon, authenticated;
 
 -- ============================================================
--- 9. STORAGE: uploads restricted to admins (matches actual usage).
+-- 9. LOGIN RPCs — let the client authenticate WITHOUT reading the
+--    users table directly. These are SECURITY DEFINER so they can
+--    read the password hash server-side, but they NEVER return it;
+--    a profile is only returned when the supplied PBKDF2 candidate
+--    hash matches, so an anonymous caller cannot enumerate PII.
+-- ============================================================
+
+-- Returns the login profile (no password, no auth_user_id) when the
+-- candidate hash matches the stored `salt:hash` for a studentId.
+create or replace function public.get_login_profile(p_student_id text, p_candidate_hash text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  u public.users%rowtype;
+  stored_hash text;
+begin
+  if p_student_id is null or p_student_id = '' then
+    return null;
+  end if;
+  select * into u from public.users where "studentId" = p_student_id limit 1;
+  if not found then
+    return null;
+  end if;
+  if position(':' in coalesce(u.password, '')) > 0 then
+    stored_hash := split_part(u.password, ':', 2);
+  else
+    stored_hash := u.password;
+  end if;
+  if stored_hash is null or stored_hash = '' or stored_hash = 'ignore' then
+    return null;
+  end if;
+  if p_candidate_hash is null or p_candidate_hash <> stored_hash then
+    return null;
+  end if;
+  return jsonb_build_object(
+    'studentId', u."studentId",
+    'name', u.name,
+    'role', u.role,
+    'email', coalesce(u.email, ''),
+    'major', coalesce(u.major, ''),
+    'google', coalesce(u.google, ''),
+    'linkedin', coalesce(u.linkedin, ''),
+    'whatsapp', coalesce(u.whatsapp, ''),
+    'status', coalesce(u.status, 'active'),
+    'lastVisit', u."lastVisit",
+    'lastIP', coalesce(u."lastIP", ''),
+    'createdAt', u."createdAt"
+  );
+end;
+$$;
+
+-- Same as get_login_profile but matches by lower(email).
+create or replace function public.get_password_salt_by_email(p_email text)
+returns text
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  stored text;
+begin
+  if p_email is null or p_email = '' then
+    return null;
+  end if;
+  select password into stored from public.users
+    where lower(coalesce(email, '')) = lower(p_email)
+    order by case when role = 'admin' then 0 else 1 end
+    limit 1;
+  if stored is null or stored = '' then
+    return null;
+  end if;
+  if position(':' in stored) > 0 then
+    return split_part(stored, ':', 1);
+  end if;
+  return '';
+end;
+$$;
+
+-- Same as get_login_profile but matches by lower(email).
+create or replace function public.get_login_profile_by_email(p_email text, p_candidate_hash text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  u public.users%rowtype;
+  stored_hash text;
+begin
+  if p_email is null or p_email = '' then
+    return null;
+  end if;
+  select * into u from public.users
+    where lower(coalesce(email, '')) = lower(p_email)
+    order by case when role = 'admin' then 0 else 1 end
+    limit 1;
+  if not found then
+    return null;
+  end if;
+  if position(':' in coalesce(u.password, '')) > 0 then
+    stored_hash := split_part(u.password, ':', 2);
+  else
+    stored_hash := u.password;
+  end if;
+  if stored_hash is null or stored_hash = '' or stored_hash = 'ignore' then
+    return null;
+  end if;
+  if p_candidate_hash is null or p_candidate_hash <> stored_hash then
+    return null;
+  end if;
+  return jsonb_build_object(
+    'studentId', u."studentId",
+    'name', u.name,
+    'role', u.role,
+    'email', coalesce(u.email, ''),
+    'major', coalesce(u.major, ''),
+    'google', coalesce(u.google, ''),
+    'linkedin', coalesce(u.linkedin, ''),
+    'whatsapp', coalesce(u.whatsapp, ''),
+    'status', coalesce(u.status, 'active'),
+    'lastVisit', u."lastVisit",
+    'lastIP', coalesce(u."lastIP", ''),
+    'createdAt', u."createdAt"
+  );
+end;
+$$;
+
+-- Session restore: returns the profile ONLY when the caller is that
+-- user (auth_user_id matches) or an admin. Prevents cross-user reads
+-- through the restore path.
+create or replace function public.get_session_profile(p_student_id text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  u public.users%rowtype;
+begin
+  if p_student_id is null or p_student_id = '' then
+    return null;
+  end if;
+  select * into u from public.users where "studentId" = p_student_id limit 1;
+  if not found then
+    return null;
+  end if;
+  if u.auth_user_id is distinct from auth.uid() and not public.is_current_user_admin() then
+    return null;
+  end if;
+  return jsonb_build_object(
+    'studentId', u."studentId",
+    'name', u.name,
+    'role', u.role,
+    'email', coalesce(u.email, ''),
+    'major', coalesce(u.major, ''),
+    'google', coalesce(u.google, ''),
+    'linkedin', coalesce(u.linkedin, ''),
+    'whatsapp', coalesce(u.whatsapp, ''),
+    'status', coalesce(u.status, 'active'),
+    'lastVisit', u."lastVisit",
+    'lastIP', coalesce(u."lastIP", ''),
+    'createdAt', u."createdAt"
+  );
+end;
+$$;
+
+-- Profile by auth_user_id (post-signIn lookups). Self or admin only.
+create or replace function public.get_profile_by_auth_id(p_auth_user_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  u public.users%rowtype;
+begin
+  if p_auth_user_id is null then
+    return null;
+  end if;
+  select * into u from public.users where auth_user_id = p_auth_user_id limit 1;
+  if not found then
+    return null;
+  end if;
+  if u.auth_user_id is distinct from auth.uid() and not public.is_current_user_admin() then
+    return null;
+  end if;
+  return jsonb_build_object(
+    'studentId', u."studentId",
+    'name', u.name,
+    'role', u.role,
+    'email', coalesce(u.email, ''),
+    'major', coalesce(u.major, ''),
+    'google', coalesce(u.google, ''),
+    'linkedin', coalesce(u.linkedin, ''),
+    'whatsapp', coalesce(u.whatsapp, ''),
+    'status', coalesce(u.status, 'active'),
+    'lastVisit', u."lastVisit",
+    'lastIP', coalesce(u."lastIP", ''),
+    'createdAt', u."createdAt"
+  );
+end;
+$$;
+
+-- OAuth email match: returns the profile only when the row's email
+-- matches the caller's verified auth email, or the caller is admin.
+create or replace function public.get_profile_by_email(p_email text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  u public.users%rowtype;
+begin
+  if p_email is null or p_email = '' then
+    return null;
+  end if;
+  if nullif(auth.jwt() ->> 'email', '') is null then
+    return null;
+  end if;
+  if lower(coalesce(auth.jwt() ->> 'email', '')) <> lower(p_email)
+     and not public.is_current_user_admin() then
+    return null;
+  end if;
+  select * into u from public.users
+    where lower(coalesce(email, '')) = lower(p_email)
+    order by case when role = 'admin' then 0 else 1 end
+    limit 1;
+  if not found then
+    return null;
+  end if;
+  return jsonb_build_object(
+    'studentId', u."studentId",
+    'name', u.name,
+    'role', u.role,
+    'email', coalesce(u.email, ''),
+    'major', coalesce(u.major, ''),
+    'google', coalesce(u.google, ''),
+    'linkedin', coalesce(u.linkedin, ''),
+    'whatsapp', coalesce(u.whatsapp, ''),
+    'status', coalesce(u.status, 'active'),
+    'lastVisit', u."lastVisit",
+    'lastIP', coalesce(u."lastIP", ''),
+    'createdAt', u."createdAt"
+  );
+end;
+$$;
+
+-- Forgot-password step 1: returns ONLY whether the student exists.
+-- No name/email disclosure to anonymous callers.
+create or replace function public.user_exists(p_student_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.users where "studentId" = p_student_id
+  )
+$$;
+
+-- Forgot-password step 2: verifies the supplied email matches the
+-- stored email for a student. Returns true only on exact match.
+create or replace function public.verify_student_email(p_student_id text, p_email text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.users
+    where "studentId" = p_student_id
+      and lower(coalesce(email, '')) = lower(coalesce(p_email, ''))
+  )
+$$;
+
+grant execute on function public.get_login_profile(text, text) to anon, authenticated;
+grant execute on function public.get_password_salt_by_email(text) to anon, authenticated;
+grant execute on function public.get_login_profile_by_email(text, text) to anon, authenticated;
+grant execute on function public.get_session_profile(text) to anon, authenticated;
+grant execute on function public.get_profile_by_auth_id(uuid) to anon, authenticated;
+grant execute on function public.get_profile_by_email(text) to anon, authenticated;
+grant execute on function public.user_exists(text) to anon, authenticated;
+grant execute on function public.verify_student_email(text, text) to anon, authenticated;
+
+-- Hardened password reset. Previously p_email was decorative and the
+-- logged-out forgot-password path always raised FORBIDDEN (broken feature).
+-- Now: admin can reset anyone; a logged-in user can reset their own
+-- password; an anonymous caller can ONLY reset when the supplied email
+-- matches the stored email (email acts as the ownership proof).
+create or replace function public.reset_password(p_student_id text, p_new_hashed text, p_email text default null)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  stored_email text;
+  caller_sid text;
+begin
+  if p_new_hashed is null or p_new_hashed = '' then
+    raise exception 'PASSWORD_REQUIRED';
+  end if;
+
+  if public.is_current_user_admin() then
+    update public.users set password = p_new_hashed where "studentId" = p_student_id;
+    return;
+  end if;
+
+  caller_sid := public.get_current_student_id();
+  if caller_sid = p_student_id then
+    update public.users set password = p_new_hashed where "studentId" = p_student_id;
+    return;
+  end if;
+
+  if p_email is null or p_email = '' then
+    raise exception 'FORBIDDEN';
+  end if;
+  select lower(coalesce(email, '')) into stored_email
+    from public.users where "studentId" = p_student_id;
+  if stored_email is null or stored_email = '' or stored_email <> lower(p_email) then
+    raise exception 'FORBIDDEN';
+  end if;
+  update public.users set password = p_new_hashed where "studentId" = p_student_id;
+end;
+$$;
+
+grant execute on function public.reset_password(text, text, text) to anon, authenticated;
+
+-- ============================================================
+-- 10. STORAGE: uploads restricted to admins (matches actual usage).
 --    Students can only read public files. No client-supplied
 --    content-type trust remains the only gate for writes.
 -- ============================================================
@@ -377,7 +726,7 @@ create policy "sources_admin_upload" on storage.objects
   for insert with check (bucket_id = 'sources' and public.is_current_user_admin());
 
 -- ============================================================
--- 10. Verification queries (should all behave as documented)
+-- 11. Verification queries (should all behave as documented)
 -- ============================================================
 -- RLS enabled:      select relname, relrowsecurity from pg_class where relname in ('users','courses','lectures','sources','additions','comments','activity','student_logs');
 -- No open users:    select * from pg_policies where tablename = 'users';

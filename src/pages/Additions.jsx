@@ -1,14 +1,16 @@
-﻿import { useState, useEffect, useMemo } from 'react'
+﻿import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { pageContainer, pageItem } from '../utils/motionTokens'
+import { uid } from '../utils/helpers'
 import { getAdditions, saveAdditions, addComment, deleteComment, getCommentsForAddition, addActivity, addStudentLog } from '../services'
-import { FiPlus, FiTrash2, FiEdit2, FiSave, FiX, FiSend, FiVideo, FiLink2, FiFileText, FiMessageCircle, FiUsers, FiChevronDown } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiEdit2, FiSave, FiX, FiSend, FiVideo, FiLink2, FiFileText, FiMessageCircle, FiUsers } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import ErrorState from '../components/feedback/ErrorState'
 import EmptyState from '../components/shared/EmptyState'
 import ConfirmDialog from '../components/shared/ConfirmDialog'
+import Skeleton from '../components/shared/Skeleton'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
@@ -25,10 +27,7 @@ export default function Additions() {
  const prefersReduced = useReducedMotion()
  const isArabic = lang === 'ar'
 
- useEffect(() => {
-  document.title = t('additions.documentTitle')
- }, [t])
- const [additions, setAdditions] = useState([])
+  const [additions, setAdditions] = useState([])
  const [loading, setLoading] = useState(true)
  const [editing, setEditing] = useState(false)
  const [editData, setEditData] = useState([])
@@ -39,29 +38,35 @@ export default function Additions() {
   const [error, setError] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
 
+ const mountedRef = useRef(true)
+
  const loadData = async () => {
   try {
    const a = await getAdditions()
+   if (!mountedRef.current) return
    setAdditions(a)
    setError(null)
-   // Load comment counts for all additions
+   // Prefetch comment counts for badges, but only for the first 40 items so a
+   // long list never triggers an N+1 storm of one query per addition.
    const counts = {}
-   await Promise.all(a.map(async (item) => {
+   await Promise.all(a.slice(0, 40).map(async (item) => {
     try {
      const c = await getCommentsForAddition(item.id)
-     counts[item.id] = c
+     if (mountedRef.current) counts[item.id] = c
     } catch (e) { /* silent */ }
    }))
-   setComments(counts)
+   if (mountedRef.current) setComments(counts)
   } catch (err) {
-   setError(err)
+   if (mountedRef.current) setError(err)
   } finally {
-   setLoading(false)
+   if (mountedRef.current) setLoading(false)
   }
  }
 
  useEffect(() => {
+  mountedRef.current = true
   loadData()
+  return () => { mountedRef.current = false }
  }, [])
 
  const handleRetry = () => {
@@ -96,7 +101,7 @@ export default function Additions() {
  const saveEdit = async () => {
   const cleaned = editData.filter(a => (a.titleAr || '').trim() || (a.titleEn || '').trim()).map(a => ({
    ...a,
-   id: a.id || Date.now().toString() + Math.random().toString(36).slice(2, 6),
+   id: a.id || uid(),
    createdAt: a.createdAt || new Date().toISOString(),
   }))
   try {
@@ -113,7 +118,7 @@ export default function Additions() {
 
  const addNew = (type) => {
   const item = {
-   id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+   id: uid(),
    type,
    titleAr: '',
    titleEn: '',
@@ -145,7 +150,7 @@ export default function Additions() {
     studentId: user.studentId,
     name: user.name,
     type: 'ADD_COMMENT',
-    detail: `تعليق على إضافة`,
+    detail: '',
     ip: '',
     device: navigator.userAgent,
    }).catch(() => {})
@@ -182,7 +187,7 @@ export default function Additions() {
 
  const displayData = editing ? editData : filteredAdditions
 
- const inputClass = "w-full glass rounded-xl px-3 py-2 text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+ const inputClass = "w-full glass rounded-xl px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
 
  const typeLabels = {
   post: t('additions.post'),
@@ -200,20 +205,20 @@ export default function Additions() {
   return (
    <div className="min-h-screen pt-24 pb-16 bg-spatial-page">
     <div className="py-16 mb-12">
-     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <div className="skeleton h-10 w-48 mx-auto mb-4 rounded-xl" />
-      <div className="skeleton h-5 w-64 mx-auto rounded-lg" />
+     <div className="container-page text-center">
+      <Skeleton className="h-10 w-48 mx-auto mb-4 rounded-xl" />
+      <Skeleton className="h-5 w-64 mx-auto rounded-lg" />
      </div>
     </div>
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+    <div className="container-page space-y-4">
      {[1,2,3].map(i => (
       <div key={i} className="glass rounded-xl p-5">
        <div className="flex items-start gap-4">
-        <div className="skeleton w-12 h-12 rounded-xl shrink-0" />
+        <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
         <div className="flex-1">
-         <div className="skeleton h-4 w-1/4 rounded-full mb-2" />
-         <div className="skeleton h-5 w-3/4 rounded-lg mb-2" />
-         <div className="skeleton h-3 w-1/2 rounded-full" />
+         <Skeleton className="h-4 w-1/4 rounded-full mb-2" />
+         <Skeleton className="h-5 w-3/4 rounded-lg mb-2" />
+         <Skeleton className="h-3 w-1/2 rounded-full" />
         </div>
        </div>
       </div>
@@ -223,15 +228,15 @@ export default function Additions() {
   )
  }
 
-  return (
-   <div className="min-h-screen bg-spatial-page pt-24 pb-16 grain">
+  return (<>
+   <div className="min-h-screen bg-spatial-page pt-24 pb-16 ">
    <div className="py-16 mb-12">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div className="container-page text-center">
      <h1 className="text-3xl md:text-5xl font-bold gradient-text-spatial mb-4">{t('additions.title')}</h1>
      <p className="text-slate-500 dark:text-white/50 text-lg">{t('additions.subtitle')}</p>
     </div>
    </div>
-   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   <div className="container-page">
     <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }}>
      <div className="flex items-center justify-between mb-8">
       {isAdmin && (
@@ -257,7 +262,7 @@ export default function Additions() {
      <div className="flex gap-2 mb-6 flex-wrap">
       <button
        onClick={() => setFilter('all')}
-       className={`px-4 py-2 rounded-xl text-sm font-medium transition ${filter === 'all' ? 'btn-spatial text-white' : 'glass text-slate-600 dark:text-white/70 hover:text-navy-900 dark:hover:text-white'}`}
+       className={`px-4 py-2 rounded-xl text-sm font-medium transition ${filter === 'all' ? 'btn-spatial text-white' : 'glass text-slate-600 dark:text-white/70 hover:text-ink'}`}
       >
        {t('additions.all')}
       </button>
@@ -265,16 +270,12 @@ export default function Additions() {
        <button
         key={type.key}
         onClick={() => setFilter(type.key)}
-        className={`px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 ${filter === type.key ? 'btn-spatial text-white' : 'glass text-slate-600 dark:text-white/70 hover:text-navy-900 dark:hover:text-white'}`}
+        className={`px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 ${filter === type.key ? 'btn-spatial text-white' : 'glass text-slate-600 dark:text-white/70 hover:text-ink'}`}
        >
         <type.icon size={14} /> {typeLabels[type.key]}
        </button>
       ))}
      </div>
-
-     {error && !editing && additions.length === 0 && (
-      <ErrorState error={error} onRetry={handleRetry} title={t('additions.failedToLoad')} />
-     )}
 
       {!error && displayData.length === 0 && !editing && (
        <EmptyState
@@ -293,18 +294,15 @@ export default function Additions() {
 
      {editing && (
       <div className="mb-6 flex gap-2 flex-wrap">
-       {types.map(type => {
-        const Icon = type.icon
-        return (
-         <button
+       {types.map(type => (
+        <button
           key={type.key}
           onClick={() => addNew(type.key)}
           className={`flex items-center gap-2 px-4 py-2 ${type.color} text-white rounded-xl text-sm font-medium hover:opacity-90 transition`}
          >
           <FiPlus size={16} /> {t('additions.addPrefix')} {typeLabels[type.key]}
          </button>
-        )
-       })}
+       ))}
       </div>
      )}
 
@@ -322,14 +320,14 @@ export default function Additions() {
            </button>
           </div>
           <div className="grid grid-cols-2 gap-3">
-           <input value={item.titleAr} onChange={e => updateItem(item.id, 'titleAr', e.target.value)} placeholder="العنوان بالعربي" className={inputClass} />
-           <input value={item.titleEn} onChange={e => updateItem(item.id, 'titleEn', e.target.value)} placeholder="Title (EN)" className={inputClass} />
+           <input value={item.titleAr} onChange={e => updateItem(item.id, 'titleAr', e.target.value)} placeholder="العنوان بالعربي" aria-label="العنوان بالعربي" className={inputClass} />
+           <input value={item.titleEn} onChange={e => updateItem(item.id, 'titleEn', e.target.value)} placeholder="Title (EN)" aria-label="Title (EN)" className={inputClass} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-           <textarea value={item.descriptionAr} onChange={e => updateItem(item.id, 'descriptionAr', e.target.value)} placeholder="الوصف بالعربي" className={inputClass + ' h-20 resize-none'} />
-           <textarea value={item.descriptionEn} onChange={e => updateItem(item.id, 'descriptionEn', e.target.value)} placeholder="Description (EN)" className={inputClass + ' h-20 resize-none'} />
+           <textarea value={item.descriptionAr} onChange={e => updateItem(item.id, 'descriptionAr', e.target.value)} placeholder="الوصف بالعربي" aria-label="الوصف بالعربي" className={inputClass + ' h-20 resize-none'} />
+           <textarea value={item.descriptionEn} onChange={e => updateItem(item.id, 'descriptionEn', e.target.value)} placeholder="Description (EN)" aria-label="Description (EN)" className={inputClass + ' h-20 resize-none'} />
           </div>
-          <input value={item.url} onChange={e => updateItem(item.id, 'url', e.target.value)}           placeholder={item.type === 'whatsapp' ? t('additions.whatsappPlaceholder') : item.type === 'video' ? t('additions.youtubePlaceholder') : t('additions.urlOptionalPlaceholder')} className={inputClass} />
+          <input value={item.url} onChange={e => updateItem(item.id, 'url', e.target.value)} placeholder={item.type === 'whatsapp' ? t('additions.whatsappPlaceholder') : item.type === 'video' ? t('additions.youtubePlaceholder') : t('additions.urlOptionalPlaceholder')} aria-label={item.type === 'whatsapp' ? t('additions.whatsappPlaceholder') : item.type === 'video' ? t('additions.youtubePlaceholder') : t('additions.urlOptionalPlaceholder')} className={inputClass} />
          </div>
         ) : (
          <>
@@ -345,7 +343,7 @@ export default function Additions() {
               </span>
               <span className="text-xs text-slate-500 dark:text-slate-400">{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}</span>
              </div>
-             <h3 className={`font-semibold text-navy-900 dark:text-white mb-1 ${expandedId !== item.id ? 'line-clamp-1' : ''}`}>{isArabic ? item.titleAr : item.titleEn}</h3>
+             <h3 className={`font-semibold text-ink mb-1 ${expandedId !== item.id ? 'line-clamp-1' : ''}`}>{isArabic ? item.titleAr : item.titleEn}</h3>
              {(item.descriptionAr || item.descriptionEn) && (
               <p className={`text-sm text-slate-500 dark:text-slate-400 ${expandedId !== item.id ? 'line-clamp-2' : 'whitespace-pre-wrap'}`}>{isArabic ? item.descriptionAr : item.descriptionEn}</p>
              )}
@@ -372,7 +370,7 @@ export default function Additions() {
              className="border-t border-slate-100 dark:border-slate-700"
             >
              <div className="p-5">
-              <h4 className="text-sm font-semibold text-navy-900 dark:text-white mb-3 flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-ink mb-3 flex items-center gap-2">
                <FiMessageCircle size={14} />
                {t('additions.comments')}
                <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">({(comments[item.id] || []).length})</span>
@@ -391,12 +389,12 @@ export default function Additions() {
                  </div>
                  <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                   <span className="text-xs font-semibold text-navy-900 dark:text-white">{c.userName}</span>
+                   <span className="text-xs font-semibold text-ink">{c.userName}</span>
                    <span className="text-xs text-slate-500 dark:text-slate-400">{c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ''}</span>
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-300 mt-0.5">{c.text}</p>
                  </div>
-                  {(user?.studentId === c.userId || isAdmin) && (
+                  {(c.isMine || isAdmin) && (
                   <button onClick={() => handleDeleteComment(item.id, c.id)} aria-label={isArabic ? 'حذف التعليق' : 'Delete comment'} className="p-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-400 hover:text-red-500 transition-colors shrink-0">
                    <FiTrash2 size={12} />
                   </button>
@@ -437,5 +435,14 @@ export default function Additions() {
      </motion.div>
     </div>
    </div>
-  )
+
+   <ConfirmDialog
+    isOpen={!!confirmDelete}
+    onClose={() => setConfirmDelete(null)}
+    onConfirm={performDeleteComment}
+    title={isArabic ? 'حذف التعليق' : 'Delete comment'}
+    message={isArabic ? 'هل أنت متأكد من حذف هذا التعليق؟ لا يمكن التراجع.' : 'Are you sure you want to delete this comment? This cannot be undone.'}
+   />
+  </>
+ )
 }

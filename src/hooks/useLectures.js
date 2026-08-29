@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { getLectures, getFavorites, getRatings, getViewed, toggleFavorite, setRating, markViewed, addStudentLog } from '../services'
+﻿import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { getLectures, addStudentLog } from '../services'
 import { sortLectures } from '../utils/sort'
+import { useUserData } from '../context/UserDataContext'
 import toast from 'react-hot-toast'
 
 export function useLectures(user, isArabic) {
@@ -12,18 +13,17 @@ export function useLectures(user, isArabic) {
   const [sortBy, setSortBy] = useState('date-desc')
   const [viewMode, setViewMode] = useState('grid')
   const [lectures, setLectures] = useState([])
-  const [localFavorites, setLocalFavorites] = useState([])
-  const [localRatings, setLocalRatings] = useState({})
-  const [viewedIds, setViewedIds] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [reloadKey, setReloadKey] = useState(0)
   const viewedIdsRef = useRef([])
 
-  const replaceViewedIds = useCallback((ids) => {
-    viewedIdsRef.current = Array.isArray(ids) ? ids : []
-    setViewedIds(viewedIdsRef.current)
-  }, [])
+  // Single source of truth from UserDataContext — no parallel fetches.
+  const { favorites, ratings, viewed, toggleFavorite, setRating, markViewed } = useUserData()
+
+  useEffect(() => {
+    viewedIdsRef.current = viewed
+  }, [viewed])
 
   useEffect(() => {
     let mounted = true
@@ -32,27 +32,14 @@ export function useLectures(user, isArabic) {
         setError(null)
         const l = await getLectures()
         if (mounted) setLectures(l)
-        if (user && mounted) {
-          const [favs, rats, viewed] = await Promise.all([
-            getFavorites(user.studentId),
-            getRatings(user.studentId),
-            getViewed(user.studentId).catch(() => []),
-          ])
-          if (mounted) {
-            setLocalFavorites(favs)
-            setLocalRatings(rats)
-            replaceViewedIds(viewed)
-          }
-        }
       } catch (err) {
-        console.warn('useLectures load failed:', err?.message)
         if (mounted) setError(err)
       }
       if (mounted) setLoading(false)
     }
     load()
     return () => { mounted = false }
-  }, [user, reloadKey, replaceViewedIds])
+  }, [reloadKey])
 
   const subjects = useMemo(() => {
     const set = new Set(lectures.map(l => isArabic ? l.subjectAr : l.subjectEn))
@@ -76,52 +63,47 @@ export function useLectures(user, isArabic) {
   const handleToggleFavorite = useCallback(async (id, lecture) => {
     if (!user) return
     try {
-      const newFavs = await toggleFavorite(user.studentId, id)
-      setLocalFavorites(newFavs)
+      const newFavs = await toggleFavorite(id)
       addStudentLog({
-        studentId: user.studentId,
-        name: user.name,
         type: 'ADD_FAVORITE',
-        detail: `${newFavs.includes(id) ? 'إضافة' : 'إزالة'} مفضلة: ${lecture?.titleAr || lecture?.titleEn || id}`,
-        ip: '',
+        detail: lecture?.titleAr || lecture?.titleEn || id,
         device: navigator.userAgent,
       }).catch(() => {})
+      return newFavs
     } catch (e) {
       toast.error(isArabic ? 'خطأ في المفضلة' : 'Failed to update favorite')
     }
-  }, [user, isArabic])
+  }, [user, isArabic, toggleFavorite])
 
   const handleRate = useCallback(async (id, rating, lecture) => {
     if (!user) return
     try {
-      const newRatings = await setRating(user.studentId, id, rating)
-      setLocalRatings(newRatings)
+      const newRatings = await setRating(id, rating)
       addStudentLog({
-        studentId: user.studentId,
-        name: user.name,
         type: 'RATE_LECTURE',
-        detail: `تقييم ${rating} نجوم: ${lecture?.titleAr || lecture?.titleEn || id}`,
-        ip: '',
+        detail: `${rating}/5 · ${lecture?.titleAr || lecture?.titleEn || id}`,
         device: navigator.userAgent,
       }).catch(() => {})
+      return newRatings
     } catch (e) {
       toast.error(isArabic ? 'خطأ في التقييم' : 'Failed to rate')
     }
-  }, [user, isArabic])
+  }, [user, isArabic, setRating])
 
-  const handleWatch = useCallback((id, lecture) => {
+  const handleWatch = useCallback(async (id, lecture) => {
     if (!user || viewedIdsRef.current.includes(id)) return
-    replaceViewedIds([...viewedIdsRef.current, id])
-    markViewed(user.studentId, id).catch(() => {})
+    // Optimistic: mark as viewed immediately (context handles SWR rollback)
+    try {
+      await markViewed(id)
+    } catch (_e) {
+      return
+    }
     addStudentLog({
-      studentId: user.studentId,
-      name: user.name,
       type: 'VIEW_LECTURE',
-      detail: `مشاهدة: ${lecture?.titleAr || lecture?.titleEn || id}`,
-      ip: '',
+      detail: lecture?.titleAr || lecture?.titleEn || id,
       device: navigator.userAgent,
     }).catch(() => {})
-  }, [user, replaceViewedIds])
+  }, [user, markViewed])
 
   const reload = useCallback(() => {
     setLoading(true)
@@ -137,7 +119,7 @@ export function useLectures(user, isArabic) {
     sortBy, setSortBy,
     viewMode, setViewMode,
     lectures, subjects, filtered,
-    localFavorites, localRatings, viewedIds,
+    localFavorites: favorites, localRatings: ratings, viewedIds: viewed,
     loading, error, reload,
     handleToggleFavorite, handleRate, handleWatch,
   }

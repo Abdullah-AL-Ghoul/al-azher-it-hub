@@ -2,7 +2,7 @@
 import TypewriterText from '../shared/TypewriterText'
 import SiteLogo from '../shared/SiteLogo'
 
-export default function AuthLogo({ title, subtitle, isArabic }) {
+export default function AuthLogo({ title, subtitle }) {
  return (
   <motion.div
    initial={{ opacity: 0, scale: 0.5, y: -20 }}
@@ -13,7 +13,7 @@ export default function AuthLogo({ title, subtitle, isArabic }) {
    <div className="mx-auto mb-5">
     <SiteLogo size="md" />
    </div>
-   <h1 className="text-2xl md:text-3xl font-bold text-navy-900 dark:text-white mb-2">
+   <h1 className="text-2xl md:text-3xl font-bold text-ink mb-2">
     {title}
    </h1>
    <p className="text-slate-500 dark:text-white/60 text-sm">

@@ -8,8 +8,9 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
  // Prevents the redirect-to-home flash/loop for persisted sessions.
  if (loading) {
   return (
-   <div className="min-h-screen flex items-center justify-center bg-spatial-page">
-    <div className="w-12 h-12 border-4 border-royal-500/20 border-t-royal-500 rounded-full animate-spin" />
+   <div className="min-h-screen flex items-center justify-center bg-spatial-page" role="status" aria-label="Loading" aria-live="polite">
+    <div className="w-12 h-12 border-4 border-royal-500/20 border-t-royal-500 rounded-full animate-spin" aria-hidden="true" />
+    <span className="sr-only">Loading...</span>
    </div>
   )
  }

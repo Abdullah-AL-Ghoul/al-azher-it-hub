@@ -4,12 +4,12 @@ import { RateLimitService } from './rateLimitService'
 import { sanitizeString } from '../utils/sanitize'
 
 export async function getCommentsForAddition(additionId) {
-  const { data, error } = await getSupabase()
-    .from('comments')
-    .select('*')
-    .eq('additionId', additionId)
-    .order('createdAt', { ascending: false })
-    .limit(100)
+  // SECURITY DEFINER RPC: returns the author display name + an isMine flag
+  // but never the raw userId (which previously leaked the studentId <-> name
+  // mapping to every authenticated user).
+  const { data, error } = await getSupabase().rpc('get_comments_public', {
+    p_addition_id: additionId,
+  })
   if (error) throw error
   return data || []
 }

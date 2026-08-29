@@ -1,8 +1,6 @@
 ﻿import { useState, memo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { useLanguage } from '../../context/LanguageContext'
-import { useNavigate } from 'react-router-dom'
-import { FiPlus, FiEdit2, FiTrash2, FiBookOpen, FiSearch } from 'react-icons/fi'
+import { FiPlus, FiEdit2, FiTrash2, FiBookOpen, FiSearch, FiVideo, FiFile } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { deleteCourse, addActivity } from '../../services'
 import usePagination from '../../hooks/usePagination'
@@ -12,8 +10,7 @@ import SkeletonRow from './SkeletonRow'
 import Pagination from './Pagination'
 
 function CoursesTable({ courses, loading, isArabic, onEdit, onAdd, onRefresh }) {
- const navigate = useNavigate()
- const prefersReduced = useReducedMotion()
+  const prefersReduced = useReducedMotion()
  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
  const [search, setSearch] = useState('')
  const filteredCourses = courses.filter(course => {
@@ -55,14 +52,14 @@ function CoursesTable({ courses, loading, isArabic, onEdit, onAdd, onRefresh }) 
        {isArabic ? `${filteredCourses.length} / ${courses.length} مادة` : `${filteredCourses.length} / ${courses.length} courses`}
       </p>
       <div className="relative">
-       <FiSearch className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 ${isArabic ? 'right-3' : 'left-3'}`} size={14} />
+       <FiSearch className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 start-3`} size={14} />
        <input
         type="text"
         placeholder={isArabic ? 'بحث بالاسم أو الدكتور...' : 'Search name or doctor...'}
         value={search}
         onChange={(e) => { setSearch(e.target.value); setPage(1) }}
         aria-label={isArabic ? 'بحث في المواد' : 'Search courses'}
-        className={`${isArabic ? 'pr-8 pl-3' : 'pl-8 pr-3'} py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48`}
+        className={`ps-8 pe-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48`}
        />
       </div>
      </div>
@@ -93,16 +90,16 @@ function CoursesTable({ courses, loading, isArabic, onEdit, onAdd, onRefresh }) 
        </div>
        <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 mb-1">
-         <h3 className="font-semibold text-navy-900 dark:text-white truncate">
+         <h3 className="font-semibold text-ink truncate">
           {isArabic ? course.nameAr : course.nameEn}
          </h3>
         </div>
         <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">
          {isArabic ? `الدكتور: ${course.doctorAr || ''}` : `Dr: ${course.doctorEn || ''}`}
         </div>
-        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 ">
-         <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">📚 Lectures: {course.lectures?.length || 0}</span>
-         <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">📄 Sources: {course.sources?.length || 0}</span>
+<div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 ">
+          <span className="flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded"><FiVideo size={10} /> {course.lectures?.length || 0}</span>
+          <span className="flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded"><FiFile size={10} /> {course.sources?.length || 0}</span>
         </div>
        </div>
       </div>

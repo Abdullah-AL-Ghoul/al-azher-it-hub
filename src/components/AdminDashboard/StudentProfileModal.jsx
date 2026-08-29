@@ -90,7 +90,7 @@ function StudentProfileModal({ student, isOpen, onClose }) {
         <FiUser size={20} className="text-royal-500" />
        </div>
        <div>
-        <h2 className="font-bold text-navy-900 dark:text-white">{student.name || student.studentId}</h2>
+        <h2 className="font-bold text-ink">{student.name || student.studentId}</h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 ">{student.studentId}</p>
        </div>
       </div>
@@ -108,26 +108,26 @@ function StudentProfileModal({ student, isOpen, onClose }) {
        <>
         {/* Account Info */}
         <div className="glass rounded-xl p-4 border border-white/10">
-         <h3 className="text-sm font-semibold text-navy-900 dark:text-white mb-3 flex items-center gap-2">
+         <h3 className="text-sm font-semibold text-ink mb-3 flex items-center gap-2">
           <FiUser size={14} className="text-royal-500" />
           {isArabic ? 'معلومات الحساب' : 'Account Info'}
          </h3>
          <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
            <span className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'الاسم' : 'Name'}</span>
-           <p className="text-navy-900 dark:text-white font-medium">{student.name || '—'}</p>
+           <p className="text-ink font-medium">{student.name || '—'}</p>
           </div>
           <div>
            <span className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'الرقم الجامعي' : 'Student ID'}</span>
-           <p className="text-navy-900 dark:text-white font-medium">{student.studentId}</p>
+           <p className="text-ink font-medium">{student.studentId}</p>
           </div>
           <div>
            <span className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'التخصص' : 'Major'}</span>
-           <p className="text-navy-900 dark:text-white font-medium">{student.major || '—'}</p>
+           <p className="text-ink font-medium">{student.major || '—'}</p>
           </div>
           <div>
            <span className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'البريد الإلكتروني' : 'Email'}</span>
-           <p className="text-navy-900 dark:text-white font-medium">{student.email || '—'}</p>
+           <p className="text-ink font-medium">{student.email || '—'}</p>
           </div>
           {student.linkedin && (
            <div className="col-span-2">
@@ -139,7 +139,7 @@ function StudentProfileModal({ student, isOpen, onClose }) {
           {student.createdAt && (
            <div className="col-span-2">
             <span className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'تاريخ التسجيل' : 'Registered'}</span>
-            <p className="text-navy-900 dark:text-white font-medium">{new Date(student.createdAt).toLocaleDateString(isArabic ? 'ar' : 'en')}</p>
+            <p className="text-ink font-medium">{new Date(student.createdAt).toLocaleDateString(isArabic ? 'ar' : 'en')}</p>
            </div>
           )}
          </div>
@@ -149,22 +149,22 @@ function StudentProfileModal({ student, isOpen, onClose }) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
          <div className="glass rounded-xl p-3 border border-white/10 text-center">
           <FiEye size={20} className="mx-auto text-violet-500 mb-1" />
-          <p className="text-xl font-bold text-navy-900 dark:text-white">{stats.viewed?.length || 0}</p>
+          <p className="text-xl font-bold text-ink">{stats.viewed?.length || 0}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 ">{isArabic ? 'مشاهدة' : 'Viewed'}</p>
          </div>
          <div className="glass rounded-xl p-3 border border-white/10 text-center">
           <FiHeart size={20} className="mx-auto text-rose-500 mb-1" />
-          <p className="text-xl font-bold text-navy-900 dark:text-white">{favorites.length}</p>
+          <p className="text-xl font-bold text-ink">{favorites.length}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 ">{isArabic ? 'مفضلة' : 'Favorites'}</p>
          </div>
          <div className="glass rounded-xl p-3 border border-white/10 text-center">
           <FiStar size={20} className="mx-auto text-amber-500 mb-1" />
-          <p className="text-xl font-bold text-navy-900 dark:text-white">{ratingsCount}</p>
+          <p className="text-xl font-bold text-ink">{ratingsCount}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 ">{isArabic ? 'تقييم' : 'Ratings'}</p>
          </div>
          <div className="glass rounded-xl p-3 border border-white/10 text-center">
           <FiClock size={20} className="mx-auto text-cyan-500 mb-1" />
-          <p className="text-sm font-bold text-navy-900 dark:text-white">
+          <p className="text-sm font-bold text-ink">
            {stats.lastVisit ? new Date(stats.lastVisit).toLocaleDateString(isArabic ? 'ar' : 'en') : '—'}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400 ">{isArabic ? 'آخر زيارة' : 'Last Visit'}</p>
@@ -198,7 +198,7 @@ function StudentProfileModal({ student, isOpen, onClose }) {
 
         {/* Activity Timeline */}
         <div className="glass rounded-xl p-4 border border-white/10">
-         <h3 className="text-sm font-semibold text-navy-900 dark:text-white mb-3 flex items-center gap-2">
+         <h3 className="text-sm font-semibold text-ink mb-3 flex items-center gap-2">
           <FiClock size={14} className="text-royal-500" />
           {isArabic ? 'سجل النشاط' : 'Activity Log'}
          </h3>
@@ -215,7 +215,7 @@ function StudentProfileModal({ student, isOpen, onClose }) {
                <Icon size={14} className={config.color} />
               </div>
               <div className="flex-1 min-w-0">
-               <p className="text-sm text-navy-900 dark:text-white">{isArabic ? config.labelAr : config.labelEn}</p>
+               <p className="text-sm text-ink">{isArabic ? config.labelAr : config.labelEn}</p>
                {log.detail && <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{log.detail}</p>}
               </div>
               <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">

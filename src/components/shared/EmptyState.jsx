@@ -1,5 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion'
-import { useLanguage } from '../../context/LanguageContext'
+﻿import { motion, useReducedMotion } from 'framer-motion'
 
 const gradByIcon = {
   blue: 'from-blue-500 to-blue-600',
@@ -18,8 +17,7 @@ export default function EmptyState({
   action,
   className = '',
 }) {
-  const { t } = useLanguage()
-  const prefersReduced = useReducedMotion()
+    const prefersReduced = useReducedMotion()
   const grad = gradByIcon[color] || gradByIcon.blue
 
   return (
@@ -35,7 +33,7 @@ export default function EmptyState({
         {Icon && <Icon size={26} className="text-white" />}
       </div>
       {title && (
-        <h3 className="text-lg font-bold text-navy-900 dark:text-white mb-2">{title}</h3>
+        <h3 className="text-lg font-bold text-ink mb-2">{title}</h3>
       )}
       {description && (
         <p className="text-sm text-slate-500 dark:text-white/50 mb-5 max-w-md mx-auto">

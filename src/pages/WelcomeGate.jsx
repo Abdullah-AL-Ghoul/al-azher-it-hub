@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
-import { welcomeContainer, welcomeItem, revealContainer, revealItem, springSoft } from '../utils/motionTokens'
+import { welcomeContainer, welcomeItem, springSoft } from '../utils/motionTokens'
 import { FiLogIn, FiUserPlus, FiPlay, FiFileText, FiLayers, FiArrowUpRight, FiSun, FiMoon, FiMonitor, FiShield, FiStar, FiDatabase, FiCpu, FiGlobe, FiCloud, FiCode, FiBookOpen, FiCheck, FiChevronDown, FiVideo, FiClock, FiAward, FiUsers, FiHelpCircle } from 'react-icons/fi'
 import SiteLogo from '../components/shared/SiteLogo'
 import Reveal from '../components/shared/Reveal'
@@ -43,7 +43,7 @@ function CountUp({ end, duration = 1400, suffix = '' }) {
  return <span ref={ref} className="tabular-nums">{value.toLocaleString()}{suffix}</span>
 }
 
-function FaqItem({ q, a, isArabic }) {
+function FaqItem({ q, a }) {
  const [open, setOpen] = useState(false)
  const prefersReduced = useReducedMotion()
  return (
@@ -53,8 +53,8 @@ function FaqItem({ q, a, isArabic }) {
     className="w-full flex items-center justify-between gap-4 px-5 py-4 text-start"
     aria-expanded={open}
    >
-    <span className="font-semibold text-navy-900 dark:text-white text-sm flex items-center gap-2.5">
-     <FiHelpCircle size={16} className="text-royal-500 dark:text-cyan-400 flex-shrink-0" />
+    <span className="font-semibold text-ink text-sm flex items-center gap-2.5">
+     <FiHelpCircle size={16} className="text-accent flex-shrink-0" />
      {q}
     </span>
     <motion.span animate={prefersReduced ? {} : { rotate: open ? 180 : 0 }} transition={prefersReduced ? {} : springSoft} className="flex-shrink-0">
@@ -79,7 +79,7 @@ function FaqItem({ q, a, isArabic }) {
 }
 
 export default function WelcomeGate() {
- const { lang, t, toggleLang } = useLanguage()
+ const { lang, toggleLang } = useLanguage()
  const { theme, toggle } = useTheme()
  const prefersReduced = useReducedMotion()
  const { user } = useAuth()
@@ -88,10 +88,7 @@ export default function WelcomeGate() {
  const itemVariants = prefersReduced ? { hidden: {}, visible: {} } : welcomeItem
  const isArabic = lang === 'ar'
 
- useEffect(() => {
-  document.title = isArabic ? 'مرحباً - AL-Azher IT Hub' : 'Welcome - AL-Azher IT Hub'
- }, [isArabic])
- useEffect(() => { if (user) navigate('/home', { replace: true }) }, [user, navigate])
+  useEffect(() => { if (user) navigate('/home', { replace: true }) }, [user, navigate])
  if (user) return null
 
  const features = [
@@ -129,30 +126,30 @@ export default function WelcomeGate() {
  ]
 
  return (
-  <div className="relative min-h-screen overflow-hidden bg-spatial-full grain">
+  <div className="relative min-h-screen overflow-hidden bg-spatial-full ">
    {/* Background depth */}
    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
     <div className="absolute inset-0 spatial-grid opacity-[0.35]" />
-    <div className="absolute -top-32 -left-32 w-[520px] h-[520px] bg-royal-500/[0.08] rounded-full blur-[48px] animate-orb-float-1" />
-    <div className="absolute top-[30%] -right-24 w-[560px] h-[560px] bg-cyan-400/[0.07] rounded-full blur-[48px] animate-orb-float-2" />
-    <div className="absolute bottom-0 left-[30%] w-[640px] h-[360px] bg-violet-500/[0.06] rounded-full blur-[56px] animate-orb-float-3" />
+    <div className="absolute -top-32 -left-32 w-[520px] h-[520px] bg-royal-500/[0.08] rounded-full blur-[48px]" />
+    <div className="absolute top-[30%] -right-24 w-[560px] h-[560px] bg-cyan-400/[0.07] rounded-full blur-[48px]" />
+    <div className="absolute bottom-0 left-[30%] w-[640px] h-[360px] bg-violet-500/[0.06] rounded-full blur-[56px]" />
    </div>
 
    {/* Top bar */}
-   <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   <div className="relative z-20 container-page">
     <div className="flex items-center justify-between h-16 md:h-20">
      <div className="flex items-center gap-2">
       <SiteLogo size="sm" />
-      <span className="hidden sm:inline font-bold text-navy-900 dark:text-white tracking-tight">AL-Azher IT Hub</span>
+      <span className="hidden sm:inline font-bold text-ink tracking-tight">AL-Azher IT Hub</span>
       <span className="hidden md:inline-flex items-center gap-1.5 ms-3 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold tracking-widest uppercase">
        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> {isArabic ? 'متاح الآن' : 'Live'}
       </span>
      </div>
      <div className="flex items-center gap-2">
-       <button onClick={toggleLang} className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-navy-900 dark:hover:text-white transition" aria-label={isArabic ? 'تبديل اللغة: EN' : 'Switch language: عربي'}>
+       <button onClick={toggleLang} className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-ink transition" aria-label={isArabic ? 'تبديل اللغة: EN' : 'Switch language: عربي'}>
         {isArabic ? 'EN' : 'عربي'}
        </button>
-      <button onClick={toggle} className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-navy-900 dark:hover:text-white transition" aria-label={isArabic ? 'تبديل المظهر' : 'Toggle theme'}>
+      <button onClick={toggle} className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-ink transition" aria-label={isArabic ? 'تبديل المظهر' : 'Toggle theme'}>
        {theme === 'light' ? <FiMoon size={16} /> : theme === 'dark' ? <FiMonitor size={16} /> : <FiSun size={16} />}
       </button>
       <Link to="/login" className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl btn-primary text-xs font-semibold">
@@ -163,7 +160,7 @@ export default function WelcomeGate() {
    </div>
 
    {/* ===== HERO ===== */}
-   <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   <div className="relative z-10 container-page">
     <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-12 items-center pt-6 lg:pt-10 pb-10 lg:min-h-[calc(100vh-140px)]">
      {/* Left — Editorial */}
      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="text-center lg:text-start">
@@ -173,7 +170,7 @@ export default function WelcomeGate() {
        <span className="hidden sm:inline-flex items-center gap-1 text-amber-500 dark:text-amber-400"><FiStar size={12} className="fill-amber-400 text-amber-400" /> 4.9/5</span>
       </motion.div>
 
-      <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl lg:text-[60px] font-extrabold tracking-tight leading-[0.95] text-navy-900 dark:text-white">
+      <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl lg:text-[60px] font-extrabold tracking-tight leading-[0.95] text-ink">
        {isArabic ? 'تعلّم أذكى،' : 'Learn smarter,'}
        <br />
        <span className="gradient-text-spatial">{isArabic ? 'وتفوّق في موادك.' : 'excel in your courses.'}</span>
@@ -227,13 +224,19 @@ export default function WelcomeGate() {
      >
       <div className="relative w-full max-w-[520px]">
        <div className="absolute -inset-6 bg-gradient-to-br from-royal-500/15 via-cyan-400/10 to-violet-500/10 rounded-[32px] blur-2xl" />
-       <div className="relative glass rounded-[28px] p-5 md:p-6 shadow-2xl overflow-hidden">
+       <div className="relative glass-panel gradient-border rounded-[28px] p-5 md:p-6 shadow-2xl overflow-hidden">
+        <div className="absolute inset-0 spatial-grid opacity-[0.12] pointer-events-none" />
+        <div className="absolute -top-6 -right-6 w-24 h-24 hero-orbit opacity-40 pointer-events-none hidden md:block" aria-hidden="true" />
         <div className="absolute inset-0 bg-gradient-to-br from-royal-500/[0.06] via-transparent to-cyan-400/[0.06] pointer-events-none" />
+        <div className="relative flex items-center gap-2 mb-3">
+         <span className="eyebrow text-[10px] !mb-0">{isArabic ? 'محاضرة 04 • 24 دقيقة' : 'Lecture 04 • 24 min'}</span>
+         <span className="ms-auto w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        </div>
         <div className="relative flex items-center justify-between mb-4">
          <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-royal-500 text-white flex items-center justify-center"><FiPlay size={16} /></div>
           <div>
-           <div className="text-sm font-bold text-navy-900 dark:text-white">{isArabic ? 'قواعد البيانات — المحاضرة 4' : 'Databases — Lecture 4'}</div>
+           <div className="text-sm font-bold text-ink">{isArabic ? 'قواعد البيانات — المحاضرة 4' : 'Databases — Lecture 4'}</div>
            <div className="text-xs text-slate-500 dark:text-white/50">{isArabic ? 'د. أحمد · 24 دقيقة' : 'Dr. Ahmed · 24 min'}</div>
           </div>
          </div>
@@ -258,7 +261,7 @@ export default function WelcomeGate() {
          ].map(s => (
           <div key={s.k} className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 p-2.5 text-center">
            <div className="text-[11px] tracking-widest uppercase text-slate-500 dark:text-white/50">{s.k}</div>
-           <div className="text-sm font-bold text-navy-900 dark:text-white">{s.v}</div>
+           <div className="text-sm font-bold text-ink">{s.v}</div>
           </div>
          ))}
         </div>
@@ -271,7 +274,7 @@ export default function WelcomeGate() {
        >
         <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center"><FiFileText size={14} /></span>
         <div>
-         <div className="text-xs font-bold text-navy-900 dark:text-white leading-none">{isArabic ? 'ملخص جديد' : 'New summary'}</div>
+         <div className="text-xs font-bold text-ink leading-none">{isArabic ? 'ملخص جديد' : 'New summary'}</div>
          <div className="text-[11px] text-slate-500 dark:text-white/50">{isArabic ? 'تمت الإضافة اليوم' : 'Added today'}</div>
         </div>
        </motion.div>
@@ -283,7 +286,7 @@ export default function WelcomeGate() {
        >
         <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center"><FiCheck size={14} /></span>
         <div>
-         <div className="text-xs font-bold text-navy-900 dark:text-white leading-none">{isArabic ? 'تمت المتابعة' : 'Progress tracked'}</div>
+         <div className="text-xs font-bold text-ink leading-none">{isArabic ? 'تمت المتابعة' : 'Progress tracked'}</div>
          <div className="text-[11px] text-slate-500 dark:text-white/50">{isArabic ? 'المحاضرة 4 من 8' : 'Lecture 4 of 8'}</div>
         </div>
        </motion.div>
@@ -310,7 +313,7 @@ export default function WelcomeGate() {
    </Reveal>
 
    {/* ===== FEATURES ===== */}
-   <div className="relative z-10 py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   <div className="relative z-10 py-16 container-page">
     <SectionHeading
      eyebrow={isArabic ? 'لماذا نحن' : 'Why us'}
      title={isArabic ? 'كل ما يحتاجه طالب تكنولوجيا المعلومات' : 'Everything an IT student needs'}
@@ -324,7 +327,7 @@ export default function WelcomeGate() {
         <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${f.grad} flex items-center justify-center text-white shadow-lg mb-4 group-hover:scale-110 group-hover:rotate-3 transition duration-300`}>
          <Icon size={22} />
         </div>
-        <h3 className="font-semibold text-navy-900 dark:text-white mb-1">{isArabic ? f.labelAr : f.labelEn}</h3>
+        <h3 className="font-semibold text-ink mb-1">{isArabic ? f.labelAr : f.labelEn}</h3>
         <p className="text-sm text-slate-500 dark:text-white/60">{isArabic ? f.descAr : f.descEn}</p>
        </div>
       )
@@ -333,7 +336,7 @@ export default function WelcomeGate() {
    </div>
 
    {/* ===== HOW IT WORKS ===== */}
-   <div className="relative z-10 py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   <div className="relative z-10 py-16 container-page">
     <SectionHeading
      eyebrow={isArabic ? 'كيف تعمل المنصة' : 'How it works'}
      title={isArabic ? 'ابدأ في 3 خطوات بسيطة' : 'Start in 3 simple steps'}
@@ -349,7 +352,7 @@ export default function WelcomeGate() {
          <div className={`w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${i === 0 ? 'from-royal-500 to-cyan-500' : i === 1 ? 'from-emerald-500 to-teal-500' : 'from-amber-500 to-orange-500'} flex items-center justify-center text-white shadow-lg`}>
           <Icon size={24} />
          </div>
-         <h3 className="font-semibold text-navy-900 dark:text-white mb-1">{isArabic ? s.titleAr : s.titleEn}</h3>
+         <h3 className="font-semibold text-ink mb-1">{isArabic ? s.titleAr : s.titleEn}</h3>
          <p className="text-sm text-slate-500 dark:text-white/60">{isArabic ? s.descAr : s.descEn}</p>
         </div>
         {i < steps.length - 1 && (
@@ -370,7 +373,7 @@ export default function WelcomeGate() {
    </div>
 
    {/* ===== TESTIMONIALS ===== */}
-   <div className="relative z-10 py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   <div className="relative z-10 py-16 container-page">
     <SectionHeading
      eyebrow={isArabic ? 'آراء الطلاب' : 'Student voices'}
      title={isArabic ? 'ماذا يقول طلابنا' : 'What our students say'}
@@ -382,13 +385,13 @@ export default function WelcomeGate() {
        <div className="flex items-center gap-1 mb-4 text-amber-400">
         {[1, 2, 3, 4, 5].map(star => <FiStar key={star} size={14} className="fill-amber-400" />)}
        </div>
-       <p className="text-sm text-navy-900 dark:text-white/80 leading-relaxed mb-5">"{isArabic ? tm.textAr : tm.textEn}"</p>
+       <p className="text-sm text-navy-900 dark:text-white/80 leading-relaxed mb-5">&ldquo;{isArabic ? tm.textAr : tm.textEn}&rdquo;</p>
        <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-royal-500 to-cyan-400 flex items-center justify-center text-white text-sm font-bold">
          {tm.name.charAt(0)}
         </div>
         <div>
-         <p className="text-sm font-semibold text-navy-900 dark:text-white">{tm.name}</p>
+         <p className="text-sm font-semibold text-ink">{tm.name}</p>
          <p className="text-xs text-slate-500 dark:text-white/50">{tm.role}</p>
         </div>
        </div>
@@ -445,7 +448,7 @@ export default function WelcomeGate() {
         const Icon = s.icon
         return (
          <span key={s.en} className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-slate-600 dark:text-white/60 font-medium">
-          <Icon size={14} className="text-royal-500 dark:text-cyan-400" />
+          <Icon size={14} className="text-accent" />
           {isArabic ? s.ar : s.en}
          </span>
         )

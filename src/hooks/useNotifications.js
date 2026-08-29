@@ -28,18 +28,17 @@ export function useNotifications(user) {
  const [notifications, setNotifications] = useState([])
  const [unreadCount, setUnreadCount] = useState(0)
  const lastSeenRef = useRef(Date.now())
- const channelRef = useRef(null)
  const studentId = user?.studentId || 'anon'
 
  const getLastVisitKey = useCallback(() => `al_azher_last_visit_${studentId}`, [studentId])
 
  const loadRecent = useCallback(async () => {
   try {
+   // Uses the SECURITY DEFINER get_notifications_feed RPC, which exposes only
+   // type/action/detail/timestamp — never studentId/name/ip/device. Directly
+   // reading the activity table is admin-only under RLS.
    const { data, error } = await getSupabase()
-    .from('activity')
-    .select('*')
-    .order('timestamp', { ascending: false })
-    .limit(30)
+    .rpc('get_notifications_feed', { p_limit: 30 })
    if (error) return
    const items = (data || [])
     .filter(n => isWorthNotifying(n.type, n.action))
@@ -65,31 +64,21 @@ export function useNotifications(user) {
  }, [getLastVisitKey])
 
  useEffect(() => {
+  if (!user) return
   loadRecent()
-
-  try {
-   const supabase = getSupabase()
-   const channel = supabase
-    .channel('activity-changes')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activity' }, (payload) => {
-     const n = payload.new
-     if (!isWorthNotifying(n.type, n.action)) return
-     const newItem = { ...n, meta: getActivityMeta(n.type, n.action) }
-     setNotifications(prev => [newItem, ...prev].slice(0, 30))
-     setUnreadCount(prev => prev + 1)
-    })
-    .subscribe()
-   channelRef.current = channel
-  } catch { /* silent */ }
-
-  const interval = setInterval(loadRecent, 60000)
+  // Poll instead of subscribing to realtime: realtime on `activity` is
+  // admin-only under RLS and would leak PII if opened to students.
+  // Only poll while the tab is visible — hidden tabs skip the network call.
+  const loadIfVisible = () => {
+   if (document.visibilityState === 'visible') loadRecent()
+  }
+  const interval = setInterval(loadIfVisible, 60000)
+  document.addEventListener('visibilitychange', loadIfVisible)
   return () => {
    clearInterval(interval)
-   if (channelRef.current) {
-    try { getSupabase().removeChannel(channelRef.current) } catch { /* silent */ }
-   }
+   document.removeEventListener('visibilitychange', loadIfVisible)
   }
- }, [loadRecent])
+ }, [loadRecent, user])
 
  return { notifications, unreadCount, markAsRead, refresh: loadRecent }
 }

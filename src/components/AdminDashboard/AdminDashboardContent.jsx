@@ -1,10 +1,9 @@
 ﻿import { useState, useMemo, useRef, useCallback, memo } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { FiBook, FiUsers, FiActivity, FiGrid, FiX, FiSave, FiUpload, FiFile, FiFileText, FiLogIn, FiTrash2, FiCheck, FiLoader, FiAlertCircle, FiYoutube, FiDownload, FiVideo } from 'react-icons/fi'
+import { FiX, FiUpload, FiFile, FiTrash2, FiCheck, FiLoader, FiAlertCircle, FiYoutube } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { addCourse, updateCourse, addLecture, updateLecture, addSource, updateSource } from '../../services'
 import { useFileUpload } from '../../hooks/useFileUpload'
-import { formatBytes, ACCEPTED_MIME_TYPES } from '../../services/sourceStorage'
+import { formatBytes } from '../../services/sourceStorage'
 import { extractYouTubeId, lectureThumb } from '../../utils/helpers'
 import CoursesTable from './CoursesTable'
 import LecturesTable from './LecturesTable'
@@ -16,7 +15,10 @@ import SettingsPanel from './SettingsPanel'
 import CrudForm from './CrudForm'
 import FormField from './FormField'
 import FormActions from './FormActions'
-import { INPUT_CLASS, exportToJson } from '../../utils/adminShared'
+import CourseProfileModal from './CourseProfileModal'
+import OverviewPanel from './OverviewPanel'
+import { INPUT_CLASS } from '../../utils/adminShared'
+import { computeActiveStudents, computeNewStudents } from '../../utils/adminStatsLogic'
 
 export default memo(function AdminDashboardContent({
  courses,
@@ -34,8 +36,7 @@ export default memo(function AdminDashboardContent({
  onRefresh,
  onNavigate
 }) {
- const prefersReduced = useReducedMotion()
- const [showCourseForm, setShowCourseForm] = useState(false)
+  const [showCourseForm, setShowCourseForm] = useState(false)
  const [editingCourseId, setEditingCourseId] = useState(null)
  const [courseForm, setCourseForm] = useState({ nameAr: '', nameEn: '', doctorAr: '', doctorEn: '' })
  const courseFormRef = useRef(null)
@@ -43,16 +44,17 @@ export default memo(function AdminDashboardContent({
  const [showLectureForm, setShowLectureForm] = useState(false)
  const [editingLectureId, setEditingLectureId] = useState(null)
  const [lectureForm, setLectureForm] = useState({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString().slice(0, 10), subjectAr: '', subjectEn: '', videoId: '', sortOrder: 0, doctorAr: '', doctorEn: '' })
- const [lectureCourseId, setLectureCourseId] = useState('')
- const [lectureCustomSubject, setLectureCustomSubject] = useState(false)
- const lectureFormRef = useRef(null)
+  const [lectureCourseId, setLectureCourseId] = useState('')
+  const [lectureCustomSubject, setLectureCustomSubject] = useState(false)
+  const [lectureCourseSearch, setLectureCourseSearch] = useState('')
+  const lectureFormRef = useRef(null)
 
- const [showSourceForm, setShowSourceForm] = useState(false)
- const [editingSourceId, setEditingSourceId] = useState(null)
- const [sourceForm, setSourceForm] = useState({ titleAr: '', titleEn: '', url: '', subjectAr: '', subjectEn: '', fileData: null, fileName: '', files: [] })
- const sourceFormRef = useRef(null)
- const sourceFileRef = useRef(null)
- const sourceUpload = useFileUpload()
+  const [showSourceForm, setShowSourceForm] = useState(false)
+  const [editingSourceId, setEditingSourceId] = useState(null)
+  const [sourceForm, setSourceForm] = useState({ titleAr: '', titleEn: '', url: '', subjectAr: '', subjectEn: '', fileData: null, fileName: '', files: [] })
+  const sourceFormRef = useRef(null)
+  const sourceFileRef = useRef(null)
+  const sourceUpload = useFileUpload()
 
  const scrollToForm = useCallback((ref) => {
   setTimeout(() => {
@@ -141,12 +143,13 @@ export default memo(function AdminDashboardContent({
     await addLecture(data)
     toast.success(isArabic ? 'تم إنشاء المحاضرة' : 'Lecture created')
    }
-   setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString().slice(0, 10), subjectAr: '', subjectEn: '', videoId: '', sortOrder: 0, doctorAr: '', doctorEn: '' })
-   setLectureCourseId('')
-   setLectureCustomSubject(false)
-   setEditingLectureId(null)
-   setShowLectureForm(false)
-   if (onRefresh) onRefresh()
+    setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString().slice(0, 10), subjectAr: '', subjectEn: '', videoId: '', sortOrder: 0, doctorAr: '', doctorEn: '' })
+    setLectureCourseId('')
+    setLectureCourseSearch('')
+    setLectureCustomSubject(false)
+    setEditingLectureId(null)
+    setShowLectureForm(false)
+    if (onRefresh) onRefresh()
   } catch (error) {
    toast.error(isArabic ? 'فشل حفظ المحاضرة' : 'Failed to save lecture')
   }
@@ -192,14 +195,20 @@ export default memo(function AdminDashboardContent({
   }
  }
 
- const handleSourceFiles = async (e) => {
-  const fileList = e.target.files
-  if (!fileList?.length) return
-  await sourceUpload.uploadFiles(fileList, isArabic)
-  e.target.value = ''
- }
+  const handleSourceFiles = async (e) => {
+   const fileList = e.target.files
+   if (!fileList?.length) return
+   await sourceUpload.uploadFiles(fileList, isArabic)
+   e.target.value = ''
+  }
 
- const overviewStats = useMemo(() => ({
+  const [profileCourse, setProfileCourse] = useState(null)
+
+  const activeStudents = useMemo(() => computeActiveStudents(users, studentLogs), [users, studentLogs])
+
+  const newStudents = useMemo(() => computeNewStudents(users), [users])
+
+  const overviewStats = useMemo(() => ({
   totalCourses: courses.length,
   totalLectures: lectures.length,
   totalSources: sources.length,
@@ -280,39 +289,53 @@ export default memo(function AdminDashboardContent({
       title={editingLectureId
        ? (isArabic ? 'تعديل المحاضرة' : 'Edit Lecture')
        : (isArabic ? 'إضافة محاضرة جديدة' : 'Add New Lecture')}
-      onClose={() => { setShowLectureForm(false); setEditingLectureId(null) }}
+      onClose={() => { setShowLectureForm(false); setEditingLectureId(null); setLectureCourseSearch('') }}
       isArabic={isArabic}
      >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-       <div className="md:col-span-2">
-        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة' : 'Course / Subject'}</label>
-        {!lectureCustomSubject ? (
-         <div className="flex gap-2">
-          <select
-           value={lectureCourseId}
-           onChange={e => {
-            const cid = e.target.value
-            setLectureCourseId(cid)
-            if (cid === '__custom__') {
-             setLectureCustomSubject(true)
-             setLectureForm({ ...lectureForm, subjectAr: '', subjectEn: '' })
-            } else {
-             const course = courses.find(c => c.id === cid)
-             if (course) {
-              setLectureForm({ ...lectureForm, subjectAr: course.nameAr || '', subjectEn: course.nameEn || '' })
+        <div className="md:col-span-2">
+         <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة' : 'Course / Subject'}</label>
+         {!lectureCustomSubject ? (
+          <div className="flex gap-2 flex-col sm:flex-row">
+           <div className="relative flex-1">
+            <input
+             value={lectureCourseSearch}
+             onChange={e => setLectureCourseSearch(e.target.value)}
+             placeholder={isArabic ? 'ابحث عن المادة...' : 'Search courses...'}
+             aria-label={isArabic ? 'بحث عن المادة' : 'Search courses'}
+             className={`${INPUT_CLASS} mb-1.5 sm:mb-0`}
+            />
+           </div>
+           <select
+            value={lectureCourseId}
+            onChange={e => {
+             const cid = e.target.value
+             setLectureCourseId(cid)
+             if (cid === '__custom__') {
+              setLectureCustomSubject(true)
+              setLectureForm({ ...lectureForm, subjectAr: '', subjectEn: '' })
+             } else {
+              const course = courses.find(c => c.id === cid)
+              if (course) {
+               setLectureForm({ ...lectureForm, subjectAr: course.nameAr || '', subjectEn: course.nameEn || '' })
+              }
              }
-            }
-           }}
-           className={INPUT_CLASS}
-          >
-           <option value="">{isArabic ? 'اختر المادة...' : 'Select course...'}</option>
-           {courses.map(c => (
-            <option key={c.id} value={c.id}>{isArabic ? c.nameAr : c.nameEn}</option>
-           ))}
-           <option value="__custom__">{isArabic ? '...أخرى (كتابة يدوية)' : '...Other (custom)'}</option>
-          </select>
-         </div>
-        ) : (
+            }}
+            className={INPUT_CLASS}
+           >
+            <option value="">{isArabic ? 'اختر المادة...' : 'Select course...'}</option>
+            {courses
+             .filter(c => {
+              const q = lectureCourseSearch.toLowerCase()
+              return !q || c.nameAr?.toLowerCase().includes(q) || c.nameEn?.toLowerCase().includes(q)
+             })
+             .map(c => (
+              <option key={c.id} value={c.id}>{isArabic ? c.nameAr : c.nameEn}</option>
+             ))}
+            <option value="__custom__">{isArabic ? '...أخرى (كتابة يدوية)' : '...Other (custom)'}</option>
+           </select>
+          </div>
+         ) : (
          <div className="space-y-2">
           <div className="flex gap-2">
            <input
@@ -424,9 +447,10 @@ export default memo(function AdminDashboardContent({
       isArabic={isArabic}
       onEdit={handleEditLecture}
       onAdd={() => {
-   setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString().slice(0, 10), subjectAr: '', subjectEn: '', videoId: '', sortOrder: 0, doctorAr: '', doctorEn: '' })
-       setLectureCourseId('')
-       setLectureCustomSubject(false)
+setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString().slice(0, 10), subjectAr: '', subjectEn: '', videoId: '', sortOrder: 0, doctorAr: '', doctorEn: '' })
+    setLectureCourseId('')
+    setLectureCourseSearch('')
+    setLectureCustomSubject(false)
        setEditingLectureId(null)
        setShowLectureForm(true)
        scrollToForm(lectureFormRef)
@@ -633,148 +657,28 @@ export default memo(function AdminDashboardContent({
 
    {/* ========== OVERVIEW TAB ========== */}
    {selectedTab === 'overview' && (
-    <>
-     {/* Quick Actions */}
-     <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} className="flex flex-wrap gap-3 mb-6 items-center">
-      <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{isArabic ? 'إجراءات سريعة:' : 'Quick actions:'}</span>
-      <button onClick={() => onNavigate('lectures')} className="flex items-center gap-2 px-3 py-1.5 bg-royal-500 hover:bg-royal-600 text-white rounded-lg text-sm font-medium transition">
-       <FiVideo size={14} /> {isArabic ? 'إدارة المحاضرات' : 'Manage lectures'}
-      </button>
-      <button onClick={() => onNavigate('courses')} className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition">
-       <FiBook size={14} /> {isArabic ? 'إدارة المواد' : 'Manage courses'}
-      </button>
-      <button onClick={() => onNavigate('sources')} className="flex items-center gap-2 px-3 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium transition">
-       <FiGrid size={14} /> {isArabic ? 'إدارة المصادر' : 'Manage sources'}
-      </button>
-      <button onClick={() => onNavigate('users')} className="flex items-center gap-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition">
-       <FiUsers size={14} /> {isArabic ? 'الطلاب' : 'Students'}
-      </button>
-      <button onClick={() => exportToJson('al-azher-backup', t)} className="flex items-center gap-2 px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition">
-       <FiDownload size={14} /> {isArabic ? 'نسخة احتياطية' : 'Backup'}
-      </button>
-     </motion.div>
+    <OverviewPanel
+     courses={courses}
+     lectures={lectures}
+     activityLogs={activityLogs}
+     additions={additions}
+     activeStudents={activeStudents}
+     newStudents={newStudents}
+     overviewStats={overviewStats}
+     isArabic={isArabic}
+     onNavigate={onNavigate}
+     onCourseClick={setProfileCourse}
+     onRefresh={onRefresh}
+    />
+   )}
 
-     {/* Stats */}
-     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      {[
-       { value: overviewStats.totalCourses, label: isArabic ? 'المواد' : 'Courses', icon: FiBook, gradient: 'from-emerald-500 to-emerald-600', delay: 0 },
-       { value: overviewStats.totalLectures, label: isArabic ? 'المحاضرات' : 'Lectures', icon: FiActivity, gradient: 'from-violet-500 to-violet-600', delay: 0.08 },
-       { value: overviewStats.totalSources, label: isArabic ? 'المصادر' : 'Sources', icon: FiGrid, gradient: 'from-cyan-500 to-cyan-600', delay: 0.16 },
-       { value: overviewStats.activeUsers, label: isArabic ? 'العدد الحقيقي للطلاب' : 'Real Students', icon: FiUsers, gradient: 'from-amber-500 to-amber-600', delay: 0.24 },
-       { value: overviewStats.totalLogins, label: isArabic ? 'تسجيلات الدخول' : 'Total Logins', icon: FiLogIn, gradient: 'from-rose-500 to-rose-600', delay: 0.32 },
-      ].map((stat, i) => {
-       const Icon = stat.icon
-       return (
-        <motion.div
-         key={i}
-         initial={prefersReduced ? {} : { opacity: 0, x: i % 2 === 0 ? 50 : -50, scale: 0.85 }}
-         animate={prefersReduced ? {} : { opacity: 1, x: 0, scale: 1 }}
-         transition={prefersReduced ? {} : { duration: 0.7, delay: stat.delay, type: 'spring', stiffness: 150, damping: 15 }}
-         whileHover={prefersReduced ? {} : { scale: 1.04, y: -6 }}
-         className="glass rounded-2xl p-5 border border-white/10 hover:border-royal-500/30 transition group cursor-default"
-        >
-         <div className="flex items-center gap-4">
-          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition duration-300`}>
-           <Icon size={24} />
-          </div>
-          <div>
-           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">{stat.label}</p>
-           <motion.p
-            initial={prefersReduced ? {} : { opacity: 0, scale: 0.3 }}
-            animate={prefersReduced ? {} : { opacity: 1, scale: 1 }}
-            transition={prefersReduced ? {} : { duration: 0.8, delay: stat.delay + 0.2, type: 'spring', stiffness: 120 }}
-            className="text-3xl font-extrabold text-navy-900 dark:text-white tracking-tight"
-           >
-            {stat.value}
-           </motion.p>
-          </div>
-         </div>
-        </motion.div>
-       )
-})}
-      </div>
-
-      {/* Lectures per course mini bar chart */}
-      {courses.length > 0 && (
-       <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass rounded-2xl p-5 border border-white/10 mt-6">
-        <h3 className="text-sm font-bold text-navy-900 dark:text-white mb-4">{isArabic ? 'المحاضرات حسب المادة' : 'Lectures per course'}</h3>
-        <div className="space-y-2.5">
-         {courses.slice(0, 8).map(c => {
-          const count = lectures.filter(l => l.courseId === c.id || l.subjectAr === c.nameAr || l.subjectEn === c.nameEn).length
-          const max = Math.max(1, ...courses.slice(0, 8).map(cc => lectures.filter(l => l.courseId === cc.id || l.subjectAr === cc.nameAr || l.subjectEn === cc.nameEn).length))
-          const pct = Math.round((count / max) * 100)
-          return (
-           <div key={c.id} className="flex items-center gap-3">
-            <span className="text-xs text-slate-500 dark:text-slate-400 w-28 truncate flex-shrink-0">{isArabic ? c.nameAr : c.nameEn}</span>
-            <div className="flex-1 h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-             <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: 0.5, ease: [0.16,1,0.3,1] }} className="h-full rounded-full bg-gradient-to-r from-royal-500 to-cyan-500" />
-            </div>
-            <span className="text-xs font-medium text-navy-900 dark:text-white w-8 text-right tabular-nums">{count}</span>
-           </div>
-          )
-         })}
-        </div>
-       </motion.div>
-      )}
-
-      {/* Recent activity + recent additions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-       <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass rounded-2xl p-5 border border-white/10">
-        <div className="flex items-center justify-between mb-4">
-         <h3 className="text-sm font-bold text-navy-900 dark:text-white">{isArabic ? 'آخر النشاطات' : 'Recent activity'}</h3>
-         <FiActivity size={14} className="text-slate-400" />
-        </div>
-        {activityLogs.length === 0 ? (
-         <p className="text-xs text-slate-500 dark:text-slate-400 text-center py-6">{isArabic ? 'لا توجد نشاطات بعد' : 'No activity yet'}</p>
-        ) : (
-         <ul className="space-y-2.5">
-          {activityLogs.slice(0, 6).map(log => (
-           <li key={log.id} className="flex items-start gap-3">
-            <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${log.action === 'ADD' ? 'bg-emerald-400' : log.action === 'DELETE' ? 'bg-rose-400' : 'bg-cyan-400'}`} />
-            <div className="min-w-0 flex-1">
-             <p className="text-xs text-navy-900 dark:text-white truncate">
-              <span className="font-semibold">{log.action === 'ADD' ? (isArabic ? 'إضافة' : 'Add') : log.action === 'DELETE' ? (isArabic ? 'حذف' : 'Delete') : (isArabic ? 'تحديث' : 'Update')}</span>
-              {' '}<span className="text-slate-500 dark:text-slate-400">{log.detail}</span>
-             </p>
-             <p className="text-[10px] text-slate-400 dark:text-slate-500">
-              {log.timestamp ? new Date(log.timestamp).toLocaleString(isArabic ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
-             </p>
-            </div>
-           </li>
-          ))}
-         </ul>
-        )}
-       </motion.div>
-
-       <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="glass rounded-2xl p-5 border border-white/10">
-        <div className="flex items-center justify-between mb-4">
-         <h3 className="text-sm font-bold text-navy-900 dark:text-white">{isArabic ? 'آخر الإضافات' : 'Recent additions'}</h3>
-         <FiFileText size={14} className="text-slate-400" />
-        </div>
-        {additions.length === 0 ? (
-         <p className="text-xs text-slate-500 dark:text-slate-400 text-center py-6">{isArabic ? 'لا توجد إضافات بعد' : 'No additions yet'}</p>
-        ) : (
-         <ul className="space-y-2.5">
-          {additions.slice(0, 6).map(a => (
-           <li key={a.id} className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-             <FiFileText size={14} className="text-emerald-500" />
-            </div>
-            <div className="min-w-0 flex-1">
-             <p className="text-xs text-navy-900 dark:text-white truncate">{isArabic ? a.titleAr : a.titleEn}</p>
-             <p className="text-[10px] text-slate-400 dark:text-slate-500">
-              {isArabic ? a.subjectAr : a.subjectEn}
-              {a.createdAt ? ` · ${new Date(a.createdAt).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short' })}` : ''}
-             </p>
-            </div>
-           </li>
-          ))}
-         </ul>
-        )}
-       </motion.div>
-      </div>
-     </>
-    )}
-   </div>
-  )
- })
+     <CourseProfileModal
+      course={profileCourse}
+      lectures={lectures}
+      sources={sources}
+      isOpen={!!profileCourse}
+      onClose={() => setProfileCourse(null)}
+     />
+    </div>
+   )
+  })

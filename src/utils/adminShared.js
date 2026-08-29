@@ -1,7 +1,7 @@
-import { exportAllData } from '../services'
+﻿import { exportAllData } from '../services'
 import { toast } from 'react-hot-toast'
 
-export const INPUT_CLASS = 'w-full glass border border-white/10 rounded-lg px-3 py-2 text-sm text-navy-900 dark:text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-royal-400/50'
+export const INPUT_CLASS = 'w-full glass border border-white/10 rounded-lg px-3 py-2 text-sm text-ink placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-royal-400/50'
 
 export async function exportToJson(filename, t, items) {
   try {

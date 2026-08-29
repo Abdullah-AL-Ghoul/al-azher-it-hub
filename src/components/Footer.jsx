@@ -29,28 +29,28 @@ export default memo(function Footer() {
  ]
 
  return (
-  <footer className="relative glass border-t border-white/10 text-navy-900 dark:text-white">
+  <footer className="relative glass border-t border-white/10 text-ink">
    <motion.div
     variants={prefersReduced ? {} : pageContainer}
     initial="hidden"
     whileInView="visible"
     viewport={{ once: true, margin: '-50px' }}
-    className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
+    className="container-page py-16"
    >
     {/* CTA banner */}
     <div className="gradient-border rounded-2xl p-6 md:p-8 mb-14 overflow-hidden relative">
-     <div className="absolute -top-16 -right-16 w-48 h-48 bg-royal-500/10 rounded-full blur-3xl" />
-     <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl" />
+     <div className="absolute -top-16 -end-16 w-48 h-48 bg-royal-500/10 rounded-full blur-3xl" />
+     <div className="absolute -bottom-16 -start-16 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl" />
      <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
       <div>
-       <h3 className="text-xl md:text-2xl font-bold text-navy-900 dark:text-white mb-1">{t('footer.ctaTitle')}</h3>
+       <h3 className="text-xl md:text-2xl font-bold text-ink mb-1">{t('footer.ctaTitle')}</h3>
        <p className="text-slate-500 dark:text-slate-400 text-sm">{t('footer.ctaDesc')}</p>
       </div>
       <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
-       <Link to="/lectures" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl btn-primary font-semibold text-sm">
+       <Link to="/lectures" className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] rounded-xl btn-primary font-semibold text-sm">
         {t('nav.lectures')} <FiArrowUpRight size={16} />
        </Link>
-       <Link to="/contact" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl btn-secondary font-semibold text-sm">
+       <Link to="/contact" className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] rounded-xl btn-secondary font-semibold text-sm">
         {t('footer.contact')} <FiArrowUpRight size={16} />
        </Link>
       </div>
@@ -63,50 +63,50 @@ export default memo(function Footer() {
        <SiteLogo size="sm" />
        <span className="font-bold text-lg">{t('site.title')}</span>
       </Link>
-      <h3 className="font-semibold text-sm text-royal-500 dark:text-cyan-400 uppercase tracking-wider mb-4">
+      <h3 className="font-semibold text-sm text-accent uppercase tracking-wider mb-4">
        {t('footer.about')}
       </h3>
       <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-5">
        {t('footer.aboutDesc')}
       </p>
-      <Link to="/contact" className="inline-flex items-center gap-1.5 py-1.5 mb-5 text-royal-500 dark:text-cyan-400 hover:text-royal-600 dark:hover:text-cyan-300 text-sm font-medium transition-colors group">
+       <Link to="/contact" className="inline-flex items-center gap-1.5 py-1.5 mb-5 text-accent hover:text-royal-600 dark:hover:text-cyan-300 text-sm font-medium transition-colors group">
        {t('footer.contact')}
        <FiArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5" />
       </Link>
       {/* Social Icons */}
       <div className="flex items-center gap-3">
         <a href="https://www.linkedin.com/in/abdullah-al-ghoul-a254763a6/" target="_blank" rel="noopener noreferrer"
-         className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/20 border border-black/8 dark:border-white/10 hover:border-royal-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-royal-500 dark:hover:text-royal-400 transition-colors duration-300"
-         aria-label={isArabic ? 'لينكد إن' : 'LinkedIn'}>
+         className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/20 border border-black/8 dark:border-white/10 hover:border-royal-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-royal-500 dark:hover:text-royal-400 transition-colors duration-300"
+         aria-label={isArabic ? 'لينكد إن - LinkedIn' : 'LinkedIn'}>
         <FiLinkedin size={18} />
        </a>
        <a href="mailto:abdallhalghoul200@gmail.com"
-         className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/20 border border-black/8 dark:border-white/10 hover:border-royal-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors duration-300"
-         aria-label={isArabic ? 'البريد الإلكتروني' : 'Email'}>
+         className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/20 border border-black/8 dark:border-white/10 hover:border-royal-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors duration-300"
+         aria-label={isArabic ? 'البريد الإلكتروني - Email' : 'Email'}>
         <FiMail size={18} />
        </a>
        <a href="https://wa.me/970592127061" target="_blank" rel="noopener noreferrer"
-         className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-emerald-500/20 border border-black/8 dark:border-white/10 hover:border-emerald-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors duration-300"
-         aria-label={isArabic ? 'واتساب' : 'WhatsApp'}>
+         className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-emerald-500/20 border border-black/8 dark:border-white/10 hover:border-emerald-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors duration-300"
+         aria-label={isArabic ? 'واتساب - WhatsApp' : 'WhatsApp'}>
         <FaWhatsapp size={18} />
        </a>
        <a href="tel:+970592127061"
-         className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-amber-500/20 border border-black/8 dark:border-white/10 hover:border-amber-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300"
-         aria-label={isArabic ? 'الهاتف' : 'Phone'}>
+         className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-amber-500/20 border border-black/8 dark:border-white/10 hover:border-amber-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300"
+         aria-label={isArabic ? 'الهاتف - Phone' : 'Phone'}>
         <FiPhone size={18} />
        </a>
       </div>
      </motion.div>
 
      <motion.div variants={pageItem}>
-      <h3 className="font-semibold text-sm text-royal-500 dark:text-cyan-400 uppercase tracking-wider mb-4">
+      <h3 className="font-semibold text-sm text-accent uppercase tracking-wider mb-4">
        {t('footer.quickLinks')}
       </h3>
        <ul className="space-y-1">
         {links.map(link => (
          <li key={link.to}>
-          <Link to={link.to} className="inline-flex items-center gap-1 py-1.5 text-slate-500 dark:text-slate-400 hover:text-navy-900 dark:hover:text-white text-sm transition-colors group">
-           <FiArrowUpRight className="opacity-0 group-hover:opacity-100 transition-opacity text-royal-500 dark:text-cyan-400" size={14} />
+          <Link to={link.to} className="inline-flex items-center gap-1 py-1.5 text-slate-500 dark:text-slate-400 hover:text-ink text-sm transition-colors group">
+           <FiArrowUpRight className="opacity-0 group-hover:opacity-100 transition-opacity text-accent" size={14} />
            {link.label}
           </Link>
          </li>
@@ -115,14 +115,14 @@ export default memo(function Footer() {
      </motion.div>
 
      <motion.div variants={pageItem}>
-      <h3 className="font-semibold text-sm text-royal-500 dark:text-cyan-400 uppercase tracking-wider mb-4">
+      <h3 className="font-semibold text-sm text-accent uppercase tracking-wider mb-4">
        {t('footer.resources')}
       </h3>
        <ul className="space-y-1">
         {resourceLinks.map(link => (
          <li key={link.to}>
-          <Link to={link.to} className="inline-flex items-center gap-1 py-1.5 text-slate-500 dark:text-slate-400 hover:text-navy-900 dark:hover:text-white text-sm transition-colors group">
-           <FiArrowUpRight className="opacity-0 group-hover:opacity-100 transition-opacity text-royal-500 dark:text-cyan-400" size={14} />
+          <Link to={link.to} className="inline-flex items-center gap-1 py-1.5 text-slate-500 dark:text-slate-400 hover:text-ink text-sm transition-colors group">
+           <FiArrowUpRight className="opacity-0 group-hover:opacity-100 transition-opacity text-accent" size={14} />
            {link.label}
           </Link>
          </li>
@@ -131,7 +131,7 @@ export default memo(function Footer() {
      </motion.div>
 
      <motion.div variants={pageItem}>
-      <h3 className="font-semibold text-sm text-royal-500 dark:text-cyan-400 uppercase tracking-wider mb-4">
+      <h3 className="font-semibold text-sm text-accent uppercase tracking-wider mb-4">
        {t('footer.contact')}
       </h3>
       <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400 ">

@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, memo } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { FiSearch, FiDownload, FiTrash2, FiEdit2, FiUser, FiSave, FiX, FiKey, FiExternalLink, FiMail, FiBookOpen, FiCalendar, FiClock } from 'react-icons/fi'
+import { motion, useReducedMotion } from 'framer-motion'
+import { FiSearch, FiDownload, FiTrash2, FiEdit2, FiUser, FiSave, FiX, FiKey, FiExternalLink, FiMail, FiBookOpen, FiCalendar } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { deleteStudent, updateStudent, resetPassword } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'
@@ -84,8 +84,8 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
  }
 
  const handlePasswordChange = async (studentId) => {
-  if (!passwordForm.password || passwordForm.password.length < 6) {
-   toast.error(isArabic ? 'كلمة المرور قصيرة جداً' : 'Password too short')
+  if (!passwordForm.password || passwordForm.password.length < 8) {
+   toast.error(isArabic ? 'كلمة المرور قصيرة جداً (8 أحرف على الأقل)' : 'Password too short (min 8 characters)')
    return
   }
   if (passwordForm.password !== passwordForm.confirm) {
@@ -131,19 +131,15 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
   }
  }
 
- const handleBulkDelete = async () => {
-  let count = 0
-  for (const id of selectedIds) {
-   try {
-    await deleteStudent(id)
-    count++
-   } catch (_e) { /* skip */ }
+const handleBulkDelete = async () => {
+   const ids = [...selectedIds]
+   const results = await Promise.allSettled(ids.map(id => deleteStudent(id)))
+   const count = results.filter(r => r.status === 'fulfilled').length
+   setSelectedIds(new Set())
+   setConfirmBulkDelete(false)
+   toast.success(isArabic ? `تم حذف ${count} طالب` : `${count} students deleted`)
+   if (onRefresh) onRefresh()
   }
-  setSelectedIds(new Set())
-  setConfirmBulkDelete(false)
-  toast.success(isArabic ? `تم حذف ${count} طالب` : `${count} students deleted`)
-  if (onRefresh) onRefresh()
- }
 
  if (loading) {
   return <SkeletonRow count={5} widths={['60%']} />
@@ -159,14 +155,14 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
   >
    <div className="flex justify-between items-center flex-wrap gap-4">
     <div className="relative">
-     <FiSearch className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 ${isArabic ? 'right-3' : 'left-3'}`} size={16} />
+     <FiSearch className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 start-3`} size={16} />
      <input
       type="text"
       placeholder={isArabic ? 'بحث بالاسم، الرقم، البريد، التخصص...' : 'Search by name, ID, email, major...'}
       value={search}
       onChange={(e) => { setSearch(e.target.value); setPage(1) }}
       aria-label={isArabic ? 'بحث عن طالب' : 'Search students'}
-      className={`${isArabic ? 'pr-9 pl-4' : 'pl-9 pr-4'} py-2 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-64`}
+      className={`ps-9 pe-4 py-2 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-64`}
      />
     </div>
     <div className="flex items-center gap-3">
@@ -220,19 +216,19 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
             <input
              value={editForm.name}
              onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-             className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
+             className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
              placeholder={isArabic ? 'الاسم' : 'Name'}
             />
             <input
               value={editForm.email}
               onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-              className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
+              className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
               placeholder={isArabic ? 'البريد الإلكتروني' : 'Email'}
              />
              <select
               value={editForm.role}
               onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-              className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50"
+              className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
               aria-label={isArabic ? 'الدور' : 'Role'}
              >
               <option value="student">{isArabic ? 'طالب' : 'Student'}</option>
@@ -261,7 +257,7 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
            </div>
            <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-             <h3 className="font-semibold text-navy-900 dark:text-white text-sm">{user.name || user.studentId}</h3>
+             <h3 className="font-semibold text-ink text-sm">{user.name || user.studentId}</h3>
              <div className="flex items-center gap-1.5">
               <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
               <span className={`text-xs ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 '}`}>
@@ -320,7 +316,7 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
              type="password"
              value={passwordForm.password}
              onChange={e => setPasswordForm({ ...passwordForm, password: e.target.value })}
-             className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
+             className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
              placeholder={isArabic ? 'كلمة المرور الجديدة' : 'New password'}
             />
             <input
@@ -328,7 +324,7 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
              value={passwordForm.confirm}
              onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
              onKeyDown={e => e.key === 'Enter' && handlePasswordChange(user.studentId)}
-             className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
+             className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
              placeholder={isArabic ? 'تأكيد كلمة المرور' : 'Confirm password'}
             />
             <button onClick={() => handlePasswordChange(user.studentId)} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors" aria-label={isArabic ? 'حفظ كلمة المرور' : 'Save password'}>

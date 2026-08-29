@@ -45,7 +45,7 @@ export default function CustomSelect({ value, options, onChange, isArabic, label
       setActiveIndex(options.length - 1)
      }
     }}
-    className="flex items-center gap-2 px-4 py-2 glass rounded-xl text-sm text-slate-600 dark:text-white/70 hover:text-navy-900 dark:hover:text-white transition min-w-[160px] justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500/50"
+    className="flex items-center gap-2 px-4 py-2 glass rounded-xl text-sm text-slate-600 dark:text-white/70 hover:text-ink transition min-w-[160px] justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500/50"
     role="combobox"
     aria-expanded={open}
     aria-haspopup="listbox"
@@ -78,10 +78,10 @@ export default function CustomSelect({ value, options, onChange, isArabic, label
          aria-selected={value === opt.value}
          onClick={() => commit(opt)}
          onMouseEnter={() => setActiveIndex(i)}
-         className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+         className={`w-full text-left px-4 py-2.5 min-h-[44px] text-sm transition-colors ${
           value === opt.value
            ? 'bg-royal-500/10 dark:bg-cyan-500/20 text-royal-500 dark:text-cyan-300'
-           : 'text-slate-600 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/5 hover:text-navy-900 dark:hover:text-white'
+           : 'text-slate-600 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/5 hover:text-ink'
          }`}
         >
          {isArabic ? opt.labelAr : opt.labelEn}
