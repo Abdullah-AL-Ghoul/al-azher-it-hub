@@ -20,3 +20,9 @@ coverage/
 # Test artifacts (Playwright)
 test-results/
 playwright-report/
+
+# AI assistant tooling (local only, not part of the app)
+.agents/
+.claude/
+.zcode/
+skills-lock.json
