@@ -180,7 +180,7 @@ export default function Lectures() {
     {user && continueWatching.length > 0 && (
      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
       <div className="flex items-center justify-between mb-3">
-       <h1 className="text-sm font-bold text-ink flex items-center gap-2">
+       <h2 className="text-sm font-bold text-ink flex items-center gap-2">
         <FiEye size={16} className="text-accent" />
         {isArabic ? 'متابعة المشاهدة' : 'Continue watching'}
        </h2>

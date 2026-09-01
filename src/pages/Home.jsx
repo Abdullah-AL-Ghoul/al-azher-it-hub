@@ -383,7 +383,7 @@ export default function Home() {
            </div>
            <h3 className="font-semibold text-ink text-sm line-clamp-2 mb-1 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">
             {isArabic ? addition.titleAr : addition.titleEn}
-           </h4>
+           </h3>
            {(addition.descriptionAr || addition.descriptionEn) && (
             <p className="text-xs text-slate-500 dark:text-white/60 line-clamp-2">
              {isArabic ? addition.descriptionAr : addition.descriptionEn}
@@ -457,7 +457,7 @@ export default function Home() {
            <span className="inline-block text-xs bg-black/5 dark:bg-white/5 border border-black/8 dark:border-white/10 text-slate-500 dark:text-white/60 px-2 py-0.5 rounded-full mb-2">
             {isArabic ? lecture.subjectAr : lecture.subjectEn}
            </span>
-           <h3 className="font-semibold text-ink text-sm mb-1 line-clamp-2 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">{isArabic ? lecture.titleAr : lecture.titleEn}</h4>
+           <h3 className="font-semibold text-ink text-sm mb-1 line-clamp-2 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">{isArabic ? lecture.titleAr : lecture.titleEn}</h3>
            <p className="text-xs text-slate-500 dark:text-white/50">{lecture.date}</p>
           </div>
          </Link>

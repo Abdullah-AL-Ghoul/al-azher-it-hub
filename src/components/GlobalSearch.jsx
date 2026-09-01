@@ -35,13 +35,13 @@ const typeColors = {
  page: 'from-cyan-500 to-cyan-600',
 }
 
-export default function GlobalSearch() {
+export default function GlobalSearch({ autoOpen = false }) {
  const { lang, t } = useLanguage()
  const { user } = useAuth()
  const navigate = useNavigate()
  const isArabic = lang === 'ar'
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(autoOpen && !!user)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [activeIndex, setActiveIndex] = useState(0)

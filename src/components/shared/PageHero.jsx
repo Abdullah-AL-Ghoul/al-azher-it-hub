@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 
 /**
  * Shared animated page header. Gives every page its own identity via
@@ -34,7 +35,28 @@ const MOTIFS = {
   ],
 }
 
+/* Per-word staggered reveal. Each word carries the gradient itself —
+   background-clip: text doesn't survive inline-block children on the parent. */
+function RevealTitle({ title, reduced }) {
+  const words = String(title).split(' ')
+  if (reduced) return title
+  return words.map((word, i) => (
+    <motion.span
+      key={`${word}-${i}`}
+      aria-hidden="true"
+      className="gradient-text-spatial inline-block"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: 0.08 + i * 0.07, ease: 'easeOut' }}
+    >
+      {word}
+      {i < words.length - 1 ? '\u00A0' : ''}
+    </motion.span>
+  ))
+}
+
 function PageHero({ variant = 'play', title, subtitle, children }) {
+  const prefersReduced = useReducedMotion()
   const motifs = MOTIFS[variant] || MOTIFS.play
   return (
     <div className="py-16 mb-10 page-hero">
@@ -44,8 +66,19 @@ function PageHero({ variant = 'play', title, subtitle, children }) {
         ))}
       </div>
       <div className="container-page text-center relative">
-        <h1 className="text-3xl md:text-5xl font-bold gradient-text-spatial mb-4">{title}</h1>
-        {subtitle && <p className="text-slate-500 dark:text-white/50 text-lg">{subtitle}</p>}
+        <h1 className="text-3xl md:text-5xl font-bold mb-4" aria-label={title}>
+          <RevealTitle title={title} reduced={prefersReduced} />
+        </h1>
+        {subtitle && (
+          <motion.p
+            initial={prefersReduced ? {} : { opacity: 0, y: 10 }}
+            animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.2 }}
+            className="text-slate-500 dark:text-white/50 text-lg"
+          >
+            {subtitle}
+          </motion.p>
+        )}
         {children}
       </div>
     </div>

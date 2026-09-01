@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion, useInView } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -11,6 +11,17 @@ import Reveal from '../components/shared/Reveal'
 import CountUp from '../components/shared/CountUp'
 import SectionHeading from '../components/shared/SectionHeading'
 import Lazy3DScene from '../components/three/Lazy3DScene'
+import useMagnetic from '../hooks/useMagnetic'
+
+/* Primary CTA with a magnetic hover drift (desktop pointers only). */
+function MagneticLink({ to, className, children }) {
+ const { ref, ...magnetProps } = useMagnetic(6)
+ return (
+  <Link ref={ref} to={to} className={className} {...magnetProps}>
+   {children}
+  </Link>
+ )
+}
 
 function FaqItem({ q, a }) {
  const [open, setOpen] = useState(false)
@@ -56,6 +67,13 @@ export default function WelcomeGate() {
  const containerVariants = prefersReduced ? { hidden: {}, visible: {} } : welcomeContainer
  const itemVariants = prefersReduced ? { hidden: {}, visible: {} } : welcomeItem
  const isArabic = lang === 'ar'
+
+ // Freeze the infinite hero animations once they leave the viewport
+ // (framer-motion keeps re-rendering RAF loops otherwise).
+ const heroClusterRef = useRef(null)
+ const heroClusterInView = useInView(heroClusterRef, { margin: '80px' })
+ const marqueeRef = useRef(null)
+ const marqueeInView = useInView(marqueeRef, { margin: '80px' })
 
   useEffect(() => { if (user) navigate('/home', { replace: true }) }, [user, navigate])
  if (user) return null
@@ -153,15 +171,15 @@ export default function WelcomeGate() {
 
       {/* CTA */}
       <motion.div variants={itemVariants} className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-       <Link to="/signup" className="group inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl btn-primary font-semibold text-[15px] min-h-[48px]">
+       <MagneticLink to="/signup" className="group inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl btn-primary font-semibold text-[15px] min-h-[48px]">
         <FiUserPlus size={18} className={isArabic ? 'rotate-180' : ''} />
         {isArabic ? 'أنشئ حسابك مجاناً' : 'Create your free account'}
         <FiArrowUpRight size={16} className="opacity-60 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-       </Link>
-       <Link to="/login" className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl btn-secondary font-semibold text-[15px] min-h-[48px]">
+       </MagneticLink>
+       <MagneticLink to="/login" className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl btn-secondary font-semibold text-[15px] min-h-[48px]">
         <FiLogIn size={18} className={isArabic ? 'rotate-180' : ''} />
         {isArabic ? 'تسجيل الدخول' : 'Sign in'}
-       </Link>
+       </MagneticLink>
       </motion.div>
 
       {/* Trust row */}
@@ -309,10 +327,10 @@ export default function WelcomeGate() {
      })}
     </div>
     <Reveal className="text-center mt-8">
-     <Link to="/signup" className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl btn-primary font-semibold text-[15px] min-h-[48px]">
+     <MagneticLink to="/signup" className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl btn-primary font-semibold text-[15px] min-h-[48px]">
       <FiUserPlus size={18} className={isArabic ? 'rotate-180' : ''} />
       {isArabic ? 'ابدأ الآن مجاناً' : 'Get started free'}
-     </Link>
+     </MagneticLink>
     </Reveal>
    </div>
 
@@ -364,12 +382,12 @@ export default function WelcomeGate() {
      <h2 className="relative text-2xl md:text-4xl font-bold gradient-text-spatial mb-4">{isArabic ? 'جاهز تبدأ رحلتك؟' : 'Ready to start?'}</h2>
      <p className="relative text-slate-500 dark:text-white/60 text-lg mb-8 max-w-xl mx-auto">{isArabic ? 'انضم إلى زملائك وتابع المحاضرات والمصادر والخطط الدراسية من مكان واحد.' : 'Join your classmates and follow lectures, sources, and study plans all in one place.'}</p>
      <div className="relative flex flex-col sm:flex-row gap-3 justify-center">
-      <Link to="/signup" className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl btn-primary font-semibold text-[15px] min-h-[48px]">
+      <MagneticLink to="/signup" className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl btn-primary font-semibold text-[15px] min-h-[48px]">
        <FiUserPlus size={18} className={isArabic ? 'rotate-180' : ''} /> {isArabic ? 'أنشئ حسابك مجاناً' : 'Create your free account'}
-      </Link>
-      <Link to="/login" className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl btn-secondary font-semibold text-[15px] min-h-[48px]">
+      </MagneticLink>
+      <MagneticLink to="/login" className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl btn-secondary font-semibold text-[15px] min-h-[48px]">
        <FiLogIn size={18} className={isArabic ? 'rotate-180' : ''} /> {isArabic ? 'تسجيل الدخول' : 'Sign in'}
-      </Link>
+      </MagneticLink>
      </div>
     </div>
    </Reveal>

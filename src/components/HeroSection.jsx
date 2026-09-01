@@ -7,7 +7,18 @@ import { pageContainerSlow, pageItemSlow } from '../utils/motionTokens'
 import { FiArrowDown, FiArrowUpRight, FiPlay } from 'react-icons/fi'
 import Lazy3DScene from './three/Lazy3DScene'
 import useParallax from '../hooks/useParallax'
+import useMagnetic from '../hooks/useMagnetic'
 import CountUp from './shared/CountUp'
+
+/* Primary CTA with a magnetic hover drift (desktop pointers only). */
+function MagneticLink({ to, className, children }) {
+ const { ref, ...magnetProps } = useMagnetic(6)
+ return (
+  <Link ref={ref} to={to} className={className} {...magnetProps}>
+   {children}
+  </Link>
+ )
+}
 
 export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount = 50, sourcesCount = 15, watchedCount = 200, materialsCount = 15 }) {
  const { lang, t } = useLanguage()
@@ -75,14 +86,14 @@ export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount =
      </motion.p>
 
      <motion.div variants={pageItemSlow} className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
-       <Link to={ctaLink || '/lectures'} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl btn-primary font-semibold text-[15px]">
+       <MagneticLink to={ctaLink || '/lectures'} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl btn-primary font-semibold text-[15px]">
         <FiPlay size={16} />
         {t('home.hero.cta')}
         <FiArrowUpRight size={14} className="opacity-60" />
-       </Link>
-       <Link to={ctaSecondaryLink || '/sources'} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl btn-secondary font-semibold text-[15px]">
+       </MagneticLink>
+       <MagneticLink to={ctaSecondaryLink || '/sources'} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl btn-secondary font-semibold text-[15px]">
         {t('home.hero.ctaSecondary')}
-       </Link>
+       </MagneticLink>
      </motion.div>
 
      {/* Animated Counters */}

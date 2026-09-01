@@ -1,14 +1,15 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useMemo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import {
  getLectures, getFavorites, getUserStats, getSources,
- studentUpdateProfile, addActivity, addStudentLog, resetPassword, authenticateUser
+ studentUpdateProfile, addActivity, addStudentLog, getStudentLogs,
+ resetPassword, authenticateUser
 } from '../services'
 import { pageContainer, pageItem } from '../utils/motionTokens'
-import { FiUser, FiEdit2, FiSave, FiX, FiLinkedin, FiPhone, FiGlobe, FiBookOpen, FiHeart, FiEye, FiArrowLeft, FiLink, FiLock } from 'react-icons/fi'
+import { FiUser, FiEdit2, FiSave, FiX, FiLinkedin, FiPhone, FiGlobe, FiBookOpen, FiHeart, FiEye, FiArrowLeft, FiLink, FiLock, FiActivity } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import motivationalQuotes from '../data/quotes'
 import ErrorState from '../components/feedback/ErrorState'
@@ -16,6 +17,17 @@ import Skeleton from '../components/shared/Skeleton'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
+
+/* Heat-cell shades, light → dark with activity intensity. */
+const HEAT_LEVELS = [
+ 'bg-slate-200/70 dark:bg-white/5',
+ 'bg-royal-500/30 dark:bg-cyan-500/25',
+ 'bg-royal-500/60 dark:bg-cyan-500/50',
+ 'bg-royal-600 dark:bg-cyan-400',
+]
+
+const isoDay = (dt) =>
+ `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
 
 // Only allow http(s) links for the user's social profile fields. Anything else
 // (javascript:, data:, vbscript:) is dropped to prevent stored-XSS via href.
@@ -48,6 +60,7 @@ export default function Profile() {
  const [showPasswordForm, setShowPasswordForm] = useState(false)
  const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' })
  const [pwSaving, setPwSaving] = useState(false)
+ const [logDates, setLogDates] = useState([])
 
  const retryLoad = () => {
   setError(null)
@@ -55,16 +68,45 @@ export default function Profile() {
   setRetryCount(c => c + 1)
  }
 
+ // GitHub-style 12-week activity grid from student_logs timestamps
+ // (real recorded activity — no synthetic dates).
+ const heatmap = useMemo(() => {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const dayMs = 86400000
+  const start = new Date(today)
+  start.setDate(start.getDate() - 77 - today.getDay()) // Sunday, 11 full weeks back
+  const byDay = new Map()
+  for (const day of logDates) {
+   if (!day) continue
+   const d = new Date(`${day}T00:00:00`)
+   if (Number.isNaN(d.getTime())) continue
+   const idx = Math.floor((d.getTime() - start.getTime()) / dayMs)
+   if (idx >= 0 && idx < 84) byDay.set(idx, (byDay.get(idx) || 0) + 1)
+  }
+  const weeks = []
+  for (let w = 0; w < 12; w++) {
+   const col = []
+   for (let d = 0; d < 7; d++) {
+    const idx = w * 7 + d
+    const date = new Date(start.getTime() + idx * dayMs)
+    col.push({ count: byDay.get(idx) || 0, future: date.getTime() > today.getTime(), label: isoDay(date) })
+   }
+   weeks.push(col)
+  }
+  return weeks
+ }, [logDates])
+
  useEffect(() => {
   if (!user || user.role === 'admin') return
   let mounted = true
   async function load() {
    try {
-    const [lectures, favs, userStats, sources] = await Promise.all([
+    const [lectures, favs, userStats, sources, logs] = await Promise.all([
      getLectures(),
      getFavorites(user.studentId),
      getUserStats(user.studentId),
      getSources(),
+     getStudentLogs(user.studentId).catch(() => []),
     ])
     if (mounted) {
      setProfileData({
@@ -82,6 +124,7 @@ export default function Profile() {
      })
      const quotes = motivationalQuotes[lang] || motivationalQuotes.en
      setQuote(quotes[Math.floor(Math.random() * quotes.length)])
+     setLogDates(Array.isArray(logs) ? logs.map((l) => String(l.timestamp || '').slice(0, 10)) : [])
     }
    } catch (err) {
     if (mounted) setError(err)
@@ -180,13 +223,15 @@ export default function Profile() {
    {/* Motivational Quote Banner */}
    <motion.div variants={itemVariants} className="py-12 mb-8">
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-     <motion.div
+      <motion.div
       initial={prefersReduced ? {} : { scale: 0.8, opacity: 0 }}
       animate={prefersReduced ? {} : { scale: 1, opacity: 1 }}
       transition={prefersReduced ? {} : { delay: 0.2, type: 'spring', damping: 15 }}
-      className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-violet-500 rounded-2xl flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-lg shadow-cyan-500/20"
+      className="relative w-[86px] h-[86px] mx-auto mb-6 rounded-full p-[3px] bg-[conic-gradient(from_120deg,#2563EB,#06B6D4,#7C3AED,#2563EB)] shadow-lg shadow-cyan-500/25"
      >
-      {user.name?.charAt(0)?.toUpperCase()}
+      <div className="w-full h-full rounded-full bg-gradient-to-br from-royal-500 to-violet-500 flex items-center justify-center text-white font-bold text-2xl tracking-wide" aria-hidden="true">
+       {(user.name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join('') || '?'}
+      </div>
      </motion.div>
       <h1 className="text-2xl md:text-3xl font-bold text-ink mb-2">
       {t('profile.greeting', { name: user.name })}
@@ -233,6 +278,37 @@ export default function Profile() {
        </motion.div>
       )
      })}
+    </motion.div>
+
+    {/* Activity heatmap */}
+    <motion.div variants={itemVariants} className="glass rounded-xl p-6">
+     <div className="flex items-center justify-between mb-4">
+      <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+       <FiActivity size={18} className="text-accent" />
+       {isArabic ? 'نشاطك خلال 12 أسبوعاً' : 'Your activity — 12 weeks'}
+      </h2>
+     </div>
+     <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="flex gap-[3px]" role="img" aria-label={isArabic ? 'خريطة نشاط 12 أسبوعاً' : '12-week activity map'}>
+       {heatmap.map((week, wi) => (
+        <div key={wi} className="flex flex-col gap-[3px]">
+         {week.map((cell, di) => (
+          <span
+           key={di}
+           title={`${cell.label} — ${cell.count} ${isArabic ? 'حدث' : 'events'}`}
+           className={`w-3 h-3 rounded-[3px] ${cell.future ? 'opacity-0 pointer-events-none' : cell.count === 0 ? HEAT_LEVELS[0] : cell.count < 3 ? HEAT_LEVELS[1] : cell.count < 6 ? HEAT_LEVELS[2] : HEAT_LEVELS[3]}`}
+          />
+         ))}
+        </div>
+       ))}
+      </div>
+      <div className="flex items-center gap-1.5">
+       <span className="text-xs text-slate-500 dark:text-white/50">{isArabic ? 'أكثر' : 'More'}</span>
+       {HEAT_LEVELS.map((lvl) => (
+        <span key={lvl} aria-hidden="true" className={`w-3 h-3 rounded-[3px] ${lvl}`} />
+       ))}
+      </div>
+     </div>
     </motion.div>
 
     {/* Profile Info */}

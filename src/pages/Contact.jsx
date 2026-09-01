@@ -160,11 +160,21 @@ export default function Contact() {
          <motion.div
           key="success"
           initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          animate={prefersReduced ? { opacity: 1, scale: 1 } : { opacity: 1, scale: [0.9, 1.06, 1] }}
           exit={{ opacity: 0, scale: 0.9 }}
+          transition={prefersReduced ? { duration: 0.15 } : { scale: { type: 'spring', stiffness: 260, damping: 14 } }}
           className="py-12 text-center"
          >
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-400/20 dark:to-teal-400/20 border border-emerald-200/30 dark:border-emerald-400/20 flex items-center justify-center">
+          <div className="relative w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-400/20 dark:to-teal-400/20 border border-emerald-200/30 dark:border-emerald-400/20 flex items-center justify-center">
+           {!prefersReduced && (
+            <motion.span
+             aria-hidden="true"
+             className="absolute inset-0 rounded-2xl border-2 border-emerald-400/50"
+             initial={{ scale: 1, opacity: 0.7 }}
+             animate={{ scale: 1.4, opacity: 0 }}
+             transition={{ duration: 0.9, repeat: 2, ease: 'easeOut', delay: 0.15 }}
+            />
+           )}
            <FiCheck className="text-4xl text-emerald-500 dark:text-emerald-400" />
           </div>
           <h3 className="text-2xl font-bold text-ink mb-2">

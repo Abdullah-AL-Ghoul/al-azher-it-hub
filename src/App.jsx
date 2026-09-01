@@ -19,8 +19,6 @@ import GlobalSearchTrigger from './components/GlobalSearchTrigger'
 const Chatbot = lazy(() => import('./components/Chatbot'))
 const GlobalSearch = lazy(() => import('./components/GlobalSearch'))
 
-const Chatbot = lazy(() => import('./components/Chatbot'))
-
 const WelcomeGate = lazy(() => import('./pages/WelcomeGate'))
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
@@ -74,6 +72,24 @@ function AppContent() {
  const [chatbotReady, setChatbotReady] = useState(false)
  const [searchActive, setSearchActive] = useState(false)
  const [searchAutoOpen, setSearchAutoOpen] = useState(false)
+
+ // GlobalSearch mounts lazily on first activation; the Ctrl/Cmd+K shortcut
+ // opens it pre-focused (autoOpen), the navbar chip opens it plain.
+ const activateSearch = useCallback((autoOpen = false) => {
+  setSearchAutoOpen(autoOpen)
+  setSearchActive(true)
+ }, [])
+
+ useEffect(() => {
+  const onKey = (e) => {
+   if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 'k') {
+    e.preventDefault()
+    activateSearch(true)
+   }
+  }
+  window.addEventListener('keydown', onKey)
+  return () => window.removeEventListener('keydown', onKey)
+ }, [activateSearch])
 
  useSeo(location.pathname, lang)
 
@@ -201,11 +217,11 @@ function AppContent() {
      role: 'status',
      ariaLive: 'polite',
      style: {
-      background: 'rgba(15, 23, 42, 0.9)',
-      color: '#e2e8f0',
+      background: 'var(--bg-surface)',
+      color: 'var(--text-primary)',
       borderRadius: '16px',
       backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(255,255,255,0.08)',
+      border: '1px solid var(--border-default)',
       fontSize: '14px',
      },
      success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },

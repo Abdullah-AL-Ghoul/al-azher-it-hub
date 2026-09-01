@@ -1,9 +1,10 @@
-﻿import { useState, useEffect, useMemo, useCallback } from 'react'
+﻿import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { getLectures, getSources, getFavorites, getRatings, getViewed, toggleFavorite, setRating, markViewed, addStudentLog } from '../services'
+import { useScrollFrame } from '../hooks/useScrollManager.jsx'
 import { pageContainer, pageItem, revealItem } from '../utils/motionTokens'
 import { lectureVideoId, lectureThumb, downloadFile, getSourceFiles } from '../utils/helpers'
 import VideoPlayer from '../components/shared/VideoPlayer'
@@ -231,6 +232,8 @@ export default function LectureDetail() {
 
  return (
   <motion.div variants={prefersReduced ? { hidden: {}, visible: {} } : pageContainer} initial="hidden" animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page ">
+   {/* Reading progress — DOM-written per scroll frame, no re-renders */}
+   <ReadingProgress reduced={prefersReduced} />
    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
     {/* Breadcrumb */}
@@ -490,5 +493,24 @@ export default function LectureDetail() {
     )}
    </div>
   </motion.div>
+ )
+}
+// Thin fixed progress bar (top of viewport) filled by scroll depth —
+// written straight to the DOM per frame via useScrollFrame.
+function ReadingProgress({ reduced }) {
+ const barRef = useRef(null)
+ useScrollFrame(({ progress }) => {
+  if (barRef.current) barRef.current.style.transform = `scaleX(${Math.min(progress, 100) / 100})`
+ })
+ return (
+  <div className="fixed top-0 inset-x-0 z-[60] h-[3px] pointer-events-none" aria-hidden="true">
+   {/* dir=ltr keeps the fill anchored to the scroll direction in both locales */}
+   <div
+    ref={barRef}
+    dir="ltr"
+    className="h-full origin-left bg-gradient-to-r from-royal-500 to-cyan-400"
+    style={{ transform: 'scaleX(0)', transition: reduced ? 'none' : 'transform 0.1s linear' }}
+   />
+  </div>
  )
 }
