@@ -52,7 +52,7 @@ export function useScrollFrame(onScroll) {
  useEffect(() => {
   let raf = null
   const handle = () => {
-   if (raf) return
+   if (raf !== null) return
    raf = requestAnimationFrame(() => {
     raf = null
     const y = window.scrollY
@@ -64,7 +64,7 @@ export function useScrollFrame(onScroll) {
   window.addEventListener('scroll', handle, { passive: true })
   window.addEventListener('resize', handle)
   return () => {
-   if (raf) cancelAnimationFrame(raf)
+   if (raf !== null) cancelAnimationFrame(raf)
    window.removeEventListener('scroll', handle)
    window.removeEventListener('resize', handle)
   }
