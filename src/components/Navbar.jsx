@@ -49,13 +49,6 @@ export default memo(function Navbar() {
   const mobileTrapRef = useFocusTrap(isOpen)
   const isArabic = lang === 'ar'
   const { notifications, unreadCount, markAsRead } = useNotifications(user)
-
-  useEffect(() => {
-    if (progressRef.current) {
-      progressRef.current.style.width = `${progress}%`
-    }
-  }, [progress])
-
   useEffect(() => {
     if (!isOpen && !showNotifications) return
     const prev = document.body.style.overflow
