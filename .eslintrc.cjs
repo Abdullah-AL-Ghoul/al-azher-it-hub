@@ -30,4 +30,16 @@ module.exports = {
     'react-hooks/exhaustive-deps': 'warn',
     'no-empty': ['error', { allowEmptyCatch: true }],
   },
+  overrides: [
+    {
+      // react-three-fiber renders three.js elements (<mesh>, <ambientLight>…)
+      // whose lowercase props (position, intensity, args…) are valid R3F
+      // attributes, not DOM properties — disable the DOM-property rule there.
+      files: ['src/components/three/**/*.jsx'],
+      rules: {
+        'react/no-unknown-property': 'off',
+      },
+    },
+  ],
 }
+

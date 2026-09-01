@@ -60,6 +60,12 @@ describe('lectureThumb', () => {
   it('builds hqdefault URL when quality hq', () => {
     expect(lectureThumb('dQw4w9WgXcQ', 'hq')).toBe('https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg')
   })
+  it('builds maxresdefault URL when quality maxres (true 16:9)', () => {
+    expect(lectureThumb('dQw4w9WgXcQ', 'maxres')).toBe('https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg')
+  })
+  it('falls back to mq for unknown quality', () => {
+    expect(lectureThumb('dQw4w9WgXcQ', 'ultra')).toBe('https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg')
+  })
   it('returns null for empty id', () => {
     expect(lectureThumb('')).toBe(null)
     expect(lectureThumb(null)).toBe(null)

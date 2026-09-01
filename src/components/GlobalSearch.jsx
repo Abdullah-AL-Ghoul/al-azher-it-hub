@@ -7,6 +7,8 @@ import { getLectures, getSources, getAdditions } from '../services'
 import { modalOverlay, modalContent } from '../utils/motionTokens'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { FiSearch, FiFileText, FiGrid, FiHeart, FiArrowRight, FiX } from 'react-icons/fi'
+import LectureThumbnail from './shared/LectureThumbnail'
+import { lectureVideoId } from '../utils/helpers'
 
 const navPages = [
  { to: '/home', keys: ['home', 'الرئيسية'] },
@@ -121,7 +123,7 @@ export default function GlobalSearch() {
      const title = isArabic ? l.titleAr : l.titleEn
      const subject = isArabic ? l.subjectAr : l.subjectEn
      if (title?.toLowerCase().includes(lower) || subject?.toLowerCase().includes(lower)) {
-      items.push({ type: 'lecture', title: title || '', subtitle: subject || '', id: l.id })
+      items.push({ type: 'lecture', title: title || '', subtitle: subject || '', id: l.id, videoId: lectureVideoId(l) })
      }
     })
 
@@ -291,9 +293,15 @@ export default function GlobalSearch() {
              role="option"
              aria-selected={i === activeIndex}
             >
-             <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${typeColors[item.type]} flex items-center justify-center text-white shrink-0`}>
-              <Icon size={14} />
-             </div>
+             {item.type === 'lecture' && item.videoId ? (
+              <div className="relative w-14 h-8 rounded-lg overflow-hidden bg-black/30 shrink-0">
+               <LectureThumbnail videoId={item.videoId} alt="" width={56} height={32} />
+              </div>
+             ) : (
+              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${typeColors[item.type]} flex items-center justify-center text-white shrink-0`}>
+               <Icon size={14} />
+              </div>
+             )}
              <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-ink truncate">{item.title}</p>
               {item.subtitle && (

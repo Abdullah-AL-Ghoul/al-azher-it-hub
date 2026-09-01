@@ -7,6 +7,7 @@ import { uid } from '../utils/helpers'
 import { getAdditions, saveAdditions, addComment, deleteComment, getCommentsForAddition, addActivity, addStudentLog } from '../services'
 import { FiPlus, FiTrash2, FiEdit2, FiSave, FiX, FiSend, FiVideo, FiLink2, FiFileText, FiMessageCircle, FiUsers } from 'react-icons/fi'
 import toast from 'react-hot-toast'
+import PageHero from '../components/shared/PageHero'
 import ErrorState from '../components/feedback/ErrorState'
 import EmptyState from '../components/shared/EmptyState'
 import ConfirmDialog from '../components/shared/ConfirmDialog'
@@ -16,9 +17,9 @@ const containerVariants = pageContainer
 const itemVariants = pageItem
 
 const types = [
- { key: 'post', icon: FiFileText, color: 'bg-blue-500' },
- { key: 'whatsapp', icon: FiLink2, color: 'bg-emerald-500' },
- { key: 'video', icon: FiVideo, color: 'bg-rose-500' },
+ { key: 'post', icon: FiFileText, color: 'bg-gradient-to-br from-royal-500 to-cyan-500' },
+ { key: 'whatsapp', icon: FiLink2, color: 'bg-gradient-to-br from-emerald-500 to-teal-500' },
+ { key: 'video', icon: FiVideo, color: 'bg-gradient-to-br from-rose-500 to-violet-500' },
 ]
 
 export default function Additions() {
@@ -230,12 +231,7 @@ export default function Additions() {
 
   return (<>
    <div className="min-h-screen bg-spatial-page pt-24 pb-16 ">
-   <div className="py-16 mb-12">
-    <div className="container-page text-center">
-     <h1 className="text-3xl md:text-5xl font-bold gradient-text-spatial mb-4">{t('additions.title')}</h1>
-     <p className="text-slate-500 dark:text-white/50 text-lg">{t('additions.subtitle')}</p>
-    </div>
-   </div>
+   <PageHero variant="chips" title={t('additions.title')} subtitle={t('additions.subtitle')} />
    <div className="container-page">
     <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }}>
      <div className="flex items-center justify-between mb-8">
@@ -383,7 +379,7 @@ export default function Additions() {
                 </p>
                )}
                {(comments[item.id] || []).map(c => (
-                <div key={c.id} className="flex items-start gap-2 p-3 bg-slate-50 dark:bg-navy-700/50 rounded-lg">
+                <div key={c.id} className="flex items-start gap-2 p-3 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-line">
                  <div className="w-7 h-7 bg-royal-500 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
                   {c.userName?.charAt(0)?.toUpperCase()}
                  </div>

@@ -45,6 +45,9 @@ export default defineConfig({
             if (id.includes('framer-motion')) return 'vendor-motion'
             if (id.includes('react-hot-toast')) return 'vendor-toast'
             if (id.includes('@supabase')) return 'vendor-supabase'
+            // three + R3F + drei ship as one lazy vendor chunk, only fetched
+            // when a Lazy3DScene actually mounts.
+            if (id.includes('three') || id.includes('@react-three')) return 'vendor-three'
             if (id.includes('react-dom') || id.includes('react-router-dom') || id.includes('/react/')) return 'vendor-react'
           }
         },

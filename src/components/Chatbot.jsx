@@ -435,7 +435,7 @@ export default function Chatbot() {
        {...modalContent}
        aria-label={t('chatbot.assistantLabel')}
        aria-modal="true"
-       className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] z-50 w-[calc(100vw-48px)] sm:w-96 h-[75vh] sm:h-[520px] bg-white dark:bg-navy-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 flex flex-col overflow-hidden end-6`}
+       className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] z-50 w-[calc(100vw-48px)] sm:w-96 h-[75vh] sm:h-[520px] modal-spatial rounded-2xl flex flex-col overflow-hidden end-6`}
        role="dialog"
       >
       <div className="bg-gradient-to-r from-royal-500 to-cyan-500 px-4 py-3.5 flex items-center gap-3">
@@ -471,7 +471,7 @@ export default function Chatbot() {
       <div
        aria-label={t('chatbot.chatMessagesLabel')}
        aria-live="polite"
-       className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-navy-900"
+       className="flex-1 overflow-y-auto p-4 space-y-3 bg-black/[0.02] dark:bg-black/20"
        role="log"
       >
        <AnimatePresence initial={false}>
@@ -494,7 +494,7 @@ export default function Chatbot() {
           role="group"
           aria-label={isArabic ? 'اقتراحات سريعة' : 'Quick suggestions'}
           animate={{ height: 'auto', opacity: 1 }}
-          className="px-3 pb-2.5 pt-1 flex flex-wrap gap-1.5 bg-slate-50 dark:bg-navy-900 border-t border-slate-100 dark:border-slate-700/50 overflow-hidden"
+          className="px-3 pb-2.5 pt-1 flex flex-wrap gap-1.5 bg-black/[0.02] dark:bg-black/20 border-t border-line overflow-hidden"
           exit={{ height: 0, opacity: 0 }}
           initial={{ height: 0, opacity: 0 }}
          >
@@ -515,7 +515,7 @@ export default function Chatbot() {
        )}
       </AnimatePresence>
 
-      <div className="p-3 bg-white dark:bg-navy-800 border-t border-slate-100 dark:border-slate-700">
+      <div className="p-3 border-t border-line">
        <form
         className="flex gap-2"
         onSubmit={event => {

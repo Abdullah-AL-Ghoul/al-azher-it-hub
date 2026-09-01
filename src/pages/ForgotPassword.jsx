@@ -145,8 +145,13 @@ export default function ForgotPassword() {
 
  return (
   <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-spatial-full">
-   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-500/5 via-transparent to-transparent" />
-   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent" />
+   {/* Match AuthLayout's animated atmosphere */}
+   <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+    <div className="absolute top-[15%] left-[12%] w-72 h-72 rounded-full bg-royal-500/15 blur-3xl animate-orb-float-1" />
+    <div className="absolute bottom-[12%] right-[10%] w-80 h-80 rounded-full bg-cyan-400/12 blur-3xl animate-orb-float-2" />
+    <div className="absolute top-[55%] left-[45%] w-60 h-60 rounded-full bg-violet-500/10 blur-3xl animate-orb-float-3" />
+   </div>
+   <div className="absolute inset-0 spatial-grid opacity-40" aria-hidden="true" />
 
    <motion.div
     initial={prefersReduced ? {} : { opacity: 0, scale: 0.95 }}

@@ -10,6 +10,7 @@ import { formatBytes } from '../services/sourceStorage'
 import { pageContainer, pageItem } from '../utils/motionTokens'
 import { SORT_OPTIONS, downloadFile, getSourceFiles } from '../utils/helpers'
 import toast from 'react-hot-toast'
+import PageHero from '../components/shared/PageHero'
 import FilterBar from '../components/FilterBar'
 import CustomSelect from '../components/shared/CustomSelect'
 import ErrorState from '../components/feedback/ErrorState'
@@ -454,12 +455,7 @@ export default function Sources() {
 
   return (
    <motion.div variants={containerVariants} initial={prefersReduced ? false : "hidden"} animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page ">
-   <div className="py-16 mb-12">
-    <div className="container-page text-center">
-     <h1 className="text-3xl md:text-5xl font-bold gradient-text-spatial mb-4">{t('sources.title')}</h1>
-     <p className="text-slate-500 dark:text-white/50 text-lg">{t('sources.subtitle')}</p>
-    </div>
-   </div>
+   <PageHero variant="file" title={t('sources.title')} subtitle={t('sources.subtitle')} />
 
    <div className="container-page">
     <motion.div variants={itemVariants} className="mb-10">
@@ -496,7 +492,7 @@ export default function Sources() {
         search ? (
          <button
           onClick={() => { setSearch(''); setActiveSubject('all') }}
-          className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-medium transition"
+          className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] btn-secondary rounded-xl text-sm font-medium"
          >
           {isArabic ? 'مسح البحث' : 'Clear search'}
          </button>

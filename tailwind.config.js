@@ -100,6 +100,9 @@ export default {
         'orb-float-1': 'orbFloat1 20s ease-in-out infinite',
         'orb-float-2': 'orbFloat2 25s ease-in-out infinite',
         'orb-float-3': 'orbFloat3 30s ease-in-out infinite',
+        'gradient-pan': 'gradientPan 8s ease infinite',
+        'float-slow': 'floatSlow 7s ease-in-out infinite',
+        'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -109,6 +112,18 @@ export default {
         shimmer: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
+        },
+        gradientPan: {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
+        floatSlow: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-12px)' },
+        },
+        pulseGlow: {
+          '0%, 100%': { opacity: '0.5', transform: 'scale(1)' },
+          '50%': { opacity: '0.9', transform: 'scale(1.04)' },
         },
         spatialDrift: {
           '0%, 100%': { transform: 'translate(0, 0) rotate(0deg) scale(1)' },

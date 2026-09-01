@@ -7,6 +7,7 @@ import { pageContainer, pageItem } from '../utils/motionTokens'
 import { FiBookOpen, FiArrowRight, FiLayers, FiAward, FiPlus, FiTrash2, FiEdit2, FiSave, FiX, FiLink2 } from 'react-icons/fi'
 import ErrorState from '../components/feedback/ErrorState'
 import ConfirmDialog from '../components/shared/ConfirmDialog'
+import Lazy3DScene from '../components/three/Lazy3DScene'
 import toast from 'react-hot-toast'
 import Skeleton from '../components/shared/Skeleton'
 
@@ -191,8 +192,23 @@ export default function CourseRoadmap() {
 
  return (
    <motion.div variants={containerVariants} initial={prefersReduced ? false : "hidden"} animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page ">
-    <div className="py-16 mb-12">
-     <div className="container-page text-center">
+    <div className="py-16 mb-12 page-hero">
+     {/* 3D winding path behind the header (desktop) / floating motifs */}
+     <Lazy3DScene
+      className="absolute inset-0 opacity-60"
+      scene={() => import('../components/three/RoadmapScene')}
+      sceneProps={{ theme: 'dark' }}
+      fallbackLabel={isArabic ? 'مسار ثلاثي الأبعاد' : '3D learning path'}
+      fallback={
+       <div className="absolute inset-0" aria-hidden="true">
+        <div className="floating-motif top-[18%] left-[8%] w-12 h-12" />
+        <div className="floating-motif m2 top-[55%] left-[22%] w-8 h-8" />
+        <div className="floating-motif m3 top-[30%] right-[12%] w-10 h-10" />
+        <div className="floating-motif m2 top-[65%] right-[25%] w-6 h-6" />
+       </div>
+      }
+     />
+     <div className="container-page text-center relative">
       <div className="inline-flex items-center gap-2 px-4 py-1.5 glass rounded-full mb-4">
        <FiLayers size={14} className="text-accent" />
        <span className="text-slate-600 dark:text-white/60 text-xs font-medium">{t('roadmap.interactivePlan')}</span>
@@ -302,9 +318,9 @@ export default function CourseRoadmap() {
        const colors = YEAR_COLORS[year - 1] || YEAR_COLORS[0]
 
        return (
-        <motion.div key={year} variants={itemVariants} className={`rounded-2xl border ${colors.border} ${colors.bg} p-6`}>
+        <motion.div key={year} variants={itemVariants} className={`relative rounded-2xl glass border border-line p-6 overflow-hidden`}>
          <div className="flex items-center gap-3 mb-6">
-          <div className={`w-10 h-10 rounded-xl ${colors.dot} flex items-center justify-center text-white font-bold text-sm`}>
+          <div className={`w-10 h-10 rounded-xl ${colors.dot} flex items-center justify-center text-white font-bold text-sm shadow-lg`}>
            {year}
           </div>
           <div>
@@ -319,7 +335,7 @@ export default function CourseRoadmap() {
            if (semCourses.length === 0) return null
 
            return (
-            <div key={sem} className="bg-white dark:bg-navy-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4">
+            <div key={sem} className="rounded-xl bg-black/[0.03] dark:bg-white/[0.03] border border-line p-4">
              <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">
               {isArabic ? `الفصل ${sem}` : `Semester ${sem}`}
              </h3>
@@ -344,8 +360,8 @@ export default function CourseRoadmap() {
                  }}
                  className={`relative p-3 rounded-xl border transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-royal-500 ${
                   selectedCourse === `${year}-${sem}-${idx}`
-                   ? 'border-royal-500 bg-royal-50 dark:bg-royal-900/20 shadow-lg shadow-royal-500/10'
-                   : 'border-slate-100 dark:border-slate-700 hover:border-royal-300 dark:hover:border-royal-700'
+                   ? 'border-royal-500 bg-royal-500/10 shadow-lg shadow-royal-500/10'
+                   : 'border-line hover:border-royal-300 dark:hover:border-royal-700'
                  }`}
                  onClick={() => setSelectedCourse(selectedCourse === `${year}-${sem}-${idx}` ? null : `${year}-${sem}-${idx}`)}
                 >

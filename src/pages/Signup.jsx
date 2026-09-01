@@ -175,7 +175,7 @@ export default function Signup() {
     <motion.div
      initial={{ opacity: 0 }}
      animate={{ opacity: 1 }}
-     transition={{ delay: 0.3 }}
+     transition={{ delay: 0.2 }}
      className="relative z-10"
     >
      <form onSubmit={handleSubmit} className="space-y-4">
@@ -184,7 +184,7 @@ export default function Signup() {
         key={field.key}
         initial={{ opacity: 0, x: isArabic ? 30 : -30 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.4 + i * 0.12, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ delay: 0.25 + i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
        >
         <label htmlFor={`signup-${field.key}`} className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
          {isArabic ? field.labelAr : field.labelEn}
@@ -207,7 +207,7 @@ export default function Signup() {
       <motion.div
        initial={{ opacity: 0, x: isArabic ? 30 : -30 }}
        animate={{ opacity: 1, x: 0 }}
-       transition={{ delay: 0.76, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+       transition={{ delay: 0.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
        <label htmlFor="signup-password" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
         {t('signup.password')}
@@ -240,7 +240,7 @@ export default function Signup() {
       <motion.div
        initial={{ opacity: 0, x: isArabic ? 30 : -30 }}
        animate={{ opacity: 1, x: 0 }}
-       transition={{ delay: 0.88, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+       transition={{ delay: 0.58, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <label htmlFor="signup-confirm-password" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
          {t('signup.confirmPassword')}
@@ -272,7 +272,7 @@ export default function Signup() {
        loadingText={t('signup.signingUp')}
        buttonText={t('signup.signup')}
        isArabic={isArabic}
-       delay={1}
+       delay={0.65}
       />
      </form>
 
@@ -281,7 +281,7 @@ export default function Signup() {
      <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ delay: 1.1 }}
+      transition={{ delay: 0.7 }}
       className="mt-6 text-center"
      >
       <p className="text-slate-500 dark:text-white/50 text-sm">

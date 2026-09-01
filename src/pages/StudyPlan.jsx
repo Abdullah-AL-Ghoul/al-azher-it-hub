@@ -10,6 +10,7 @@ import ErrorState from '../components/feedback/ErrorState'
 import EmptyState from '../components/shared/EmptyState'
 import ConfirmDialog from '../components/shared/ConfirmDialog'
 import toast from 'react-hot-toast'
+import PageHero from '../components/shared/PageHero'
 import Skeleton from '../components/shared/Skeleton'
 
 const containerVariants = pageContainer
@@ -149,12 +150,7 @@ export default function StudyPlan() {
 
  return (
   <motion.div variants={containerVariants} initial={prefersReduced ? false : "hidden"} animate="visible" className="min-h-screen pt-24 pb-16 bg-spatial-page ">
-   <div className="py-16 mb-12">
-    <div className="container-page text-center">
-     <h1 className="text-3xl md:text-5xl font-bold gradient-text-spatial mb-4">{t('studyPlan.title')}</h1>
-     <p className="text-slate-500 dark:text-white/50 text-lg">{t('studyPlan.subtitle')}</p>
-    </div>
-   </div>
+   <PageHero variant="path" title={t('studyPlan.title')} subtitle={t('studyPlan.subtitle')} />
 
    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
     {canEdit && (
@@ -235,17 +231,23 @@ export default function StudyPlan() {
      <motion.div className="space-y-4" variants={containerVariants}>
       {links.map(link => (
        <motion.div key={link.id} variants={itemVariants} whileHover={prefersReduced ? {} : { y: -3 }}>
-         <div className="glass glass-hover rounded-xl p-5 flex items-center justify-between group transition">
+         <div className="glass glass-hover lift rounded-xl p-5 flex items-center gap-4 group transition">
+          <span className="w-11 h-11 shrink-0 rounded-xl bg-gradient-to-br from-royal-500 to-cyan-400 text-white flex items-center justify-center shadow-lg shadow-royal-500/20 group-hover:scale-105 group-hover:rotate-3 transition-transform" aria-hidden="true">
+           <FiBookOpen size={20} />
+          </span>
           <a href={link.url} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-0">
-           <h2 className="font-semibold text-ink group-hover:text-royal-500 transition-colors text-base">{isArabic ? link.titleAr : link.titleEn}</h2>
+           <h2 className="font-semibold text-ink group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors text-base truncate">{isArabic ? link.titleAr : link.titleEn}</h2>
+           <p className="text-xs text-slate-500 dark:text-white/40 truncate mt-0.5" dir="ltr">{link.url}</p>
           </a>
-          <div className="flex items-center gap-2 ms-4">
+          <div className="flex items-center gap-2 ms-2">
            {canEdit && (
             <button onClick={() => setConfirmDeleteId(link.id)} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" aria-label={t('common.delete')}>
              <FiTrash2 size={16} />
             </button>
            )}
-           <FiExternalLink className="text-slate-500 dark:text-slate-400 group-hover:text-royal-500 transition-colors" size={20} />
+           <span className="w-9 h-9 rounded-lg bg-black/5 dark:bg-white/5 border border-line flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-royal-500 dark:group-hover:text-cyan-300 group-hover:border-royal-500/40 transition-colors" aria-hidden="true">
+            <FiExternalLink size={16} />
+           </span>
          </div>
         </div>
        </motion.div>

@@ -39,12 +39,15 @@ export default function SplashScreen({ onComplete }) {
 
      <div className="relative z-10 text-center">
       <motion.div
-       initial={prefersReduced ? {} : { scale: 0, rotate: -180 }}
-       animate={prefersReduced ? {} : { scale: 1, rotate: 0 }}
-       transition={prefersReduced ? {} : { type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
+       initial={prefersReduced ? {} : { scale: 0.4, rotate: -25, opacity: 0 }}
+       animate={prefersReduced ? {} : { scale: 1, rotate: 0, opacity: 1 }}
+       transition={prefersReduced ? {} : { type: 'spring', stiffness: 180, damping: 16, delay: 0.15 }}
        className="mx-auto mb-8"
       >
-       <SiteLogo size="lg" />
+       {/* gradient-halo paints the spinning conic ring behind the mark */}
+       <div className="gradient-halo rounded-3xl">
+        <SiteLogo size="lg" />
+       </div>
       </motion.div>
 
       <motion.div

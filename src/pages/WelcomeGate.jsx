@@ -5,11 +5,11 @@ import { useLanguage } from '../context/LanguageContext'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { welcomeContainer, welcomeItem, springSoft } from '../utils/motionTokens'
-import { FiLogIn, FiUserPlus, FiPlay, FiFileText, FiLayers, FiArrowUpRight, FiSun, FiMoon, FiMonitor, FiShield, FiStar, FiDatabase, FiCpu, FiGlobe, FiCloud, FiCode, FiBookOpen, FiCheck, FiChevronDown, FiVideo, FiClock, FiAward, FiUsers, FiHelpCircle } from 'react-icons/fi'
+import { FiLogIn, FiUserPlus, FiFileText, FiLayers, FiArrowUpRight, FiSun, FiMoon, FiMonitor, FiShield, FiStar, FiDatabase, FiCpu, FiGlobe, FiCloud, FiCode, FiBookOpen, FiCheck, FiChevronDown, FiVideo, FiClock, FiAward, FiUsers, FiHelpCircle } from 'react-icons/fi'
 import SiteLogo from '../components/shared/SiteLogo'
 import Reveal from '../components/shared/Reveal'
 import SectionHeading from '../components/shared/SectionHeading'
-import Badge from '../components/shared/Badge'
+import Lazy3DScene from '../components/three/Lazy3DScene'
 
 function CountUp({ end, duration = 1400, suffix = '' }) {
  const [value, setValue] = useState(0)
@@ -215,56 +215,31 @@ export default function WelcomeGate() {
       </motion.div>
      </motion.div>
 
-     {/* Right — Visual stack */}
+     {/* Right — 3D knowledge cluster (WebGL on desktop, CSS art fallback) */}
      <motion.div
       initial={prefersReduced ? {} : { opacity: 0, y: 24, scale: 0.98 }}
       animate={prefersReduced ? {} : { opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
       className="relative flex items-center justify-center"
      >
-      <div className="relative w-full max-w-[520px]">
+      <div className="relative w-full max-w-[520px] aspect-square">
        <div className="absolute -inset-6 bg-gradient-to-br from-royal-500/15 via-cyan-400/10 to-violet-500/10 rounded-[32px] blur-2xl" />
-       <div className="relative glass-panel gradient-border rounded-[28px] p-5 md:p-6 shadow-2xl overflow-hidden">
+       <div className="relative glass-panel gradient-border rounded-[28px] shadow-2xl overflow-hidden w-full h-full">
         <div className="absolute inset-0 spatial-grid opacity-[0.12] pointer-events-none" />
         <div className="absolute -top-6 -right-6 w-24 h-24 hero-orbit opacity-40 pointer-events-none hidden md:block" aria-hidden="true" />
-        <div className="absolute inset-0 bg-gradient-to-br from-royal-500/[0.06] via-transparent to-cyan-400/[0.06] pointer-events-none" />
-        <div className="relative flex items-center gap-2 mb-3">
-         <span className="eyebrow text-[10px] !mb-0">{isArabic ? 'محاضرة 04 • 24 دقيقة' : 'Lecture 04 • 24 min'}</span>
-         <span className="ms-auto w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        </div>
-        <div className="relative flex items-center justify-between mb-4">
-         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-royal-500 text-white flex items-center justify-center"><FiPlay size={16} /></div>
-          <div>
-           <div className="text-sm font-bold text-ink">{isArabic ? 'قواعد البيانات — المحاضرة 4' : 'Databases — Lecture 4'}</div>
-           <div className="text-xs text-slate-500 dark:text-white/50">{isArabic ? 'د. أحمد · 24 دقيقة' : 'Dr. Ahmed · 24 min'}</div>
+        <Lazy3DScene
+         className="absolute inset-0"
+         scene={() => import('../components/three/KnowledgeScene')}
+         fallbackLabel={isArabic ? 'مشهد ثلاثي الأبعاد لتكوين معرفي' : '3D knowledge cluster scene'}
+         fallback={
+          <div className="absolute inset-0">
+           <div className="absolute top-[28%] left-1/2 -translate-x-1/2 w-40 h-40 rounded-full bg-gradient-to-br from-royal-500/40 to-cyan-400/30 blur-md animate-depth-breathe" />
+           <div className="absolute top-[20%] left-[18%] w-10 h-10 rounded-full border-2 border-cyan-400/50 animate-float-slow" />
+           <div className="absolute top-[55%] right-[15%] w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/40 to-royal-500/30 rotate-12 animate-float-slow" style={{ animationDelay: '-2s' }} />
+           <div className="absolute top-[18%] right-[22%] w-6 h-6 rounded-lg bg-cyan-400/40 rotate-6 animate-float-slow" style={{ animationDelay: '-4s' }} />
           </div>
-         </div>
-         <Badge tone="success">{isArabic ? 'تتم الآن' : 'Now watching'}</Badge>
-        </div>
-        <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-[16/9] flex items-center justify-center">
-         <div className="absolute inset-0 bg-gradient-to-br from-royal-600 via-violet-600 to-cyan-500 opacity-90" />
-         <div className="absolute inset-0 bg-[radial-gradient(400px_200px_at_50%_0%,rgba(255,255,255,0.18),transparent_60%)]" />
-         <div className="relative w-14 h-14 rounded-full bg-white text-royal-600 flex items-center justify-center shadow-xl">
-          <FiPlay size={20} className="ms-0.5" />
-         </div>
-         <div className="absolute bottom-0 inset-x-0 p-3 flex items-center gap-2">
-          <div className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden"><div className="h-full w-[62%] bg-white rounded-full" /></div>
-          <span className="text-[11px] font-medium text-white/90 tabular-nums">14:32</span>
-         </div>
-        </div>
-        <div className="mt-4 grid grid-cols-3 gap-2">
-         {[
-          { k: isArabic ? 'ملخص' : 'Summary', v: 'PDF' },
-          { k: isArabic ? 'سلايدات' : 'Slides', v: '24' },
-          { k: isArabic ? 'تقييم' : 'Rating', v: '4.9★' },
-         ].map(s => (
-          <div key={s.k} className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 p-2.5 text-center">
-           <div className="text-[11px] tracking-widest uppercase text-slate-500 dark:text-white/50">{s.k}</div>
-           <div className="text-sm font-bold text-ink">{s.v}</div>
-          </div>
-         ))}
-        </div>
+         }
+        />
        </div>
 
        <motion.div
@@ -287,7 +262,7 @@ export default function WelcomeGate() {
         <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center"><FiCheck size={14} /></span>
         <div>
          <div className="text-xs font-bold text-ink leading-none">{isArabic ? 'تمت المتابعة' : 'Progress tracked'}</div>
-         <div className="text-[11px] text-slate-500 dark:text-white/50">{isArabic ? 'المحاضرة 4 من 8' : 'Lecture 4 of 8'}</div>
+         <div className="text-[11px] text-slate-500 dark:text-white/50">{isArabic ? 'تتبع تلقائي لتقدمك' : 'Your progress, tracked'}</div>
         </div>
        </motion.div>
       </div>

@@ -5,9 +5,10 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { getLectures, getSources, getAdditions } from '../services'
 import { pageContainer, pageItem, pageContainerReduced, revealItem } from '../utils/motionTokens'
-import { lectureVideoId, lectureThumb } from '../utils/helpers'
+import { lectureVideoId, } from '../utils/helpers'
 import HeroSection from '../components/HeroSection'
 import { FiFileText, FiGrid, FiArrowLeft, FiEye, FiHeart, FiClock, FiMap, FiLink, FiUser, FiMessageCircle, FiVideo, FiChevronLeft, FiPlay, FiBookOpen, FiSend, FiUsers } from 'react-icons/fi'
+import LectureThumbnail from '../components/shared/LectureThumbnail'
 import ErrorState from '../components/feedback/ErrorState'
 import { useUserData } from '../context/UserDataContext'
 import Skeleton from '../components/shared/Skeleton'
@@ -206,8 +207,8 @@ export default function Home() {
          const videoId = lectureVideoId(lecture)
          return (
           <Link key={lecture.id} to={`/lecture/${lecture.id}`} className="group flex-shrink-0 w-64 sm:w-auto lg:w-auto snap-start glass glass-hover lift rounded-xl overflow-hidden block ">
-           <div className="relative h-28 bg-black/30 overflow-hidden">
-            {videoId && <img src={lectureThumb(videoId, 'mq')} alt="" width="320" height="180" loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />}
+           <div className="relative aspect-video bg-black/30 overflow-hidden">
+            <LectureThumbnail videoId={videoId} alt="" className="group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent flex items-center justify-center">
              <div className="w-9 h-9 bg-rose-500/90 backdrop-blur-sm rounded-full flex items-center justify-center text-white shadow-lg shadow-rose-500/30 group-hover:scale-110 transition-transform">
               <FiPlay size={14} className="ms-0.5" />
@@ -216,9 +217,6 @@ export default function Home() {
             <span className="absolute top-2 end-2 px-2 py-0.5 bg-black/55 backdrop-blur-sm rounded-full text-[10px] text-white font-medium border border-white/15">
              {isArabic ? 'أكمل' : 'Resume'}
             </span>
-            <div className="absolute bottom-0 inset-x-0 h-1 bg-white/20">
-             <div className="h-full bg-royal-500" style={{ width: '62%' }} />
-            </div>
            </div>
            <div className="p-3">
             <p className="text-[10px] tracking-widest uppercase text-slate-500 dark:text-white/50 mb-1 tabular-nums">{isArabic ? lecture.subjectAr : lecture.subjectEn}</p>
@@ -300,11 +298,11 @@ export default function Home() {
      <div className="container-page">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
        {[
-        { icon: FiEye, value: viewed?.length || 0, label: t('home.stats.watched'), gradient: 'from-cyan-500 to-cyan-600' },
-        { icon: FiHeart, value: favorites.length, label: t('home.stats.favorites'), gradient: 'from-rose-500 to-rose-600' },
-        { icon: FiFileText, value: lectures.length, label: t('home.stats.totalLectures'), gradient: 'from-violet-500 to-violet-600' },
-        { icon: FiLink, value: sources.length, label: isArabic ? 'المصادر' : 'Sources', gradient: 'from-emerald-500 to-emerald-600' },
-        { icon: FiGrid, value: materialsCount, label: isArabic ? 'عدد المواد' : 'Materials', gradient: 'from-amber-500 to-amber-600' },
+        { icon: FiFileText, value: lectures.length, label: t('home.stats.totalLectures'), gradient: 'from-violet-500 to-cyan-500' },
+        { icon: FiLink, value: sources.length, label: t('home.stats.totalSources'), gradient: 'from-emerald-500 to-cyan-500' },
+        { icon: FiEye, value: viewed?.length || 0, label: t('home.stats.watched'), gradient: 'from-cyan-500 to-royal-600' },
+        { icon: FiHeart, value: favorites.length, label: t('home.stats.favorites'), gradient: 'from-rose-500 to-pink-500' },
+        { icon: FiGrid, value: materialsCount, label: isArabic ? 'عدد المواد' : 'Materials', gradient: 'from-amber-500 to-orange-500' },
        ].map((stat, i) => {
         const Icon = stat.icon
         return (
@@ -313,7 +311,7 @@ export default function Home() {
           variants={prefersReduced ? {} : revealItem}
           transition={{ delay: i * 0.06 }}
           whileHover={prefersReduced ? {} : { y: -4 }}
-          className="glass rounded-2xl p-4 border border-white/10 hover:border-royal-500/30 flex items-center gap-3 cursor-default group"
+          className="stat-tile rounded-2xl p-4 hover:border-royal-500/30 cursor-default group"
          >
           <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition duration-300`}>
            <Icon size={22} />
@@ -427,41 +425,6 @@ export default function Home() {
     </div>
    </motion.section>
 
-   {/* Platform Stats */}
-   <motion.section variants={itemVariants} whileInView="visible" viewport={{ once: true, margin: "-50px" }} className="py-16 bg-spatial-page relative section-lazy">
-    <div className="container-page">
-     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
-       {[
-        { value: lectures.length, suffix: '+', label: t('home.stats.totalLectures'), gradient: 'from-violet-500 to-cyan-500', dir: 'right' },
-        { value: sources.length, suffix: '+', label: t('home.stats.totalSources'), gradient: 'from-emerald-500 to-cyan-500', dir: 'left' },
-        { value: userStats.viewed?.length || 0, suffix: '', label: t('home.stats.watched'), gradient: 'from-amber-500 to-rose-500', dir: 'top' },
-        { value: favorites.length, suffix: '', label: t('home.stats.favorites'), gradient: 'from-rose-500 to-pink-500', dir: 'bottom' },
-       ].map((stat, i) => {
-       const platDirAnim = {
-        right: { opacity: 0, x: 50, y: 0 },
-        left: { opacity: 0, x: -50, y: 0 },
-        top: { opacity: 0, x: 0, y: -50 },
-        bottom: { opacity: 0, x: 0, y: 50 },
-       }
-       return (
-        <motion.div
-         key={i}
-         initial={prefersReduced ? {} : platDirAnim[stat.dir]}
-         whileInView={prefersReduced ? {} : { opacity: 1, x: 0, y: 0 }}
-         viewport={{ once: true }}
-         transition={prefersReduced ? {} : { duration: 0.6, delay: i * 0.12, type: 'spring', stiffness: 180 }}
-         whileHover={prefersReduced ? {} : { scale: 1.05, y: -5 }}
-         className="text-center glass rounded-2xl px-4 py-6 cursor-default"
-        >
-         <div className={`text-3xl md:text-4xl font-extrabold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent mb-1`}>{stat.value}{stat.suffix}</div>
-         <div className="text-xs text-slate-500 dark:text-white/50 font-medium">{stat.label}</div>
-        </motion.div>
-       )
-      })}
-     </div>
-    </div>
-   </motion.section>
-
    {latestLectures.length > 0 && (
     <motion.section variants={itemVariants} whileInView="visible" viewport={{ once: true, margin: "-50px" }} className="py-20 bg-spatial-page relative section-lazy">
      <div className="container-page">
@@ -478,9 +441,12 @@ export default function Home() {
         <motion.div key={lecture.id} variants={itemVariants}>
           <Link to={`/lecture/${lecture.id}`} className="glass glass-hover rounded-xl overflow-hidden block group">
            <div className="relative h-32 bg-black/30 overflow-hidden">
-            {videoId && (
-              <img src={lectureThumb(videoId, 'mq')} srcSet={`${lectureThumb(videoId, 'mq')} 320w, ${lectureThumb(videoId, 'hq')} 480w`} sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw" alt="" width="320" height="180" loading="lazy" decoding="async" fetchPriority="low" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            )}
+            <LectureThumbnail
+             videoId={videoId}
+             alt=""
+             sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(50vw - 3rem), calc(25vw - 3.5rem)"
+             className="group-hover:scale-105 transition-transform duration-500"
+            />
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
              <div className="w-11 h-11 bg-rose-500/90 rounded-full flex items-center justify-center text-white shadow-lg shadow-rose-500/30 scale-75 group-hover:scale-100 transition-transform duration-300">
               <FiPlay size={18} className="ms-0.5" />

@@ -214,7 +214,7 @@ export default function Profile() {
         initial={prefersReduced ? {} : { opacity: 0, x: i % 2 === 0 ? 30 : -30, y: 10 }}
         animate={prefersReduced ? {} : { opacity: 1, x: 0, y: 0 }}
         transition={prefersReduced ? {} : { duration: 0.5, delay: stat.delay, type: 'spring', stiffness: 200 }}
-        className={`glass rounded-xl p-4 border ${stat.border} flex items-center gap-3 hover:scale-[1.02] transition-transform`}
+        className={`stat-tile rounded-xl p-4 flex items-center gap-3 hover:scale-[1.02] transition-transform`}
        >
         <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
          <Icon size={20} className={stat.color} />

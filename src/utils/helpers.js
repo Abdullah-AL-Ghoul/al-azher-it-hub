@@ -74,6 +74,13 @@ export function lectureVideoId(lecture) {
 
 export function lectureThumb(id, quality = 'mq') {
   if (!id) return null
-  const file = quality === 'hq' ? 'hqdefault.jpg' : 'mqdefault.jpg'
+  // maxresdefault = true 16:9 1280x720; hqdefault is 4:3 with baked black
+  // bars (cropped away by object-cover on a 16:9 box); mq is 16:9 320x180.
+  const files = {
+    maxres: 'maxresdefault.jpg',
+    hq: 'hqdefault.jpg',
+    mq: 'mqdefault.jpg',
+  }
+  const file = files[quality] || files.mq
   return `https://img.youtube.com/vi/${id}/${file}`
 }

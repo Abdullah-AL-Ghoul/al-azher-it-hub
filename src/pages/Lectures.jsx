@@ -5,7 +5,10 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { useLectures } from '../hooks/useLectures'
 import { FiPlay, FiHeart, FiCalendar, FiFilter, FiGrid, FiList, FiCheck, FiSearch, FiInbox, FiEye, FiBookOpen, FiExternalLink } from 'react-icons/fi'
-import { lectureVideoId, lectureThumb, SORT_OPTIONS } from '../utils/helpers'
+import PageHero from '../components/shared/PageHero'
+import LectureThumbnail from '../components/shared/LectureThumbnail'
+import EmptyState from '../components/shared/EmptyState'
+import { lectureVideoId, SORT_OPTIONS } from '../utils/helpers'
 import FilterBar from '../components/FilterBar'
 import CustomSelect from '../components/shared/CustomSelect'
 import VideoPlayer from '../components/shared/VideoPlayer'
@@ -128,12 +131,7 @@ export default function Lectures() {
  return (
   <div className="min-h-screen pt-24 pb-16 bg-spatial-page ">
    {/* Page header */}
-   <div className="py-16 mb-8">
-    <div className="container-page text-center">
-     <h1 className="text-3xl md:text-5xl font-bold gradient-text-spatial mb-4">{t('lectures.title')}</h1>
-     <p className="text-slate-500 dark:text-white/50 text-lg">{t('lectures.subtitle')}</p>
-    </div>
-   </div>
+   <PageHero variant="play" title={t('lectures.title')} subtitle={t('lectures.subtitle')} />
 
    <div className="container-page">
     {/* Stats strip */}
@@ -147,7 +145,7 @@ export default function Lectures() {
       ].map(s => {
        const Icon = s.icon
        return (
-        <div key={s.label} className="glass rounded-xl px-4 py-3 flex items-center gap-3">
+        <div key={s.label} className="stat-tile rounded-xl px-4 py-3">
          <div className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center shrink-0`}>
           <Icon size={18} />
          </div>
@@ -178,8 +176,8 @@ export default function Lectures() {
         const vid = lectureVideoId(l)
         return (
          <button key={l.id} onClick={() => setActiveLecture(l)} className="snap-start shrink-0 w-44 glass rounded-xl overflow-hidden text-start group hover:border-royal-500/30 transition-colors border border-transparent">
-          <div className="relative h-20 bg-black/30">
-           {vid && <img src={lectureThumb(vid, 'mq')} alt="" width="176" height="80" loading="lazy" className="w-full h-full object-cover" />}
+          <div className="relative aspect-video bg-black/30">
+           <LectureThumbnail videoId={vid} alt="" width={176} height={99} />
            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="w-8 h-8 bg-rose-500/90 rounded-full flex items-center justify-center text-white">
              <FiPlay size={14} className="ms-0.5" />
@@ -276,23 +274,19 @@ export default function Lectures() {
       <ErrorState error={isArabic ? 'تعذر تحميل المحاضرات. تحقق من اتصالك وحاول مجدداً.' : 'Failed to load lectures. Check your connection and try again.'} onRetry={reload} />
      </motion.div>
     ) : displayList.length === 0 ? (
-     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20 glass rounded-2xl border border-white/10">
-      <div className="w-16 h-16 bg-royal-500/10 dark:bg-cyan-500/10 border border-royal-500/20 dark:border-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-5">
-       {search || watchFilter !== 'all' ? <FiSearch className="text-royal-400 dark:text-cyan-400" size={28} /> : <FiInbox className="text-royal-400 dark:text-cyan-400" size={28} />}
-      </div>
-      <h2 className="text-lg font-bold text-ink mb-2">
-       {search || watchFilter !== 'all' ? (isArabic ? 'لا توجد نتائج' : 'No results') : (isArabic ? 'لا توجد محاضرات بعد' : 'No lectures yet')}
-      </h2>
-      <p className="text-sm text-slate-500 dark:text-white/50 max-w-md mx-auto mb-6">
-       {search || watchFilter !== 'all'
+     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <EmptyState
+       icon={search || watchFilter !== 'all' ? FiSearch : FiInbox}
+       title={search || watchFilter !== 'all' ? (isArabic ? 'لا توجد نتائج' : 'No results') : (isArabic ? 'لا توجد محاضرات بعد' : 'No lectures yet')}
+       description={search || watchFilter !== 'all'
         ? (isArabic ? 'جرّب كلمة بحث مختلفة أو عدّل الفلاتر' : 'Try a different search or adjust your filters')
         : (isArabic ? 'سيتم إضافة المحاضرات قريباً من المدير' : 'Lectures will be added by the admin soon')}
-      </p>
-      {(search || watchFilter !== 'all') && (
-       <button onClick={() => { setSearch(''); setActiveSubject('all'); setWatchFilter('all') }} className="inline-flex items-center gap-2 px-5 py-2.5 bg-royal-500 hover:bg-royal-600 dark:bg-cyan-500 dark:hover:bg-cyan-600 text-white rounded-xl text-sm font-medium transition">
-        {isArabic ? 'مسح الفلاتر' : 'Clear filters'}
-       </button>
-      )}
+       action={(search || watchFilter !== 'all') && (
+        <button onClick={() => { setSearch(''); setActiveSubject('all'); setWatchFilter('all') }} className="inline-flex items-center gap-2 px-5 py-2.5 btn-primary rounded-xl text-sm font-medium">
+         {isArabic ? 'مسح الفلاتر' : 'Clear filters'}
+        </button>
+       )}
+      />
      </motion.div>
     ) : viewMode === 'grid' ? (
      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -374,11 +368,12 @@ function LectureCard({ lecture, isArabic, user, localFavorites, localRatings, vi
      <div className="relative group glass-panel gradient-border spotlight-card lift rounded-xl overflow-hidden" onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); e.currentTarget.style.setProperty('--mouse-x', `${((e.clientX - r.left) / r.width) * 100}%`); e.currentTarget.style.setProperty('--mouse-y', `${((e.clientY - r.top) / r.height) * 100}%`) }}>
       <Link to={`/lecture/${lecture.id}`} onClick={() => onWatch(lecture.id, lecture)} className="absolute inset-0 z-0 rounded-xl" aria-label={title} />
       <div className="relative aspect-video pointer-events-none bg-black/30 flex items-center justify-center overflow-hidden">
-      {videoId ? (
-        <img src={lectureThumb(videoId, 'mq')} srcSet={`${lectureThumb(videoId, 'mq')} 320w, ${lectureThumb(videoId, 'hq')} 480w`} sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" alt="" width="320" height="180" loading="lazy" decoding="async" fetchPriority="low" className="w-full h-full object-cover group-hover:scale-[1.07] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform" />
-      ) : (
-       <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-violet-500/20" />
-     )}
+      <LectureThumbnail
+       videoId={videoId}
+       alt=""
+       sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(50vw - 2.5rem), calc(33.333vw - 2.7rem)"
+       className="group-hover:scale-[1.07] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
+      />
       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
       <button type="button" onClick={(e) => { e.preventDefault(); onPlay(lecture) }} className="pointer-events-auto relative z-10 w-16 h-16 bg-rose-500/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white transition duration-300 group-hover:scale-110 shadow-xl shadow-rose-500/20 backdrop-blur-sm" aria-label={isArabic ? 'تشغيل داخل الموقع' : 'Play inside the site'}>
@@ -426,11 +421,7 @@ function LectureListItem({ lecture, isArabic, user, localFavorites, localRatings
     <div className="relative group glass glass-hover flex items-center gap-4 p-4 rounded-xl">
      <Link to={`/lecture/${lecture.id}`} onClick={() => onWatch(lecture.id, lecture)} className="absolute inset-0 z-0 rounded-xl" aria-label={title} />
       <div className="pointer-events-none relative w-32 h-20 flex-shrink-0 bg-black/30 rounded-xl overflow-hidden flex items-center justify-center">
-      {videoId ? (
-         <img src={lectureThumb(videoId, 'mq')} srcSet={`${lectureThumb(videoId, 'mq')} 320w, ${lectureThumb(videoId, 'hq')} 480w`} sizes="128px" alt="" width="320" height="180" loading="lazy" decoding="async" fetchPriority="low" className="w-full h-full object-cover" />
-      ) : (
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-violet-500/20" />
-     )}
+      <LectureThumbnail videoId={videoId} alt="" width={128} height={80} sizes="128px" />
      <div className="absolute inset-0 flex items-center justify-center">
       <button type="button" onClick={(e) => { e.preventDefault(); onPlay(lecture) }} className="pointer-events-auto relative z-10 w-10 h-10 bg-rose-500/80 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-sm" aria-label={isArabic ? 'تشغيل داخل الموقع' : 'Play inside the site'}>
         <FiPlay size={18} className="ms-0.5" />
