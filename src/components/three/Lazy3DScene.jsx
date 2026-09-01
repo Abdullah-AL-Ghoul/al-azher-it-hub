@@ -33,6 +33,7 @@ export default function Lazy3DScene({
 }) {
   const hostRef = useRef(null)
   const [near, setNear] = useState(false)
+  const [visible, setVisible] = useState(false)
   const [SceneComp, setSceneComp] = useState(null)
   const capable = useMemo(() => supportsWebGL(), [])
 
@@ -43,8 +44,19 @@ export default function Lazy3DScene({
       ([entry]) => entry.isIntersecting && setNear(true),
       { rootMargin: '200px' }
     )
+    // Second observer: once loaded, pause the scene's render loop whenever
+    // the host leaves the viewport (off-screen rAF/GPU work otherwise runs
+    // forever, e.g. the hero particle field while reading below it).
+    const visibilityIo = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { rootMargin: '100px' }
+    )
     io.observe(el)
-    return () => io.disconnect()
+    visibilityIo.observe(el)
+    return () => {
+      io.disconnect()
+      visibilityIo.disconnect()
+    }
   }, [capable])
 
   useEffect(() => {
@@ -68,7 +80,7 @@ export default function Lazy3DScene({
     >
       {near && SceneComp ? (
         <Suspense fallback={fallback}>
-          <SceneComp {...(sceneProps || {})} />
+          <SceneComp {...(sceneProps || {})} paused={!visible} />
         </Suspense>
       ) : (
         fallback

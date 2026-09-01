@@ -214,7 +214,7 @@ export default function Profile() {
         initial={prefersReduced ? {} : { opacity: 0, x: i % 2 === 0 ? 30 : -30, y: 10 }}
         animate={prefersReduced ? {} : { opacity: 1, x: 0, y: 0 }}
         transition={prefersReduced ? {} : { duration: 0.5, delay: stat.delay, type: 'spring', stiffness: 200 }}
-        className={`stat-tile rounded-xl p-4 flex items-center gap-3 hover:scale-[1.02] transition-transform`}
+        className={`stat-tile p-4 hover:scale-[1.02] transition-transform`}
        >
         <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
          <Icon size={20} className={stat.color} />
@@ -244,7 +244,7 @@ export default function Profile() {
       </h2>
       {editing ? (
        <div className="flex gap-2">
-        <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial text-white rounded-xl text-sm font-medium">
+        <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial rounded-xl text-sm font-medium">
          <FiSave size={14} /> {t('profile.save')}
         </button>
         <button onClick={() => setEditing(false)} className="flex items-center gap-2 px-4 py-2 min-h-[44px] glass text-slate-600 dark:text-white/60 rounded-xl text-sm font-medium">
@@ -252,7 +252,7 @@ export default function Profile() {
         </button>
        </div>
       ) : (
-       <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial text-white rounded-xl text-sm font-medium">
+       <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial rounded-xl text-sm font-medium">
         <FiEdit2 size={14} /> {t('profile.edit')}
        </button>
       )}
@@ -318,7 +318,7 @@ export default function Profile() {
        {isArabic ? 'تغيير كلمة المرور' : 'Change Password'}
       </h2>
       {!showPasswordForm && (
-       <button onClick={() => setShowPasswordForm(true)} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial text-white rounded-xl text-sm font-medium">
+       <button onClick={() => setShowPasswordForm(true)} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial rounded-xl text-sm font-medium">
         <FiLock size={14} /> {isArabic ? 'تغيير' : 'Change'}
        </button>
       )}
@@ -344,7 +344,7 @@ export default function Profile() {
         )}
        </div>
        <div className="flex gap-2">
-        <button onClick={handleChangePassword} disabled={pwSaving} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial text-white rounded-xl text-sm font-medium disabled:opacity-50">
+        <button onClick={handleChangePassword} disabled={pwSaving} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial rounded-xl text-sm font-medium disabled:opacity-50">
          <FiSave size={14} /> {pwSaving ? (isArabic ? 'جاري الحفظ...' : 'Saving...') : (isArabic ? 'حفظ' : 'Save')}
         </button>
         <button onClick={() => { setShowPasswordForm(false); setPwForm({ current: '', newPw: '', confirm: '' }) }} className="flex items-center gap-2 px-4 py-2 min-h-[44px] glass text-slate-600 dark:text-white/60 rounded-xl text-sm font-medium">

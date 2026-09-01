@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { useScrollManager } from '../hooks/useScrollManager.jsx'
+import { useScrollManager, useScrollFrame } from '../hooks/useScrollManager.jsx'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useNotifications } from '../hooks/useNotifications'
 import { HiMenu, HiX } from 'react-icons/hi'
@@ -33,7 +33,14 @@ export default memo(function Navbar() {
   const prefersReduced = useReducedMotion()
   const { theme, toggle: toggleTheme } = useTheme()
   const location = useLocation()
-  const { scrolled, progress } = useScrollManager()
+  const { scrolled } = useScrollManager()
+  // Progress bar is written straight to the DOM per scroll frame — React
+  // state here would re-render the whole navbar ~every 100px.
+  useScrollFrame(({ progress }) => {
+    if (progressRef.current) {
+      progressRef.current.style.width = `${progress}%`
+    }
+  })
   const progressRef = useRef(null)
   const [isOpen, setIsOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -338,7 +345,7 @@ export default memo(function Navbar() {
                   {t('nav.language')}
                 </button>
                 {!user && (
-                  <Link to="/" onClick={() => setIsOpen(false)} className="w-full text-start px-4 py-3 min-h-[44px] rounded-xl text-sm font-semibold btn-spatial text-white flex items-center gap-2">
+                  <Link to="/" onClick={() => setIsOpen(false)} className="w-full text-start px-4 py-3 min-h-[44px] rounded-xl text-sm font-semibold btn-spatial flex items-center gap-2">
                     <FiUser size={16} /> {t('nav.login')}
                   </Link>
                 )}

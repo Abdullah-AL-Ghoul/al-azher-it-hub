@@ -186,7 +186,7 @@ export default function Signup() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.25 + i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
        >
-        <label htmlFor={`signup-${field.key}`} className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
+        <label htmlFor={`signup-${field.key}`} className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ms-1 uppercase tracking-wider">
          {isArabic ? field.labelAr : field.labelEn}
         </label>
         <SpatialInput
@@ -200,6 +200,8 @@ export default function Signup() {
          isArabic={isArabic}
          autoComplete={field.autoComplete}
          required={field.required}
+         aria-invalid={error ? 'true' : undefined}
+         aria-describedby={error ? 'auth-form-alert' : undefined}
         />
        </motion.div>
       ))}
@@ -209,7 +211,7 @@ export default function Signup() {
        animate={{ opacity: 1, x: 0 }}
        transition={{ delay: 0.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
-       <label htmlFor="signup-password" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
+       <label htmlFor="signup-password" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ms-1 uppercase tracking-wider">
         {t('signup.password')}
        </label>
        <SpatialInput
@@ -226,12 +228,14 @@ export default function Signup() {
         showPassword={showPassword}
         autoComplete="new-password"
         required
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error ? 'auth-form-alert' : undefined}
        />
        <AnimatePresence>
         <PasswordStrength password={form.password} isArabic={isArabic} />
        </AnimatePresence>
        {form.password && form.password.length < 8 && (
-        <p className="text-xs text-amber-400/80 mt-1 ml-1">
+        <p id="signup-password-hint" className="text-xs text-amber-400/80 mt-1 ms-1">
          {isArabic ? '8 أحرف على الأقل' : 'At least 8 characters'}
         </p>
        )}
@@ -242,7 +246,7 @@ export default function Signup() {
        animate={{ opacity: 1, x: 0 }}
        transition={{ delay: 0.58, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
-        <label htmlFor="signup-confirm-password" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
+        <label htmlFor="signup-confirm-password" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ms-1 uppercase tracking-wider">
          {t('signup.confirmPassword')}
         </label>
          <SpatialInput
@@ -259,9 +263,11 @@ export default function Signup() {
          showPassword={showConfirm}
          autoComplete="new-password"
          required
+         aria-invalid={(form.confirmPassword && form.password !== form.confirmPassword) || error ? 'true' : undefined}
+         aria-describedby={error ? 'auth-form-alert' : undefined}
         />
        {form.confirmPassword && form.password !== form.confirmPassword && (
-        <p className="text-xs text-red-600 dark:text-red-400 mt-1 ml-1">
+        <p className="text-xs text-red-600 dark:text-red-400 mt-1 ms-1">
          {t('forgotPassword.passwordsDoNotMatch')}
         </p>
        )}

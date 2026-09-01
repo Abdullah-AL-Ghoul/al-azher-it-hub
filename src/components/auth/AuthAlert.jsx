@@ -25,6 +25,7 @@ export default function AuthAlert({ type, message, show }) {
      animate={{ opacity: 1, scale: 1, y: 0 }}
      exit={{ opacity: 0, scale: 0.8, y: -10 }}
 className={`mb-6 p-4 border rounded-2xl text-sm text-center backdrop-blur-sm flex items-center justify-center gap-2 relative z-10 ${config.container}`}
+      id="auth-form-alert"
       role={type === 'error' ? 'alert' : 'status'}
       aria-live={type === 'error' ? 'assertive' : 'polite'}
      >

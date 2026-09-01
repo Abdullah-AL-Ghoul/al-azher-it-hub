@@ -112,7 +112,7 @@ export default function Login() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.4 + i * 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
        >
-         <label htmlFor={`login-${field.key}`} className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
+         <label htmlFor={`login-${field.key}`} className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ms-1 uppercase tracking-wider">
           {isArabic ? field.labelAr : field.labelEn}
          </label>
          <SpatialInput
@@ -129,6 +129,8 @@ export default function Login() {
          showPassword={showPassword}
          autoComplete={field.autoComplete}
          required={field.required}
+         aria-invalid={error ? 'true' : undefined}
+         aria-describedby={error ? 'auth-form-alert' : undefined}
         />
        </motion.div>
        ))}

@@ -51,7 +51,7 @@ export default memo(function FilterBar({ subjects, subjectCounts = {}, activeSub
      value={localSearch}
      onChange={(e) => handleChange(e.target.value)}
      placeholder={searchPlaceholder}
-     className="w-full input-spatial rounded-xl py-3.5 pr-12 pl-12 text-ink placeholder:text-slate-500 dark:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500/50 transition"
+     className="w-full input-spatial rounded-xl py-3.5 pe-12 ps-12 text-ink placeholder:text-slate-500 dark:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500/50 transition"
      aria-label={searchPlaceholder}
     />
     {localSearch && (
@@ -72,7 +72,7 @@ export default memo(function FilterBar({ subjects, subjectCounts = {}, activeSub
      aria-label={isArabic ? 'عرض الكل' : 'Show all'}
      className={`px-4 py-2 min-h-[44px] rounded-xl text-sm font-medium transition duration-200 inline-flex items-center gap-1.5 ${
       activeSubject === 'all'
-       ? 'btn-spatial text-white'
+       ? 'btn-spatial'
        : 'glass text-slate-600 dark:text-white/70 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500/50'
      }`}
     >
@@ -91,7 +91,7 @@ export default memo(function FilterBar({ subjects, subjectCounts = {}, activeSub
       aria-label={isArabic ? `تصفية حسب: ${subject}` : `Filter by: ${subject}`}
       className={`px-4 py-2 min-h-[44px] rounded-xl text-sm font-medium transition duration-200 inline-flex items-center gap-1.5 ${
        activeSubject === subject
-        ? 'btn-spatial text-white'
+        ? 'btn-spatial'
         : 'glass text-slate-600 dark:text-white/70 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500/50'
       }`}
      >

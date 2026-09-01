@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://al-azher-it-hub.vercel.app')
+// Social previews need per-page og:image/twitter:image — index.html only
+// carries static defaults, and the SPA never navigates so they'd go stale.
+const SOCIAL_IMAGE = `${SITE_URL}/og-image.png`
 
 const DEFAULT_DESCRIPTIONS = {
   ar: 'منصة تعليمية لطلبة تكنولوجيا المعلومات - محاضرات فيديو، ملخصات، وملفات PDF',
@@ -161,6 +164,8 @@ export function useSeo(pathname, lang) {
     document.title = title
     upsertMeta('property', 'og:title', title)
     upsertMeta('name', 'twitter:title', title)
+    upsertMeta('property', 'og:image', SOCIAL_IMAGE)
+    upsertMeta('name', 'twitter:image', SOCIAL_IMAGE)
 
     document.documentElement.lang = isArabic ? 'ar' : 'en'
     document.documentElement.dir = isArabic ? 'rtl' : 'ltr'

@@ -1,11 +1,14 @@
-﻿import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 
-const ScrollContext = createContext({ y: 0, progress: 0, scrolled: false })
+// Consumers re-render on `scrolled` only (it flips twice per page at most).
+// Continuous values (y / progress) are intentionally NOT context state —
+// each consumer owns a small rAF-coalesced scroll listener that writes the
+// DOM directly, so a long page scroll never re-renders Navbar/BackToTop.
+const ScrollContext = createContext({ scrolled: false })
 
 export function ScrollProvider({ children }) {
- const [scroll, setScroll] = useState({ y: 0, progress: 0, scrolled: false })
- const lastScrolledRef = useRef(false)
- const lastProgressRef = useRef(0)
+ const [scrolled, setScrolled] = useState(false)
+ const scrolledRef = useRef(false)
  const rafRef = useRef(null)
  const tickingRef = useRef(false)
 
@@ -13,22 +16,13 @@ export function ScrollProvider({ children }) {
   const handler = () => {
    if (tickingRef.current) return
    tickingRef.current = true
-   
+
    rafRef.current = requestAnimationFrame(() => {
-    const y = window.scrollY
-    const doc = document.documentElement.scrollHeight - window.innerHeight
-    const progress = doc > 0 ? (y / doc) * 100 : 0
-    const scrolled = y > 20
-
-    const progressChanged = Math.abs(lastProgressRef.current - progress) >= 2
-    const scrolledChanged = lastScrolledRef.current !== scrolled
-
-    if (progressChanged || scrolledChanged) {
-     lastProgressRef.current = progress
-     lastScrolledRef.current = scrolled
-     setScroll({ y, progress, scrolled })
+    const nextScrolled = window.scrollY > 20
+    if (nextScrolled !== scrolledRef.current) {
+     scrolledRef.current = nextScrolled
+     setScrolled(nextScrolled)
     }
-    
     tickingRef.current = false
    })
   }
@@ -41,10 +35,38 @@ export function ScrollProvider({ children }) {
  }, [])
 
  return (
-  <ScrollContext.Provider value={scroll}>
+  <ScrollContext.Provider value={{ scrolled }}>
    {children}
   </ScrollContext.Provider>
  )
 }
 
 export const useScrollManager = () => useContext(ScrollContext)
+
+// rAF-coalesced scroll callback for direct DOM writes (progress bars, rings).
+// `onScroll` receives { y, progress } — keep it stable to avoid re-subscribing.
+export function useScrollFrame(onScroll) {
+ const cbRef = useRef(onScroll)
+ cbRef.current = onScroll
+
+ useEffect(() => {
+  let raf = null
+  const handle = () => {
+   if (raf) return
+   raf = requestAnimationFrame(() => {
+    raf = null
+    const y = window.scrollY
+    const doc = document.documentElement.scrollHeight - window.innerHeight
+    cbRef.current({ y, progress: doc > 0 ? (y / doc) * 100 : 0 })
+   })
+  }
+  handle()
+  window.addEventListener('scroll', handle, { passive: true })
+  window.addEventListener('resize', handle)
+  return () => {
+   if (raf) cancelAnimationFrame(raf)
+   window.removeEventListener('scroll', handle)
+   window.removeEventListener('resize', handle)
+  }
+ }, [])
+}

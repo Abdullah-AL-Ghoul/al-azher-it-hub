@@ -67,7 +67,7 @@ export default function NotFound() {
      animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
      transition={prefersReduced ? {} : { delay: 0.6, duration: 0.5 }}
      onClick={() => navigate('/home')}
-     className="inline-flex items-center gap-2 px-8 py-4 btn-spatial text-white rounded-xl font-semibold text-lg transition duration-300"
+     className="inline-flex items-center gap-2 px-8 py-4 btn-spatial rounded-xl font-semibold text-lg transition duration-300"
     >
      <FiHome size={20} />
      {t('notFound.home')}

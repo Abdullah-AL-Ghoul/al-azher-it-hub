@@ -61,7 +61,7 @@ export default function CustomSelect({ value, options, onChange, isArabic, label
    <AnimatePresence>
     {open && (
      <>
-      <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+      <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
       <motion.div
        initial={prefersReduced ? {} : { opacity: 0, y: -8 }}
        animate={prefersReduced ? {} : { opacity: 1, y: 0 }}

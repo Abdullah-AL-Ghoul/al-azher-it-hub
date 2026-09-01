@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useMemo } from 'react'
+﻿import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -7,43 +7,7 @@ import { pageContainerSlow, pageItemSlow } from '../utils/motionTokens'
 import { FiArrowDown, FiArrowUpRight, FiPlay } from 'react-icons/fi'
 import Lazy3DScene from './three/Lazy3DScene'
 import useParallax from '../hooks/useParallax'
-
-function AnimatedCounter({ end, duration = 2000, suffix = '' }) {
- const [count, setCount] = useState(0)
- const [started, setStarted] = useState(false)
- const ref = useRef(null)
-
- useEffect(() => {
-  const observer = new IntersectionObserver(
-   ([entry]) => { if (entry.isIntersecting) setStarted(true) },
-   { threshold: 0.3 }
-  )
-  if (ref.current) observer.observe(ref.current)
-  return () => observer.disconnect()
- }, [])
-
- useEffect(() => {
-  if (!started) return
-  let startTime = null
-  let rafId = null
-  const animate = (currentTime) => {
-   if (!startTime) startTime = currentTime
-   const progress = Math.min((currentTime - startTime) / duration, 1)
-   const eased = 1 - Math.pow(1 - progress, 3)
-   setCount(Math.floor(eased * end))
-   if (progress < 1) rafId = requestAnimationFrame(animate)
-  }
-  rafId = requestAnimationFrame(animate)
-  return () => { if (rafId) cancelAnimationFrame(rafId) }
- }, [started, end, duration])
-
-  return (
-   <span>
-    <span className="sr-only">{end}{suffix}</span>
-    <span ref={ref} aria-hidden="true">{count}{suffix}</span>
-   </span>
-  )
-}
+import CountUp from './shared/CountUp'
 
 export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount = 50, sourcesCount = 15, watchedCount = 200, materialsCount = 15 }) {
  const { lang, t } = useLanguage()
@@ -96,9 +60,14 @@ export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount =
     </motion.div>
 
     <motion.h1 variants={pageItemSlow} className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6">
-     <span className="gradient-text-spatial">
+     <motion.span
+      className="gradient-text-spatial animate-gradient-pan bg-[length:200%_auto] inline-block"
+      initial={prefersReduced ? {} : { backgroundPosition: '0% 50%' }}
+      animate={prefersReduced ? {} : { backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+      transition={prefersReduced ? {} : { duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+     >
       {t('home.hero.title')}
-     </span>
+     </motion.span>
     </motion.h1>
 
     <motion.p variants={pageItemSlow} className="text-lg md:text-xl text-slate-500 dark:text-white/60 mb-8 max-w-2xl mx-auto">
@@ -133,7 +102,7 @@ export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount =
         className="text-center glass rounded-2xl px-3 py-5 cursor-default border border-white/10 hover:border-royal-500/20"
        >
         <div className={`text-3xl md:text-4xl font-extrabold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent mb-1 tabular-nums`}>
-         <AnimatedCounter end={stat.value} suffix={stat.suffix} duration={1400} />
+         <CountUp end={stat.value} suffix={stat.suffix} />
         </div>
         <div className="text-xs text-slate-500 dark:text-white/50 font-medium tracking-wide">{lang === 'ar' ? stat.labelAr : stat.labelEn}</div>
        </motion.div>

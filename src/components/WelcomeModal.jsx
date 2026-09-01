@@ -84,7 +84,7 @@ export default function WelcomeModal() {
           whileHover={prefersReduced ? {} : { scale: 1.03 }}
           whileTap={prefersReduced ? {} : { scale: 0.97 }}
           onClick={handleDismiss}
-          className="relative btn-spatial text-white px-8 py-3.5 rounded-xl font-semibold flex items-center gap-2 mx-auto"
+          className="relative btn-spatial px-8 py-3.5 rounded-xl font-semibold flex items-center gap-2 mx-auto"
         >
           {t('welcome.getStarted')}
           <FiArrowLeft size={18} className={isArabic ? '' : 'rotate-180'} />

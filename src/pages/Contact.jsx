@@ -296,7 +296,7 @@ export default function Contact() {
            whileHover={prefersReduced ? {} : { scale: 1.01 }}
            whileTap={prefersReduced ? {} : { scale: 0.99 }}
            disabled={submitting}
-           className="w-full btn-spatial text-white px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
+           className="w-full btn-spatial px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
           >
            <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
            {submitting ? (

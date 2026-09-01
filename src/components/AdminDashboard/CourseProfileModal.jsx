@@ -51,7 +51,7 @@ function CourseProfileModal({ course, lectures = [], sources = [], isOpen, onClo
           aria-modal="true"
           aria-label={course.nameAr || course.nameEn}
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
           <motion.div
             ref={trapRef}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}

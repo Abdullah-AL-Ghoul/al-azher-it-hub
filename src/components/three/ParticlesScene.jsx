@@ -53,13 +53,14 @@ function StarField({ color, count = 700 }) {
   )
 }
 
-export default function ParticlesScene({ theme = 'dark' }) {
+export default function ParticlesScene({ theme = 'dark', paused = false }) {
   const color = theme === 'light' ? '#2563eb' : '#67e8f9'
   return (
     <Canvas
       dpr={[1, 1.75]}
       camera={{ position: [0, 0, 6], fov: 55 }}
       gl={{ antialias: false, alpha: true, powerPreference: 'low-power' }}
+      frameloop={paused ? 'never' : 'always'}
       style={{ width: '100%', height: '100%' }}
     >
       <StarField color={color} />

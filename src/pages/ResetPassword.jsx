@@ -154,6 +154,7 @@ export default function ResetPassword() {
          {error && (
           <motion.div
            key="error"
+           id="rp-form-error"
            initial={{ opacity: 0, y: -10 }}
            animate={{ opacity: 1, y: 0 }}
            exit={{ opacity: 0, y: -10 }}
@@ -166,7 +167,7 @@ export default function ResetPassword() {
         </AnimatePresence>
 
         <div>
-         <label htmlFor="rp-new" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
+         <label htmlFor="rp-new" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ms-1 uppercase tracking-wider">
           {t('resetPassword.newPassword')}
          </label>
          <SpatialInput
@@ -178,6 +179,8 @@ export default function ResetPassword() {
           onChange={e => setNewPassword(e.target.value)}
           placeholder="••••••"
           aria-label={t('resetPassword.newPassword')}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={error ? 'rp-form-error' : undefined}
           isArabic={isArabic}
           autoComplete="new-password"
           disabled={loading}
@@ -188,7 +191,7 @@ export default function ResetPassword() {
         </div>
 
         <div>
-         <label htmlFor="rp-confirm" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ml-1 uppercase tracking-wider">
+         <label htmlFor="rp-confirm" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ms-1 uppercase tracking-wider">
           {t('signup.confirmPassword')}
          </label>
          <SpatialInput
@@ -200,6 +203,8 @@ export default function ResetPassword() {
           onChange={e => setConfirmPassword(e.target.value)}
           placeholder="••••••"
           aria-label={t('signup.confirmPassword')}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={error ? 'rp-form-error' : undefined}
           isArabic={isArabic}
           autoComplete="new-password"
           disabled={loading}
@@ -214,7 +219,7 @@ export default function ResetPassword() {
          whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }}
          whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }}
          disabled={loading}
-         className="w-full btn-spatial text-white px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+         className="w-full btn-spatial px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
          {loading ? (
           <>

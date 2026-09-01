@@ -205,7 +205,7 @@ export function UserDataProvider({ children }) {
       // keep optimistic on failure; will be corrected on next revalidate
       return { viewed: optimistic }
     }
-  }, [studentId, viewed])
+  }, [studentId])
 
   const value = useMemo(() => ({
     favorites,

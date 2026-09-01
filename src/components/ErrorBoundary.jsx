@@ -61,7 +61,7 @@ export default class ErrorBoundary extends Component {
       </p>
       <button
        onClick={() => window.location.reload()}
-       className="inline-flex items-center gap-2 px-6 py-3 btn-spatial text-white rounded-xl font-semibold"
+       className="inline-flex items-center gap-2 px-6 py-3 btn-spatial rounded-xl font-semibold"
       >
        <FiRefreshCw size={18} /> {t.errorBoundary.retry}
       </button>

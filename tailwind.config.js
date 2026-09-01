@@ -132,8 +132,10 @@ export default {
           '75%': { transform: 'translate(-25px, -10px) rotate(0.5deg) scale(1.01)' },
         },
         auroraShift: {
-          '0%, 100%': { backgroundPosition: '0% 50%' },
-          '50%': { backgroundPosition: '100% 50%' },
+          // Transform drift (compositor-only): the previous background-position
+          // variant repainted the full viewport every frame.
+          '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1)' },
+          '50%': { transform: 'translate3d(-3%, 2%, 0) scale(1.06)' },
         },
         depthBreathe: {
           '0%, 100%': { transform: 'scale(1)', opacity: '0.6' },

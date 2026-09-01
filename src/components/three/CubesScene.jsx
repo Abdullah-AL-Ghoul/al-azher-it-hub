@@ -67,7 +67,7 @@ function TumblingCube({ pos, scale, speed, axis, color }) {
   )
 }
 
-export default function CubesScene({ theme = 'dark' }) {
+export default function CubesScene({ theme = 'dark', paused = false }) {
   const palette =
     theme === 'light'
       ? { a: '#2563eb', b: '#06b6d4', c: '#8b5cf6' }
@@ -77,6 +77,7 @@ export default function CubesScene({ theme = 'dark' }) {
       dpr={[1, 1.75]}
       camera={{ position: [0, 0, 6.5], fov: 50 }}
       gl={{ antialias: true, alpha: true }}
+      frameloop={paused ? 'never' : 'always'}
       style={{ width: '100%', height: '100%' }}
     >
       <ambientLight intensity={0.6} />

@@ -1,6 +1,6 @@
-﻿import { useEffect, useState, useRef } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion, useInView } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
@@ -8,40 +8,9 @@ import { welcomeContainer, welcomeItem, springSoft } from '../utils/motionTokens
 import { FiLogIn, FiUserPlus, FiFileText, FiLayers, FiArrowUpRight, FiSun, FiMoon, FiMonitor, FiShield, FiStar, FiDatabase, FiCpu, FiGlobe, FiCloud, FiCode, FiBookOpen, FiCheck, FiChevronDown, FiVideo, FiClock, FiAward, FiUsers, FiHelpCircle } from 'react-icons/fi'
 import SiteLogo from '../components/shared/SiteLogo'
 import Reveal from '../components/shared/Reveal'
+import CountUp from '../components/shared/CountUp'
 import SectionHeading from '../components/shared/SectionHeading'
 import Lazy3DScene from '../components/three/Lazy3DScene'
-
-function CountUp({ end, duration = 1400, suffix = '' }) {
- const [value, setValue] = useState(0)
- const ref = useRef(null)
- const [started, setStarted] = useState(false)
- const prefersReduced = useReducedMotion()
-
- useEffect(() => {
-  if (prefersReduced) { setValue(end); return }
-  const observer = new IntersectionObserver(
-   ([entry]) => { if (entry.isIntersecting) { setStarted(true); observer.disconnect() } },
-   { threshold: 0.4 }
-  )
-  if (ref.current) observer.observe(ref.current)
-  return () => observer.disconnect()
- }, [prefersReduced, end])
-
- useEffect(() => {
-  if (!started) return
-  let raf
-  const start = performance.now()
-  const tick = (t) => {
-   const p = Math.min((t - start) / duration, 1)
-   setValue(Math.floor((1 - Math.pow(1 - p, 3)) * end))
-   if (p < 1) raf = requestAnimationFrame(tick)
-  }
-  raf = requestAnimationFrame(tick)
-  return () => cancelAnimationFrame(raf)
- }, [started, end, duration])
-
- return <span ref={ref} className="tabular-nums">{value.toLocaleString()}{suffix}</span>
-}
 
 function FaqItem({ q, a }) {
  const [open, setOpen] = useState(false)
@@ -222,7 +191,7 @@ export default function WelcomeGate() {
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
       className="relative flex items-center justify-center"
      >
-      <div className="relative w-full max-w-[520px] aspect-square">
+      <div ref={heroClusterRef} className="relative w-full max-w-[520px] aspect-square">
        <div className="absolute -inset-6 bg-gradient-to-br from-royal-500/15 via-cyan-400/10 to-violet-500/10 rounded-[32px] blur-2xl" />
        <div className="relative glass-panel gradient-border rounded-[28px] shadow-2xl overflow-hidden w-full h-full">
         <div className="absolute inset-0 spatial-grid opacity-[0.12] pointer-events-none" />
@@ -243,7 +212,7 @@ export default function WelcomeGate() {
        </div>
 
        <motion.div
-        animate={prefersReduced ? {} : { y: [0, -6, 0] }}
+        animate={prefersReduced || !heroClusterInView ? {} : { y: [0, -6, 0] }}
         transition={prefersReduced ? {} : { duration: 5, repeat: Infinity, ease: 'easeInOut' }}
         className="absolute -top-3 -right-2 md:-right-4 glass rounded-2xl px-3 py-2.5 flex items-center gap-2.5 shadow-xl"
        >
@@ -255,7 +224,7 @@ export default function WelcomeGate() {
        </motion.div>
 
        <motion.div
-        animate={prefersReduced ? {} : { y: [0, 8, 0] }}
+        animate={prefersReduced || !heroClusterInView ? {} : { y: [0, 8, 0] }}
         transition={prefersReduced ? {} : { duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
         className="absolute -bottom-4 -left-2 md:-left-6 glass rounded-2xl px-3 py-2.5 flex items-center gap-2.5 shadow-xl"
        >
@@ -407,7 +376,11 @@ export default function WelcomeGate() {
 
    {/* ===== SUBJECTS MARQUEE ===== */}
    <div className="relative z-10 py-6 border-t border-black/5 dark:border-white/5 overflow-hidden">
-    <div className="marquee-track items-center" style={{ ['--marquee-duration']: '38s' }}>
+    <div
+     ref={marqueeRef}
+     className="marquee-track items-center"
+     style={{ ['--marquee-duration']: '38s', animationPlayState: marqueeInView ? 'running' : 'paused' }}
+    >
      {[...Array(2)].map((_, rep) => (
       <div key={rep} className="flex gap-4 items-center shrink-0" aria-hidden={rep === 1}>
        {[

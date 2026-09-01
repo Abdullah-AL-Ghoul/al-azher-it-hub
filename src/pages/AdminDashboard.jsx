@@ -184,7 +184,7 @@ export default function AdminDashboard() {
         aria-selected={tab === t.key}
         aria-controls={`panel-${t.key}`}
         className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap shrink-0 ${
-         tab === t.key ? 'btn-spatial text-white shadow-lg' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10'
+         tab === t.key ? 'btn-spatial shadow-lg' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10'
         }`}
        >
         <Icon size={16} /> {isArabic ? t.labelAr : t.labelEn}

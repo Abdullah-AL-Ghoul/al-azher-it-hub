@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense, useEffect, useState } from 'react'
+﻿import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
@@ -14,7 +14,10 @@ import ProtectedRoute from './components/ProtectedRoute'
 import WelcomeModal from './components/WelcomeModal'
 import ErrorBoundary from './components/ErrorBoundary'
 import SpatialBackground from './components/spatial/SpatialBackground'
-import GlobalSearch from './components/GlobalSearch'
+import GlobalSearchTrigger from './components/GlobalSearchTrigger'
+
+const Chatbot = lazy(() => import('./components/Chatbot'))
+const GlobalSearch = lazy(() => import('./components/GlobalSearch'))
 
 const Chatbot = lazy(() => import('./components/Chatbot'))
 
@@ -69,6 +72,8 @@ function AppContent() {
  const location = useLocation()
  const [showSuccessRedirect, setShowSuccessRedirect] = useState(false)
  const [chatbotReady, setChatbotReady] = useState(false)
+ const [searchActive, setSearchActive] = useState(false)
+ const [searchAutoOpen, setSearchAutoOpen] = useState(false)
 
  useSeo(location.pathname, lang)
 
@@ -96,7 +101,7 @@ function AppContent() {
   if (user && hideLayout) {
    if (sessionStorage.getItem('al_azher_just_auth')) {
     sessionStorage.removeItem('al_azher_just_auth')
-    const t = setTimeout(() => setShowSuccessRedirect(true), 1500)
+    const t = setTimeout(() => setShowSuccessRedirect(true), 400)
     return () => clearTimeout(t)
    }
    setShowSuccessRedirect(true)
@@ -123,7 +128,7 @@ function AppContent() {
    <main id="main-content" className="flex-1" tabIndex={-1}>
      <ErrorBoundary lang={lang}>
       <Suspense fallback={<PageLoader />}>
-       <AnimatePresence mode="wait" initial={false}>
+       <AnimatePresence initial={false} mode="sync">
         <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><WelcomeGate /></PageTransition>} />
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
@@ -176,7 +181,13 @@ function AppContent() {
     {!hideLayout && <Footer />}
     {!hideLayout && <BackToTop />}
      {!hideLayout && <WelcomeModal />}
-     {!hideLayout && <GlobalSearch />}
+           {searchActive ? (
+      <Suspense fallback={null}>
+       <GlobalSearch autoOpen={searchAutoOpen} />
+      </Suspense>
+     ) : (
+      !hideLayout && <GlobalSearchTrigger onActivate={() => activateSearch(true)} />
+     )}
 {!hideLayout && chatbotReady && (
      <Suspense fallback={null}>
       <Chatbot />

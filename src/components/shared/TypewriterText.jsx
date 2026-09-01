@@ -26,7 +26,7 @@ function TypewriterText({ text, delay = 0, cursorColor = 'bg-royal-400' }) {
   <span>
    {displayed}
    {started && displayed.length < text.length && (
-    <span className={`inline-block w-0.5 h-4 ${cursorColor} ml-0.5 align-middle`} style={cursorStyle} />
+    <span className={`inline-block w-0.5 h-4 ${cursorColor} ms-0.5 align-middle`} style={cursorStyle} />
    )}
   </span>
  )

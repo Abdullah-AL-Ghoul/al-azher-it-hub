@@ -96,7 +96,7 @@ const iconPosition = isArabic ? 'right' : 'left'
       initial={{ opacity: 0, y: -5, height: 0 }}
       animate={{ opacity: 1, y: 0, height: 'auto' }}
       exit={{ opacity: 0, y: -5, height: 0 }}
-      className="text-red-400 text-xs mt-1.5 ml-1"
+      className="text-red-400 text-xs mt-1.5 ms-1"
      >
       {error}
      </motion.p>

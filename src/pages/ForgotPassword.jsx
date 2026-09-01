@@ -6,6 +6,7 @@ import { resetPassword, verifyStudentEmail, verifyStudentName } from '../service
 import { RateLimitService } from '../services/rateLimitService'
 import SpatialInput from '../components/spatial/SpatialInput'
 import SiteLogo from '../components/shared/SiteLogo'
+import AuthLayout from '../components/auth/AuthLayout'
 import { FiUser, FiLock, FiMail, FiArrowLeft, FiCheckCircle, FiLoader, FiSmile } from 'react-icons/fi'
 
 export default function ForgotPassword() {
@@ -144,32 +145,22 @@ export default function ForgotPassword() {
  }
 
  return (
-  <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-spatial-full">
-   {/* Match AuthLayout's animated atmosphere */}
-   <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-    <div className="absolute top-[15%] left-[12%] w-72 h-72 rounded-full bg-royal-500/15 blur-3xl animate-orb-float-1" />
-    <div className="absolute bottom-[12%] right-[10%] w-80 h-80 rounded-full bg-cyan-400/12 blur-3xl animate-orb-float-2" />
-    <div className="absolute top-[55%] left-[45%] w-60 h-60 rounded-full bg-violet-500/10 blur-3xl animate-orb-float-3" />
-   </div>
-   <div className="absolute inset-0 spatial-grid opacity-40" aria-hidden="true" />
-
+  <AuthLayout isArabic={isArabic} onBack={() => navigate('/login')}>
    <motion.div
     initial={prefersReduced ? {} : { opacity: 0, scale: 0.95 }}
     animate={prefersReduced ? {} : { opacity: 1, scale: 1 }}
     transition={prefersReduced ? {} : { duration: 0.5 }}
-    className="relative z-10 w-full max-w-md mx-4"
    >
-    <div className="glass rounded-3xl p-8 md:p-10">
-     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="text-center mb-8"
-     >
+    <motion.div
+     initial={{ opacity: 0, y: -20 }}
+     animate={{ opacity: 1, y: 0 }}
+     transition={{ delay: 0.2 }}
+     className="text-center mb-8"
+    >
       <div className="mx-auto mb-4">
        <SiteLogo size="md" />
       </div>
-      <h1 className="text-2xl font-bold text-ink mb-1">
+      <h1 className="text-2xl font-bold mb-1">
        {t('forgotPassword.title')}
       </h1>
       <p className="text-slate-500 dark:text-white/50 text-sm">
@@ -196,7 +187,7 @@ export default function ForgotPassword() {
         <p className="text-center text-sm text-slate-600 dark:text-white/70 mb-5 font-medium">{stepTitle()}</p>
         <AnimatePresence>
          {error && (
-          <motion.div key="error" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 text-center backdrop-blur-sm" role="alert">
+          <motion.div key="error" id="auth-form-alert" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 text-center backdrop-blur-sm" role="alert">
            {error}
           </motion.div>
          )}
@@ -212,10 +203,12 @@ export default function ForgotPassword() {
            onChange={e => setStudentId(e.target.value)}
            placeholder={t('forgotPassword.enterUniversityId')}
            aria-label={t('forgotPassword.enterUniversityId')}
+           aria-invalid={error ? 'true' : undefined}
+           aria-describedby={error ? 'auth-form-alert' : undefined}
            isArabic={isArabic}
            autoComplete="username"
           />
-          <motion.button type="submit" whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }} whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }} disabled={loading} className="w-full btn-spatial text-white px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <motion.button type="submit" whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }} whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }} disabled={loading} className="w-full btn-spatial px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
            {loading ? (<><FiLoader size={18} className="animate-spin" />{t('forgotPassword.verifying')}</>) : (t('forgotPassword.next'))}
           </motion.button>
          </form>
@@ -231,10 +224,12 @@ export default function ForgotPassword() {
            onChange={e => setStudentEmail(e.target.value)}
            placeholder={t('forgotPassword.enterEmail')}
            aria-label={t('forgotPassword.enterEmail')}
+           aria-invalid={error ? 'true' : undefined}
+           aria-describedby={error ? 'auth-form-alert' : undefined}
            isArabic={isArabic}
            autoComplete="email"
           />
-          <motion.button type="submit" whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }} whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }} disabled={loading} className="w-full btn-spatial text-white px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <motion.button type="submit" whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }} whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }} disabled={loading} className="w-full btn-spatial px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
            {loading ? (<><FiLoader size={18} className="animate-spin" />{t('forgotPassword.verifying')}</>) : (t('forgotPassword.verify'))}
           </motion.button>
           <button type="button" onClick={() => { setStep(1); setError('') }} className="w-full text-center text-xs text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/70 transition-colors">
@@ -253,10 +248,12 @@ export default function ForgotPassword() {
            onChange={e => setStudentName(e.target.value)}
            placeholder={t('forgotPassword.enterName')}
            aria-label={t('forgotPassword.enterName')}
+           aria-invalid={error ? 'true' : undefined}
+           aria-describedby={error ? 'auth-form-alert' : undefined}
            isArabic={isArabic}
            autoComplete="name"
           />
-          <motion.button type="submit" whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }} whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }} disabled={loading} className="w-full btn-spatial text-white px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <motion.button type="submit" whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }} whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }} disabled={loading} className="w-full btn-spatial px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
            {loading ? (<><FiLoader size={18} className="animate-spin" />{t('forgotPassword.verifying')}</>) : (t('forgotPassword.verify'))}
           </motion.button>
           <button type="button" onClick={() => { setStep(2); setError('') }} className="w-full text-center text-xs text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/70 transition-colors">
@@ -270,9 +267,11 @@ export default function ForgotPassword() {
           <p className="text-center text-sm text-slate-600 dark:text-white/60">
            {t('forgotPassword.hello')} <span className="font-semibold text-navy-900 dark:text-white">{studentName}</span>
           </p>
-          <SpatialInput icon={FiLock} type={showNew ? 'text' : 'password'} required value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••" aria-label={t('forgotPassword.newPassword')} isArabic={isArabic} autoComplete="new-password" disabled={loading} showToggle onToggle={() => setShowNew(v => !v)} showPassword={showNew} />
+          <SpatialInput icon={FiLock} type={showNew ? 'text' : 'password'} required value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••" aria-label={t('forgotPassword.newPassword')}
+           aria-invalid={error ? 'true' : undefined}
+           aria-describedby={error ? 'auth-form-alert' : undefined} isArabic={isArabic} autoComplete="new-password" disabled={loading} showToggle onToggle={() => setShowNew(v => !v)} showPassword={showNew} />
           <SpatialInput icon={FiLock} type={showConfirm ? 'text' : 'password'} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••" aria-label={t('signup.confirmPassword')} isArabic={isArabic} autoComplete="new-password" disabled={loading} showToggle onToggle={() => setShowConfirm(v => !v)} showPassword={showConfirm} />
-          <motion.button type="submit" whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }} whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }} disabled={loading} className="w-full btn-spatial text-white px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <motion.button type="submit" whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }} whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }} disabled={loading} className="w-full btn-spatial px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
            {loading ? (<><FiLoader size={18} className="animate-spin" />{t('forgotPassword.changing')}</>) : (t('forgotPassword.reset'))}
           </motion.button>
          </form>
@@ -281,14 +280,13 @@ export default function ForgotPassword() {
       )}
      </AnimatePresence>
 
-     <div className="mt-6 pt-4 border-t border-white/10 text-center">
+     <div className="mt-6 pt-4 border-t border-line text-center">
       <Link to="/login" className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/70 transition-colors">
        <FiArrowLeft size={16} className={isArabic ? 'rotate-180' : ''} />
        {t('forgotPassword.backToLogin')}
       </Link>
      </div>
-    </div>
-   </motion.div>
-  </div>
+    </motion.div>
+  </AuthLayout>
  )
 }

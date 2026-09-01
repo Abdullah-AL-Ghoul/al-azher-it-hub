@@ -97,7 +97,7 @@ export default function OverviewPanel({
               animate={prefersReduced ? {} : { opacity: 1, x: 0, scale: 1 }}
               transition={prefersReduced ? {} : { duration: 0.7, delay: stat.delay, type: 'spring', stiffness: 150, damping: 15 }}
               whileHover={prefersReduced ? {} : { scale: 1.04, y: -6 }}
-              className="stat-tile rounded-2xl p-5 hover:border-royal-500/30 transition group cursor-default"
+              className="stat-tile p-5 hover:border-royal-500/30 transition group cursor-default"
             >
               <div className="flex items-center gap-4">
                 <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition duration-300`}>
@@ -122,7 +122,7 @@ export default function OverviewPanel({
 
       {/* Lectures per course mini bar chart */}
       {courses.length > 0 && (
-        <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="stat-tile rounded-2xl p-5 mt-6">
+        <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="stat-tile p-5 mt-6">
           <h3 className="text-sm font-bold text-ink mb-4">{isArabic ? 'المحاضرات حسب المادة' : 'Lectures per course'}</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2 mb-3">{isArabic ? 'اضغط على مادة لعرض ملفها التعريفي (مشاهدات، تقييم، مصادر)' : 'Click a course to view its profile (views, ratings, sources)'}</p>
           <div className="space-y-2.5">
@@ -146,7 +146,7 @@ export default function OverviewPanel({
 
       {/* Recent activity + recent additions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="stat-tile rounded-2xl p-5">
+        <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="stat-tile p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-ink">{isArabic ? 'آخر النشاطات' : 'Recent activity'}</h3>
             <FiActivity size={14} className="text-slate-400" />
@@ -173,7 +173,7 @@ export default function OverviewPanel({
           )}
         </motion.div>
 
-        <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="stat-tile rounded-2xl p-5">
+        <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="stat-tile p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-ink">{isArabic ? 'آخر الإضافات' : 'Recent additions'}</h3>
             <FiFileText size={14} className="text-slate-400" />
@@ -202,7 +202,7 @@ export default function OverviewPanel({
       </div>
 
       {/* Recently active students */}
-      <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="stat-tile rounded-2xl p-5 mt-6">
+      <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="stat-tile p-5 mt-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold text-ink">{isArabic ? 'أحدث الطلاب النشطين' : 'Recently active students'}</h3>
           <FiUsers size={14} className="text-slate-400" />
@@ -236,7 +236,7 @@ export default function OverviewPanel({
       </motion.div>
 
       {/* Recently registered students */}
-      <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="stat-tile rounded-2xl p-5 mt-6">
+      <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="stat-tile p-5 mt-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold text-ink">{isArabic ? 'أحدث المسجلين' : 'Newest registrations'}</h3>
           <FiUser size={14} className="text-slate-400" />

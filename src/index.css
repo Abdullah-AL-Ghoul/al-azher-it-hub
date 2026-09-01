@@ -746,3 +746,18 @@ html[data-theme="amoled"] .gradient-text-spatial {
   }
 }
 
+/* Shine sweep on hover — mirrors .btn-spatial::after, desktop-only */
+@media (hover: hover) and (pointer: fine) {
+  .card-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.18) 50%, transparent 60%);
+    transform: translateX(-120%);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .card-shine:hover::after {
+    transform: translateX(120%);
+  }
+}

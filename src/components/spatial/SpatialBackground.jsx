@@ -11,7 +11,7 @@ function SpatialBackground() {
    <div className="absolute top-[35%] left-[45%] w-[300px] h-[300px] rounded-full bg-violet-500/[0.06] blur-[48px] animate-orb-float-3" />
    <div className="absolute top-[70%] left-[20%] w-[260px] h-[260px] rounded-full bg-emerald-400/[0.04] blur-[44px] animate-orb-float-2" />
    <div
-    className="absolute inset-0 animate-aurora-shift opacity-70"
+    className="absolute -inset-[12%] animate-aurora-shift opacity-70 will-change-transform"
     style={{
      background:
       'linear-gradient(120deg, transparent 20%, rgba(37,99,235,0.05) 40%, rgba(6,182,212,0.04) 60%, transparent 80%)',

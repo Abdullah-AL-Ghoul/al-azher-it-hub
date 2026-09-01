@@ -3,10 +3,21 @@
 // fallback to v1 for dev or when served as static public asset (Vite does not process public/).
 // To enable build-date versioning for the SW itself, configure Vite to copy/transform it via publicDir hook.
 const CACHE_NAME = (typeof __BUILD_DATE__ !== 'undefined' && __BUILD_DATE__) ? `al-azher-shell-${__BUILD_DATE__}` : 'al-azher-shell-v1'
-const SHELL_URLS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.svg', '/boot.js', '/sw-register.js', '/fonts/fonts.css', '/fonts/cairo-400-arabic.woff2', '/fonts/cairo-400-latin.woff2', '/fonts/cairo-400-latin-ext.woff2', '/fonts/inter-400-latin.woff2', '/fonts/inter-400-latin-ext.woff2', '/og-image.png', '/sitemap.xml', '/robots.txt']
+// Minimal app shell only. Heavy/social assets (og-image) and secondary font
+// subsets stream from the network into the runtime cache on first use —
+// precaching them delayed install, and one 404 used to fail cache.addAll
+// and block activation entirely.
+const SHELL_URLS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png', '/favicon.svg', '/boot.js', '/sw-register.js', '/fonts/fonts.css', '/fonts/cairo-400-arabic.woff2', '/fonts/cairo-400-latin.woff2', '/fonts/cairo-700-arabic.woff2', '/fonts/inter-400-latin.woff2', '/fonts/inter-700-latin.woff2']
+const RUNTIME_CACHE_MAX = 400
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_URLS)))
+  // Per-URL add: one bad response no longer rejects the whole install.
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME)
+      await Promise.allSettled(SHELL_URLS.map((url) => cache.add(url)))
+    })()
+  )
   self.skipWaiting()
 })
 
@@ -25,7 +36,16 @@ self.addEventListener('activate', (event) => {
 
 function cacheResponse(cacheName, request, response) {
   const clone = response.clone()
-  return caches.open(cacheName).then((cache) => cache.put(request, clone))
+  return caches.open(cacheName).then(async (cache) => {
+    await cache.put(request, clone)
+    // Bound the runtime cache: once over the cap, drop the oldest entries.
+    if (cacheName === CACHE_NAME) {
+      const keys = await cache.keys()
+      if (keys.length > RUNTIME_CACHE_MAX) {
+        await Promise.all(keys.slice(0, keys.length - RUNTIME_CACHE_MAX).map((k) => cache.delete(k)))
+      }
+    }
+  })
 }
 
 self.addEventListener('fetch', (event) => {

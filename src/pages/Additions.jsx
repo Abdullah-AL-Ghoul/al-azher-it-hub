@@ -239,7 +239,7 @@ export default function Additions() {
        <div className="flex gap-2">
         {editing ? (
          <>
-          <button onClick={saveEdit} className="flex items-center gap-2 px-4 py-2 btn-spatial text-white rounded-xl text-sm font-medium transition">
+          <button onClick={saveEdit} className="flex items-center gap-2 px-4 py-2 btn-spatial rounded-xl text-sm font-medium transition">
            <FiSave size={16} /> {t('additions.save')}
           </button>
           <button onClick={cancelEdit} className="flex items-center gap-2 px-4 py-2 glass text-slate-600 dark:text-slate-300 rounded-xl text-sm font-medium transition">
@@ -247,7 +247,7 @@ export default function Additions() {
           </button>
          </>
         ) : (
-         <button onClick={startEdit} className="flex items-center gap-2 px-4 py-2 btn-spatial text-white rounded-xl text-sm font-medium transition">
+         <button onClick={startEdit} className="flex items-center gap-2 px-4 py-2 btn-spatial rounded-xl text-sm font-medium transition">
           <FiEdit2 size={16} /> {t('additions.edit')}
          </button>
         )}
@@ -258,7 +258,7 @@ export default function Additions() {
      <div className="flex gap-2 mb-6 flex-wrap">
       <button
        onClick={() => setFilter('all')}
-       className={`px-4 py-2 rounded-xl text-sm font-medium transition ${filter === 'all' ? 'btn-spatial text-white' : 'glass text-slate-600 dark:text-white/70 hover:text-ink'}`}
+       className={`px-4 py-2 rounded-xl text-sm font-medium transition ${filter === 'all' ? 'btn-spatial' : 'glass text-slate-600 dark:text-white/70 hover:text-ink'}`}
       >
        {t('additions.all')}
       </button>
@@ -266,7 +266,7 @@ export default function Additions() {
        <button
         key={type.key}
         onClick={() => setFilter(type.key)}
-        className={`px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 ${filter === type.key ? 'btn-spatial text-white' : 'glass text-slate-600 dark:text-white/70 hover:text-ink'}`}
+        className={`px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 ${filter === type.key ? 'btn-spatial' : 'glass text-slate-600 dark:text-white/70 hover:text-ink'}`}
        >
         <type.icon size={14} /> {typeLabels[type.key]}
        </button>
@@ -280,7 +280,7 @@ export default function Additions() {
         title={t('additions.noAdditionsYet')}
         description={t('additions.subtitle')}
         action={isAdmin ? (
-         <button onClick={startEdit} className="inline-flex items-center gap-2 px-6 py-3 btn-spatial text-white rounded-xl font-medium transition">
+         <button onClick={startEdit} className="inline-flex items-center gap-2 px-6 py-3 btn-spatial rounded-xl font-medium transition">
           <FiEdit2 size={16} /> {t('additions.edit')}
          </button>
         ) : null}

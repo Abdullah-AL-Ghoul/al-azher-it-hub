@@ -235,7 +235,7 @@ export default function CourseRoadmap() {
         <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition">
          <FiPlus size={16} /> {isArabic ? 'إضافة مادة' : 'Add Course'}
         </button>
-        <button onClick={() => { setEditing(true); setEditData(roadmap) }} className="flex items-center gap-2 px-4 py-2 btn-spatial text-white rounded-xl text-sm font-medium transition">
+        <button onClick={() => { setEditing(true); setEditData(roadmap) }} className="flex items-center gap-2 px-4 py-2 btn-spatial rounded-xl text-sm font-medium transition">
          <FiEdit2 size={16} /> {t('common.edit')}
         </button>
        </>

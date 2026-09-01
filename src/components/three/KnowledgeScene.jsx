@@ -79,13 +79,14 @@ function KnowledgeCluster({ palette }) {
   )
 }
 
-export default function KnowledgeScene({ theme = 'dark' }) {
+export default function KnowledgeScene({ theme = 'dark', paused = false }) {
   const palette = PALETTES[theme === 'light' ? 'light' : 'dark']
   return (
     <Canvas
       dpr={[1, 1.75]}
       camera={{ position: [0, 0, 5.2], fov: 45 }}
-      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+      gl={{ antialias: false, alpha: true, powerPreference: 'low-power' }}
+      frameloop={paused ? 'never' : 'always'}
       style={{ width: '100%', height: '100%' }}
     >
       <ambientLight intensity={0.55} />

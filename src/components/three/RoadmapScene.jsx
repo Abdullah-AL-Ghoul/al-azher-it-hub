@@ -58,7 +58,7 @@ function RoadPath({ palette }) {
   )
 }
 
-export default function RoadmapScene({ theme = 'dark' }) {
+export default function RoadmapScene({ theme = 'dark', paused = false }) {
   const palette =
     theme === 'light'
       ? { a: '#2563eb', b: '#06b6d4' }
@@ -68,6 +68,7 @@ export default function RoadmapScene({ theme = 'dark' }) {
       dpr={[1, 1.5]}
       camera={{ position: [0, 0.5, 6], fov: 50 }}
       gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
+      frameloop={paused ? 'never' : 'always'}
       style={{ width: '100%', height: '100%' }}
     >
       <ambientLight intensity={0.7} />

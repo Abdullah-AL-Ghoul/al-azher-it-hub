@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useRef } from 'react'
+﻿import { useState, useEffect, useMemo, useRef, memo, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -16,6 +16,8 @@ import ErrorState from '../components/feedback/ErrorState'
 import Modal from '../components/ui/Modal'
 import StarRating from '../components/shared/StarRating'
 import Skeleton from '../components/shared/Skeleton'
+import usePagination from '../hooks/usePagination'
+import useTilt3D from '../hooks/useTilt3D'
 
 const sortOptions = SORT_OPTIONS
 
@@ -78,6 +80,21 @@ export default function Lectures() {
   if (watchFilter === 'unwatched') return filtered.filter(l => !viewedIds.includes(l.id))
   return filtered
  }, [filtered, watchFilter, viewedIds])
+
+ // Progressive rendering: 24 cards per batch with "load more" (200-card
+ // full lists re-render on every filter keystroke otherwise).
+ const { paginatedItems: visibleLectures, totalItems: totalVisible, hasNext: hasMoreLectures, setPage: setLecturePage } = usePagination(displayList, 24)
+
+ // Back to batch 1 when filters change — but not when watched-state updates
+ // (marking a lecture viewed must not snap the grid to page 1).
+ const filterKey = `${search}|${activeSubject}|${dateFrom}|${dateTo}|${sortBy}|${watchFilter}`
+ const lastFilterKeyRef = useRef(filterKey)
+ useEffect(() => {
+  if (lastFilterKeyRef.current !== filterKey) {
+   lastFilterKeyRef.current = filterKey
+   setLecturePage(1)
+  }
+ }, [filterKey, setLecturePage])
 
  const subjectCounts = useMemo(() => {
   const map = {}
@@ -145,7 +162,7 @@ export default function Lectures() {
       ].map(s => {
        const Icon = s.icon
        return (
-        <div key={s.label} className="stat-tile rounded-xl px-4 py-3">
+        <div key={s.label} className="stat-tile px-4 py-3">
          <div className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center shrink-0`}>
           <Icon size={18} />
          </div>
@@ -163,7 +180,7 @@ export default function Lectures() {
     {user && continueWatching.length > 0 && (
      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
       <div className="flex items-center justify-between mb-3">
-       <h2 className="text-sm font-bold text-ink flex items-center gap-2">
+       <h1 className="text-sm font-bold text-ink flex items-center gap-2">
         <FiEye size={16} className="text-accent" />
         {isArabic ? 'متابعة المشاهدة' : 'Continue watching'}
        </h2>
@@ -196,7 +213,7 @@ export default function Lectures() {
     )}
 
     {/* Filters (sticky) */}
-    <div className="sticky top-20 z-30 bg-spatial-page/90 backdrop-blur-md -mx-4 px-4 py-4 -mt-4 mb-4 border-b border-line">
+    <div className="sticky top-20 z-30 bg-spatial-page -mx-4 px-4 py-4 -mt-4 mb-4 border-b border-line">
      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <FilterBar
        subjects={subjects}
@@ -290,16 +307,28 @@ export default function Lectures() {
      </motion.div>
     ) : viewMode === 'grid' ? (
      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {displayList.map(lecture => (
+      {visibleLectures.map(lecture => (
        <LectureCard key={lecture.id} lecture={lecture} isArabic={isArabic} user={user} localFavorites={localFavorites} localRatings={localRatings} viewedIds={viewedIds} onToggleFavorite={handleToggleFavorite} onRate={handleRate} onWatch={handleWatch} onPlay={setActiveLecture} />
       ))}
      </motion.div>
     ) : (
      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-      {displayList.map(lecture => (
+      {visibleLectures.map(lecture => (
        <LectureListItem key={lecture.id} lecture={lecture} isArabic={isArabic} user={user} localFavorites={localFavorites} localRatings={localRatings} viewedIds={viewedIds} onToggleFavorite={handleToggleFavorite} onRate={handleRate} onWatch={handleWatch} onPlay={setActiveLecture} />
       ))}
      </motion.div>
+    )}
+
+    {hasMoreLectures && (
+     <div className="mt-10 text-center">
+      <button
+       type="button"
+       onClick={() => setLecturePage(p => p + 1)}
+       className="btn-spatial px-8 py-3 rounded-xl text-sm font-semibold"
+      >
+       {isArabic ? `تحميل المزيد (${visibleLectures.length} من ${totalVisible})` : `Load more (${visibleLectures.length} of ${totalVisible})`}
+      </button>
+     </div>
     )}
 
     {/* Video modal */}
@@ -359,13 +388,33 @@ function VideoPlayerModal({ lecture, onClose, isArabic, onWatch, localFavorites,
  )
 }
 
-function LectureCard({ lecture, isArabic, user, localFavorites, localRatings, viewedIds, onToggleFavorite, onRate, onWatch, onPlay }) {
+// Pointer-tracked spotlight vars, coalesced to one getBoundingClientRect per
+// frame (unthrottled handlers × 200 cards jank on filter keystrokes).
+function useSpotlightVars() {
+  const rafRef = useRef(null)
+  useEffect(() => () => cancelAnimationFrame(rafRef.current), [])
+  return useCallback((e) => {
+    const el = e.currentTarget
+    const { clientX, clientY } = e
+    if (rafRef.current) return
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null
+      const r = el.getBoundingClientRect()
+      el.style.setProperty('--mouse-x', `${((clientX - r.left) / r.width) * 100}%`)
+      el.style.setProperty('--mouse-y', `${((clientY - r.top) / r.height) * 100}%`)
+    })
+  }, [])
+}
+
+const LectureCard = memo(function LectureCard({ lecture, isArabic, user, localFavorites, localRatings, viewedIds, onToggleFavorite, onRate, onWatch, onPlay }) {
   const { t } = useLanguage()
+  const onSpotlightMove = useSpotlightVars()
+  const { ref: tiltRef, tiltHandlers } = useTilt3D({ max: 6 })
   const isViewed = viewedIds.includes(lecture.id)
   const videoId = lectureVideoId(lecture)
   const title = isArabic ? lecture.titleAr : lecture.titleEn
   return (
-     <div className="relative group glass-panel gradient-border spotlight-card lift rounded-xl overflow-hidden" onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); e.currentTarget.style.setProperty('--mouse-x', `${((e.clientX - r.left) / r.width) * 100}%`); e.currentTarget.style.setProperty('--mouse-y', `${((e.clientY - r.top) / r.height) * 100}%`) }}>
+     <div ref={tiltRef} {...tiltHandlers} className="relative group glass-panel gradient-border spotlight-card tilt-card lift rounded-xl overflow-hidden card-shine" onMouseMove={onSpotlightMove}>
       <Link to={`/lecture/${lecture.id}`} onClick={() => onWatch(lecture.id, lecture)} className="absolute inset-0 z-0 rounded-xl" aria-label={title} />
       <div className="relative aspect-video pointer-events-none bg-black/30 flex items-center justify-center overflow-hidden">
       <LectureThumbnail
@@ -410,9 +459,9 @@ function LectureCard({ lecture, isArabic, user, localFavorites, localRatings, vi
      </div>
     </div>
   )
- }
+ })
 
-function LectureListItem({ lecture, isArabic, user, localFavorites, localRatings, viewedIds, onToggleFavorite, onRate, onWatch, onPlay }) {
+const LectureListItem = memo(function LectureListItem({ lecture, isArabic, user, localFavorites, localRatings, viewedIds, onToggleFavorite, onRate, onWatch, onPlay }) {
   const { t } = useLanguage()
   const isViewed = viewedIds.includes(lecture.id)
   const videoId = lectureVideoId(lecture)
@@ -450,4 +499,4 @@ function LectureListItem({ lecture, isArabic, user, localFavorites, localRatings
     </div>
    </div>
   )
- }
+ })

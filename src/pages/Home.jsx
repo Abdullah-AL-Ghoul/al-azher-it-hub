@@ -159,9 +159,9 @@ export default function Home() {
           <FiUser size={24} />
          </div>
          <div>
-          <h2 className="text-xl md:text-2xl font-bold text-ink">
+          <h1 className="text-xl md:text-2xl font-bold text-ink">
            {isArabic ? `مرحباً بك، ${user.name}!` : `Welcome, ${user.name}!`}
-          </h2>
+          </h1>
           {userStats.lastVisit && (
            <p className="text-sm text-slate-500 dark:text-white/50 mt-1">
             {isArabic ? 'آخر زيارة' : 'Last visit'}: {new Date(userStats.lastVisit).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -171,7 +171,7 @@ export default function Home() {
         </div>
         <Link
          to="/profile"
-         className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl btn-spatial text-ink text-sm font-medium"
+         className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl btn-spatial text-sm font-medium"
         >
          {isArabic ? 'الملف الشخصي' : 'Profile'} <FiChevronLeft size={16} className={isArabic ? '' : 'rotate-180'} />
         </Link>
@@ -311,7 +311,7 @@ export default function Home() {
           variants={prefersReduced ? {} : revealItem}
           transition={{ delay: i * 0.06 }}
           whileHover={prefersReduced ? {} : { y: -4 }}
-          className="stat-tile rounded-2xl p-4 hover:border-royal-500/30 cursor-default group"
+          className="stat-tile p-4 hover:border-royal-500/30 cursor-default group"
          >
           <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition duration-300`}>
            <Icon size={22} />
@@ -381,7 +381,7 @@ export default function Home() {
              </span>
             )}
            </div>
-           <h4 className="font-semibold text-ink text-sm line-clamp-2 mb-1 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">
+           <h3 className="font-semibold text-ink text-sm line-clamp-2 mb-1 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">
             {isArabic ? addition.titleAr : addition.titleEn}
            </h4>
            {(addition.descriptionAr || addition.descriptionEn) && (
@@ -457,7 +457,7 @@ export default function Home() {
            <span className="inline-block text-xs bg-black/5 dark:bg-white/5 border border-black/8 dark:border-white/10 text-slate-500 dark:text-white/60 px-2 py-0.5 rounded-full mb-2">
             {isArabic ? lecture.subjectAr : lecture.subjectEn}
            </span>
-           <h4 className="font-semibold text-ink text-sm mb-1 line-clamp-2 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">{isArabic ? lecture.titleAr : lecture.titleEn}</h4>
+           <h3 className="font-semibold text-ink text-sm mb-1 line-clamp-2 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">{isArabic ? lecture.titleAr : lecture.titleEn}</h4>
            <p className="text-xs text-slate-500 dark:text-white/50">{lecture.date}</p>
           </div>
          </Link>

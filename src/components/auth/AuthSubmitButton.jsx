@@ -14,7 +14,7 @@ export default function AuthSubmitButton({ loading, loadingText, buttonText, isA
     whileHover={!loading ? { scale: 1.02 } : {}}
     whileTap={!loading ? { scale: 0.97 } : {}}
     disabled={loading}
-    className="w-full relative overflow-hidden btn-spatial text-ink py-4 rounded-2xl font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+    className="w-full relative overflow-hidden btn-spatial py-4 rounded-2xl font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
    >
     {!loading && (
      <motion.div
