@@ -20,6 +20,11 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'mobile-chromium',
+      use: { ...devices['Pixel 7'] },
+      testIgnore: /a11y\.spec\.js/,
+    },
   ],
   webServer: {
     command: 'npm run preview -- --port 4173',

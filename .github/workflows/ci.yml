@@ -32,16 +32,25 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: E2E smoke tests (Playwright)
-        # Note: current smoke tests are public-route only and pass without
-        # Supabase env vars. Once authenticated e2e flows are added, add
-        # VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY as repository secrets.
+      - name: E2E tests (Playwright, desktop + a11y scans)
+        # The specs are public-route only and pass without Supabase env vars
+        # beyond read-only invalid-credential sign-in attempts. Authenticated
+        # flows would need repository secrets.
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
           npx playwright install --with-deps chromium
           npx playwright test
+
+      - name: E2E mobile sanity (Pixel 7)
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npx playwright test --project=mobile-chromium e2e/smoke.spec.js e2e/interactions.spec.js
+
+      - name: Lighthouse performance budget
+        run: npx --yes @lhci/cli@0.14.x autorun
 
       - name: Security audit (moderate+)
         run: npm audit --audit-level=moderate

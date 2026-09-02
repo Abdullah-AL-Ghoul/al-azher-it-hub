@@ -21,10 +21,10 @@ export default mergeConfig(
         // Growth floors, not targets: raise these as coverage improves. After
         // the 2026-08-29 round (useSeo, useLectures tests): 10.3% lines.
         thresholds: {
-          statements: 10,
-          branches: 25,
-          functions: 20,
-          lines: 7,
+          statements: 17,
+          branches: 30,
+          functions: 33,
+          lines: 17,
         },
       },
     },

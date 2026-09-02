@@ -71,12 +71,13 @@ const handleClick = async (provider) => {
        disabled={disabled || !!loading}
        onClick={() => handleClick(p)}
        title={p.label}
+       aria-label={isArabic ? `متابعة عبر ${p.label}` : `Continue with ${p.label}`}
        className="relative flex items-center justify-center h-12 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-navy-800 hover:border-slate-300 dark:hover:border-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
        {isActive ? (
         <span className="w-5 h-5 border-2 border-slate-300 border-t-royal-500 rounded-full animate-spin" />
        ) : (
-        <Icon size={20} style={{ color: p.color }} />
+        <Icon size={20} style={{ color: p.color }} aria-hidden="true" />
        )}
       </motion.button>
      )
