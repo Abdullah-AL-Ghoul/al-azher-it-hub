@@ -112,15 +112,15 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
  const handleSubmit = async (e) => {
   e.preventDefault()
   if (!titleAr.trim() && !titleEn.trim()) {
-   toast.error(isArabic ? 'أدخل عنوان المصدر' : 'Enter source title')
+   toast.error(t('inline.sources.enter-source-title'))
    return
   }
   if (upload.files.length === 0 && !url.trim()) {
-   toast.error(isArabic ? 'ارفع ملف أو أدخل رابط' : 'Upload a file or enter a URL')
+   toast.error(t('inline.sources.upload-a-file-or'))
    return
   }
   if (upload.uploading) {
-   toast.error(isArabic ? 'انتظر حتى ينتهي الرفع' : 'Please wait for uploads to finish')
+   toast.error(t('inline.sources.please-wait-for-uploads'))
    return
   }
 
@@ -175,13 +175,13 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
      exit={{ opacity: 0, scale: 0.95, y: 20 }}
      role="dialog"
      aria-modal="true"
-     aria-label={isArabic ? 'رفع ملف' : 'Upload file'}
+     aria-label={t('inline.sources.upload-file')}
      className="modal-spatial rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
      onClick={e => e.stopPropagation()}
     >
      <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
       <h3 className="text-lg font-bold text-ink">{t('sources.uploadFile')}</h3>
-      <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors" aria-label={isArabic ? 'إغلاق' : 'Close'}>
+      <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors" aria-label={t('inline.sources.close')}>
        <FiX size={18} className="text-slate-500" />
       </button>
      </div>
@@ -189,17 +189,17 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
       <form onSubmit={handleSubmit} className="p-4 space-y-4">
        <div className="grid grid-cols-2 gap-3">
         <div>
-         <label htmlFor="sources-title-ar" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'العنوان (عربي)' : 'Title (AR)'}</label>
+         <label htmlFor="sources-title-ar" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t('inline.sources.title-ar')}</label>
          <input
           id="sources-title-ar"
           value={titleAr}
           onChange={e => setTitleAr(e.target.value)}
           className="w-full px-3 py-3 min-h-[44px] bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
-          placeholder={isArabic ? 'عنوان المصدر' : 'Source title'}
+          placeholder={t('inline.sources.source-title')}
          />
         </div>
         <div>
-         <label htmlFor="sources-title-en" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'العنوان (إنجليزي)' : 'Title (EN)'}</label>
+         <label htmlFor="sources-title-en" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t('inline.sources.title-en')}</label>
          <input
           id="sources-title-en"
           value={titleEn}
@@ -212,17 +212,17 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
 
        <div className="grid grid-cols-2 gap-3">
         <div>
-         <label htmlFor="sources-subject-ar" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة (عربي)' : 'Subject (AR)'}</label>
+         <label htmlFor="sources-subject-ar" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t('inline.sources.subject-ar')}</label>
          <input
           id="sources-subject-ar"
           value={subjectAr}
           onChange={e => setSubjectAr(e.target.value)}
           className="w-full px-3 py-3 min-h-[44px] bg-slate-50 dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
-          placeholder={isArabic ? 'اسم المادة' : 'Subject name'}
+          placeholder={t('inline.sources.subject-name')}
          />
         </div>
         <div>
-         <label htmlFor="sources-subject-en" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة (إنجليزي)' : 'Subject (EN)'}</label>
+         <label htmlFor="sources-subject-en" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t('inline.sources.subject-en')}</label>
          <input
           id="sources-subject-en"
           value={subjectEn}
@@ -234,7 +234,7 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
        </div>
 
        <div>
-        <label htmlFor="sources-url" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'رابط (اختياري)' : 'URL (optional)'}</label>
+        <label htmlFor="sources-url" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t('inline.sources.url-optional')}</label>
         <input
          id="sources-url"
          value={url}
@@ -265,7 +265,7 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
        {upload.uploading && (
         <div className="flex items-center gap-2 mb-3 text-royal-500 text-sm justify-center">
          <FiLoader size={14} className="animate-spin" />
-         {isArabic ? 'جاري الرفع...' : 'Uploading...'}
+         {t('inline.sources.uploading')}
         </div>
        )}
 
@@ -294,7 +294,7 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
             <button
              type="button"
              onClick={() => upload.removeFile(idx)}
-             aria-label={isArabic ? 'حذف الملف' : 'Remove file'}
+             aria-label={t('inline.sources.remove-file')}
              className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded text-rose-500 flex-shrink-0"
             >
              <FiTrash2 size={14} />
@@ -308,7 +308,7 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
           disabled={upload.uploading}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 hover:border-royal-400 hover:text-royal-500 transition-colors text-sm disabled:opacity-50"
          >
-          <FiUpload size={14} /> {isArabic ? 'إضافة ملف آخر' : 'Add another file'}
+          <FiUpload size={14} /> {t('inline.sources.add-another-file')}
          </button>
         </div>
        ) : (
@@ -320,10 +320,10 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
          <FiUpload size={24} className="text-slate-500 dark:text-slate-400" />
          <span className="text-sm text-slate-500 dark:text-slate-400 ">{t('sources.uploadHint')}</span>
          <span className="text-xs text-slate-500 dark:text-slate-400 ">
-          {isArabic ? 'PDF, JPG, PNG, ZIP, DOC (حد أقصى 100MB)' : 'PDF, JPG, PNG, ZIP, DOC (max 100MB)'}
+          {t('inline.sources.pdf-jpg-png-zip')}
          </span>
          <span className="text-xs text-slate-400 dark:text-slate-500">
-          {isArabic ? 'أو اسحب الملف وأفلته هنا' : 'or drag & drop a file here'}
+          {t('inline.sources.or-drag-drop-a')}
          </span>
         </button>
        )}
@@ -335,7 +335,7 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
         onClick={onClose}
         className="flex-1 px-4 py-3 min-h-[44px] bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
        >
-        {isArabic ? 'إلغاء' : 'Cancel'}
+        {t('inline.sources.cancel')}
        </button>
        <button
         type="submit"
@@ -407,7 +407,7 @@ export default function Sources() {
    const matchSearch = !search || title?.toLowerCase().includes(search.toLowerCase()) || subject?.toLowerCase().includes(search.toLowerCase())
    return matchSubject && matchSearch
   })
-  const sortLocale = isArabic ? 'ar' : 'en'
+  const sortLocale = t('inline.sources.en')
   result.sort((a, b) => {
    const titleA = (isArabic ? a.titleAr : a.titleEn) || ''
    const titleB = (isArabic ? b.titleAr : b.titleEn) || ''
@@ -486,15 +486,15 @@ export default function Sources() {
      <EmptyState
       icon={search ? FiSearch : FiFolder}
       color="amber"
-      title={search ? (isArabic ? 'لا توجد نتائج للبحث' : 'No search results') : (isArabic ? 'لا توجد مصادر بعد' : 'No sources yet')}
-      description={search ? (isArabic ? 'جرّب كلمة بحث مختلفة أو افحص الفلاتر' : 'Try a different search term or check your filters') : (isArabic ? 'سيتم إضافة المصادر قريباً أو يمكنك رفع ملفات' : 'Sources will be added soon, or you can upload files')}
+      title={search ? (t('inline.sources.no-search-results')) : (t('inline.sources.no-sources-yet'))}
+      description={search ? (t('inline.sources.try-a-different-search')) : (t('inline.sources.sources-will-be-added'))}
        action={
         search ? (
          <button
           onClick={() => { setSearch(''); setActiveSubject('all') }}
           className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] btn-secondary rounded-xl text-sm font-medium"
          >
-          {isArabic ? 'مسح البحث' : 'Clear search'}
+          {t('inline.sources.clear-search')}
          </button>
         ) : isAdmin ? (
          <button
@@ -541,7 +541,7 @@ export default function Sources() {
                  rel="noopener noreferrer"
                  onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — ${f.name}`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}
                  className="p-1.5 rounded-lg text-cyan-500 hover:bg-cyan-500/10 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
-                 title={isArabic ? 'فتح' : 'Open'}
+                 title={t('inline.sources.open')}
                  aria-label={isArabic ? `فتح ${f.name}` : `Open ${f.name}`}
                 >
                  <FiExternalLink size={14} />
@@ -549,7 +549,7 @@ export default function Sources() {
                 <button
                  onClick={() => downloadFile(f.url, f.name)}
                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-500/10 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
-                 title={isArabic ? 'تحميل' : 'Download'}
+                 title={t('inline.sources.download')}
                  aria-label={isArabic ? `تحميل ${f.name}` : `Download ${f.name}`}
                 >
                  <FiDownload size={14} />
@@ -557,7 +557,7 @@ export default function Sources() {
                </div>
               ))}
               {allFiles.length > 6 && (
-               <p className="text-xs text-slate-500 dark:text-white/50">+{allFiles.length - 6} {isArabic ? 'ملفات أخرى' : 'more files'}</p>
+               <p className="text-xs text-slate-500 dark:text-white/50">+{allFiles.length - 6} {t('inline.sources.more-files')}</p>
               )}
               {allFiles.length > 1 && (
                <button

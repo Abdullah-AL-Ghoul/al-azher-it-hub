@@ -6,6 +6,7 @@ import { pageContainer, pageContainerReduced } from '../../utils/motionTokens'
 import SkeletonRow from './SkeletonRow'
 import Pagination from './Pagination'
 import StudentProfileModal from './StudentProfileModal'
+import { useLanguage } from '../../context/LanguageContext'
 
 const ACTION_CONFIG = {
  LOGIN: { icon: FiLogIn, bgClass: 'bg-emerald-500/10', textClass: 'text-emerald-500', badgeBg: 'bg-emerald-500/10', badgeTextLight: 'text-emerald-600', badgeTextDark: 'dark:text-emerald-400', labelAr: 'تسجيل دخول', labelEn: 'Login' },
@@ -22,6 +23,7 @@ const ACTION_CONFIG = {
 const FALLBACK_CONFIG = { icon: FiArrowRight, bgClass: 'bg-slate-500/10', textClass: 'text-slate-500', badgeBg: 'bg-slate-500/10', badgeTextLight: 'text-slate-600', badgeTextDark: 'dark:text-slate-400 ' }
 
 function StudentLogs({ logs, users, loading, isArabic }) {
+ const { t } = useLanguage()
  const prefersReduced = useReducedMotion()
  const [search, setSearch] = useState('')
  const [filter, setFilter] = useState('all')
@@ -62,7 +64,7 @@ function StudentLogs({ logs, users, loading, isArabic }) {
        onChange={e => setFilter(e.target.value)}
        className={`ps-8 pe-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50`}
       >
-       <option value="all">{isArabic ? 'الكل' : 'All'}</option>
+       <option value="all">{t('inline.student-logs.all')}</option>
        {Object.entries(ACTION_CONFIG).map(([key, cfg]) => (
         <option key={key} value={key}>{isArabic ? cfg.labelAr : cfg.labelEn}</option>
        ))}
@@ -72,7 +74,7 @@ function StudentLogs({ logs, users, loading, isArabic }) {
       <FiSearch className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 start-3`} size={14} />
       <input
        type="text"
-       placeholder={isArabic ? 'بحث...' : 'Search...'}
+       placeholder={t('inline.student-logs.search')}
        value={search}
        onChange={e => setSearch(e.target.value)}
        className={`ps-8 pe-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48`}
@@ -84,7 +86,7 @@ function StudentLogs({ logs, users, loading, isArabic }) {
    {filteredLogs.length === 0 ? (
     <div className="glass rounded-xl p-12 text-center border border-white/10">
      <FiUser className="mx-auto text-5xl text-slate-300 dark:text-slate-600 mb-4" />
-     <p className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'لا توجد سجلات' : 'No logs'}</p>
+     <p className="text-slate-500 dark:text-slate-400 ">{t('inline.student-logs.no-logs')}</p>
     </div>
    ) : (
     <div className="space-y-2">
@@ -117,7 +119,7 @@ function StudentLogs({ logs, users, loading, isArabic }) {
           )}
          </div>
          <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
-          {new Date(log.timestamp || Date.now()).toLocaleString(isArabic ? 'ar' : 'en')}
+          {new Date(log.timestamp || Date.now()).toLocaleString(t('inline.student-logs.en'))}
          </span>
         </div>
        </div>

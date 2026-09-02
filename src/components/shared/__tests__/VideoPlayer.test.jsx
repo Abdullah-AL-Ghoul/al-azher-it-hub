@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { renderWithProviders as render, screen, waitFor } from '../../../test-utils/renderWithProviders'
 import userEvent from '@testing-library/user-event'
 import VideoPlayer from '../VideoPlayer'
 
@@ -66,8 +66,9 @@ describe('VideoPlayer', () => {
     expect(onWatch).toHaveBeenCalled()
   })
 
-  it('renders the English fallback copy in en mode', () => {
-    render(<VideoPlayer videoId={null} url={null} isArabic={false} />)
-    expect(screen.getByText('No video for this lecture')).toBeInTheDocument()
+  it('renders the English fallback copy in en mode', async () => {
+    render(<VideoPlayer videoId={null} url={null} isArabic={false} />, { lang: 'en' })
+    // en.json loads asynchronously through the LanguageProvider.
+    await waitFor(() => expect(screen.getByText('No video for this lecture')).toBeInTheDocument())
   })
 })

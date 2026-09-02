@@ -35,7 +35,7 @@ const TAB_DATA_MAP = {
 
 export default function AdminDashboard() {
  const { logout } = useAuth()
- const { lang } = useLanguage()
+ const { t, lang } = useLanguage()
  const navigate = useNavigate()
  const isArabic = lang === 'ar'
 
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
 
    const failed = results.some(r => r.status === 'rejected')
    if (failed) {
-    toast.error(isArabic ? 'تعذر تحميل بعض البيانات' : 'Some data failed to load')
+    toast.error(t('inline.admin-dashboard.some-data-failed-to'))
    }
 
    const setters = {
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
    loadedTabs.current.add(tabKey)
   } catch (error) {
    if (generation !== loadGeneration.current) return
-   toast.error(isArabic ? 'فشل تحميل البيانات' : 'Failed to load data')
+   toast.error(t('inline.admin-dashboard.failed-to-load-data'))
   } finally {
    if (generation === loadGeneration.current) setLoading(false)
   }
@@ -136,9 +136,9 @@ export default function AdminDashboard() {
         onClick={() => navigate('/home')}
         className="flex items-center gap-2 px-3 py-2 glass text-slate-600 dark:text-white/70 hover:text-ink rounded-xl text-sm font-medium transition"
        >
-        <FiHome size={16} /> {isArabic ? 'الرئيسية' : 'Home'}
+        <FiHome size={16} /> {t('inline.admin-dashboard.home')}
        </button>
-       <h1 className="text-xl md:text-2xl font-bold gradient-text-spatial">{isArabic ? 'لوحة التحكم' : 'Admin Dashboard'}</h1>
+       <h1 className="text-xl md:text-2xl font-bold gradient-text-spatial">{t('inline.admin-dashboard.admin-dashboard')}</h1>
       </div>
       <div className="flex items-center gap-2">
        <AdminSearch
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
         onClick={async () => { await logout(); navigate('/') }}
         className="flex items-center gap-2 px-3 py-1.5 glass text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl text-sm font-medium transition"
        >
-        <span>{isArabic ? 'تسجيل خروج' : 'Logout'}</span>
+        <span>{t('inline.admin-dashboard.logout')}</span>
         <span aria-hidden="true">✕</span>
        </button>
       </div>
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
    </div>
 
    <div className="container-page py-6">
-    <div className="flex items-center gap-2 mb-6 p-2 glass rounded-xl overflow-x-auto scrollbar-thin" role="tablist" aria-label={isArabic ? 'أقسام لوحة التحكم' : 'Dashboard tabs'}
+    <div className="flex items-center gap-2 mb-6 p-2 glass rounded-xl overflow-x-auto scrollbar-thin" role="tablist" aria-label={t('inline.admin-dashboard.dashboard-tabs')}
      onKeyDown={e => {
       const dir = isArabic ? -1 : 1
       let idx = TABS.findIndex(t => t.key === tab)

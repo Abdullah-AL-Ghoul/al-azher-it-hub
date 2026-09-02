@@ -59,7 +59,7 @@ function FaqItem({ q, a }) {
 }
 
 export default function WelcomeGate() {
- const { lang, toggleLang } = useLanguage()
+ const { t, lang, toggleLang } = useLanguage()
  const { theme, toggle } = useTheme()
  const prefersReduced = useReducedMotion()
  const { user } = useAuth()
@@ -100,10 +100,10 @@ export default function WelcomeGate() {
  ]
 
  const faqs = [
-  { q: isArabic ? 'كيف أسجّل في المنصة؟' : 'How do I sign up?', a: isArabic ? 'اضغط "إنشاء حساب جديد" وأدخل رقمك الجامعي وكلمة المرور. التسجيل يستغرق ثوانٍ قليلة.' : 'Click "Create account", enter your university ID and password. Signup takes seconds.' },
-  { q: isArabic ? 'هل المنصة مجانية؟' : 'Is the platform free?', a: isArabic ? 'نعم، المنصة مجانية بالكامل لجميع طلبة تكنولوجيا المعلومات — المحاضرات والمصادر متاحة للجميع.' : 'Yes, it is completely free for all IT students — lectures and sources are available to everyone.' },
-  { q: isArabic ? 'كيف أجد مصادر المادة؟' : 'How do I find subject sources?', a: isArabic ? 'افتح أي محاضرة وستجد قسم "مصادر المادة" يظهر المصادر المرتبطة بنفس المادة مباشرة.' : 'Open any lecture and the "Subject sources" section shows sources for that subject directly.' },
-  { q: isArabic ? 'هل يمكنني تتبع تقدمي؟' : 'Can I track my progress?', a: isArabic ? 'نعم! في الصفحة الرئيسية تجد قسم "تقدمك في المواد" مع أشرطة تقدم ونسبة إنجاز لكل مادة.' : 'Yes! On the home page you will find "Your subject progress" with progress bars and completion per subject.' },
+  { q: t('inline.welcome-gate.how-do-i-sign'), a: t('inline.welcome-gate.click-create-account-enter') },
+  { q: t('inline.welcome-gate.is-the-platform-free'), a: t('inline.welcome-gate.yes-it-is-completely') },
+  { q: t('inline.welcome-gate.how-do-i-find'), a: t('inline.welcome-gate.open-any-lecture-and') },
+  { q: t('inline.welcome-gate.can-i-track-my'), a: t('inline.welcome-gate.yes-on-the-home') },
  ]
 
  const heroStats = [
@@ -129,18 +129,18 @@ export default function WelcomeGate() {
       <SiteLogo size="sm" />
       <span className="hidden sm:inline font-bold text-ink tracking-tight">AL-Azher IT Hub</span>
       <span className="hidden md:inline-flex items-center gap-1.5 ms-3 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold tracking-widest uppercase">
-       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> {isArabic ? 'متاح الآن' : 'Live'}
+       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> {t('inline.welcome-gate.live')}
       </span>
      </div>
      <div className="flex items-center gap-2">
-       <button onClick={toggleLang} className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-ink transition" aria-label={isArabic ? 'تبديل اللغة: EN' : 'Switch language: عربي'}>
-        {isArabic ? 'EN' : 'عربي'}
+       <button onClick={toggleLang} className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-ink transition" aria-label={t('inline.welcome-gate.switch-language-عربي')}>
+        {t('inline.welcome-gate.عربي')}
        </button>
-      <button onClick={toggle} className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-ink transition" aria-label={isArabic ? 'تبديل المظهر' : 'Toggle theme'}>
+      <button onClick={toggle} className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur text-slate-600 dark:text-white/70 hover:text-ink transition" aria-label={t('inline.welcome-gate.toggle-theme')}>
        {theme === 'light' ? <FiMoon size={16} /> : theme === 'dark' ? <FiMonitor size={16} /> : <FiSun size={16} />}
       </button>
       <Link to="/login" className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl btn-primary text-xs font-semibold">
-       <FiLogIn size={14} className={isArabic ? 'rotate-180' : ''} /> {isArabic ? 'دخول' : 'Sign in'}
+       <FiLogIn size={14} className={isArabic ? 'rotate-180' : ''} /> {t('inline.welcome-gate.sign-in')}
       </Link>
      </div>
     </div>
@@ -153,32 +153,30 @@ export default function WelcomeGate() {
      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="text-center lg:text-start">
       <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-medium text-slate-600 dark:text-white/70 mb-6">
        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-royal-500 text-white"><FiShield size={12} /></span>
-       {isArabic ? 'منصة تعليمية موثوقة لطلبة تكنولوجيا المعلومات' : 'Trusted platform for IT students'}
+       {t('inline.welcome-gate.trusted-platform-for-it')}
        <span className="hidden sm:inline-flex items-center gap-1 text-amber-500 dark:text-amber-400"><FiStar size={12} className="fill-amber-400 text-amber-400" /> 4.9/5</span>
       </motion.div>
 
       <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl lg:text-[60px] font-extrabold tracking-tight leading-[0.95] text-ink">
-       {isArabic ? 'تعلّم أذكى،' : 'Learn smarter,'}
+       {t('inline.welcome-gate.learn-smarter')}
        <br />
-       <span className="gradient-text-spatial">{isArabic ? 'وتفوّق في موادك.' : 'excel in your courses.'}</span>
+       <span className="gradient-text-spatial">{t('inline.welcome-gate.excel-in-your-courses')}</span>
       </motion.h1>
 
       <motion.p variants={itemVariants} className="mt-5 text-[15px] md:text-lg leading-relaxed text-slate-600 dark:text-white/60 max-w-xl mx-auto lg:mx-0">
-       {isArabic
-        ? 'محاضرات فيديو منظمة، ملخصات مركزة، ومصادر مرتبة تحت كل مادة — كل ما تحتاجه للتفوق في تكنولوجيا المعلومات في منصة واحدة.'
-        : 'Organized video lectures, concise summaries, and curated sources under every subject — everything you need to excel in IT, all in one place.'}
+       {t('inline.welcome-gate.organized-video-lectures-concise')}
       </motion.p>
 
       {/* CTA */}
       <motion.div variants={itemVariants} className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
        <MagneticLink to="/signup" className="group inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl btn-primary font-semibold text-[15px] min-h-[48px]">
         <FiUserPlus size={18} className={isArabic ? 'rotate-180' : ''} />
-        {isArabic ? 'أنشئ حسابك مجاناً' : 'Create your free account'}
+        {t('inline.welcome-gate.create-your-free-account')}
         <FiArrowUpRight size={16} className="opacity-60 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
        </MagneticLink>
        <MagneticLink to="/login" className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl btn-secondary font-semibold text-[15px] min-h-[48px]">
         <FiLogIn size={18} className={isArabic ? 'rotate-180' : ''} />
-        {isArabic ? 'تسجيل الدخول' : 'Sign in'}
+        {t('inline.welcome-gate.sign-in-2')}
        </MagneticLink>
       </motion.div>
 
@@ -188,7 +186,7 @@ export default function WelcomeGate() {
         {[0, 1, 2].map(i => <div key={i} className="w-7 h-7 rounded-full border-2 border-white dark:border-navy-900 bg-gradient-to-br from-royal-500 to-cyan-400 flex items-center justify-center text-white text-[10px] font-bold">{String.fromCharCode(65 + i)}</div>)}
         <div className="w-7 h-7 rounded-full border-2 border-white dark:border-navy-900 bg-slate-900 dark:bg-white text-white dark:text-navy-900 flex items-center justify-center text-[10px] font-bold">+500</div>
        </div>
-       <span>{isArabic ? 'يثق بنا طلاب من 4 دفعات · وصول سريع وآمن' : 'Trusted by 4 cohorts · Fast & secure access'}</span>
+       <span>{t('inline.welcome-gate.trusted-by-4-cohorts')}</span>
       </motion.div>
 
       {/* Hero stats */}
@@ -217,7 +215,7 @@ export default function WelcomeGate() {
         <Lazy3DScene
          className="absolute inset-0"
          scene={() => import('../components/three/KnowledgeScene')}
-         fallbackLabel={isArabic ? 'مشهد ثلاثي الأبعاد لتكوين معرفي' : '3D knowledge cluster scene'}
+         fallbackLabel={t('inline.welcome-gate.3d-knowledge-cluster-scene')}
          fallback={
           <div className="absolute inset-0">
            <div className="absolute top-[28%] left-1/2 -translate-x-1/2 w-40 h-40 rounded-full bg-gradient-to-br from-royal-500/40 to-cyan-400/30 blur-md animate-depth-breathe" />
@@ -236,8 +234,8 @@ export default function WelcomeGate() {
        >
         <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center"><FiFileText size={14} /></span>
         <div>
-         <div className="text-xs font-bold text-ink leading-none">{isArabic ? 'ملخص جديد' : 'New summary'}</div>
-         <div className="text-[11px] text-slate-500 dark:text-white/50">{isArabic ? 'تمت الإضافة اليوم' : 'Added today'}</div>
+         <div className="text-xs font-bold text-ink leading-none">{t('inline.welcome-gate.new-summary')}</div>
+         <div className="text-[11px] text-slate-500 dark:text-white/50">{t('inline.welcome-gate.added-today')}</div>
         </div>
        </motion.div>
 
@@ -248,8 +246,8 @@ export default function WelcomeGate() {
        >
         <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center"><FiCheck size={14} /></span>
         <div>
-         <div className="text-xs font-bold text-ink leading-none">{isArabic ? 'تمت المتابعة' : 'Progress tracked'}</div>
-         <div className="text-[11px] text-slate-500 dark:text-white/50">{isArabic ? 'تتبع تلقائي لتقدمك' : 'Your progress, tracked'}</div>
+         <div className="text-xs font-bold text-ink leading-none">{t('inline.welcome-gate.progress-tracked')}</div>
+         <div className="text-[11px] text-slate-500 dark:text-white/50">{t('inline.welcome-gate.your-progress-tracked')}</div>
         </div>
        </motion.div>
       </div>
@@ -261,10 +259,10 @@ export default function WelcomeGate() {
    <Reveal className="relative z-10 py-8 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="glass rounded-2xl px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
      {[
-      { value: 60, suffix: '+', label: isArabic ? 'محاضرة مسجلة' : 'Lectures recorded' },
-      { value: 300, suffix: '+', label: isArabic ? 'مصدر متاح' : 'Sources available' },
-      { value: 8, suffix: '+', label: isArabic ? 'مادة دراسية' : 'Subjects' },
-      { value: 4, suffix: '', label: isArabic ? 'دفعات يستخدمونها' : 'Cohorts using it' },
+      { value: 60, suffix: '+', label: t('inline.welcome-gate.lectures-recorded') },
+      { value: 300, suffix: '+', label: t('inline.welcome-gate.sources-available') },
+      { value: 8, suffix: '+', label: t('inline.welcome-gate.subjects') },
+      { value: 4, suffix: '', label: t('inline.welcome-gate.cohorts-using-it') },
      ].map(s => (
       <div key={s.label}>
        <div className="text-2xl md:text-3xl font-extrabold gradient-text-spatial"><CountUp end={s.value} suffix={s.suffix} /></div>
@@ -277,9 +275,9 @@ export default function WelcomeGate() {
    {/* ===== FEATURES ===== */}
    <div className="relative z-10 py-16 container-page">
     <SectionHeading
-     eyebrow={isArabic ? 'لماذا نحن' : 'Why us'}
-     title={isArabic ? 'كل ما يحتاجه طالب تكنولوجيا المعلومات' : 'Everything an IT student needs'}
-     subtitle={isArabic ? 'ميزات مصممة لتبسيط تعلمك وتنظيم موادك' : 'Features designed to simplify your learning and organize your subjects'}
+     eyebrow={t('inline.welcome-gate.why-us')}
+     title={t('inline.welcome-gate.everything-an-it-student')}
+     subtitle={t('inline.welcome-gate.features-designed-to-simplify')}
     />
     <Reveal className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
      {features.map((f) => {
@@ -300,9 +298,9 @@ export default function WelcomeGate() {
    {/* ===== HOW IT WORKS ===== */}
    <div className="relative z-10 py-16 container-page">
     <SectionHeading
-     eyebrow={isArabic ? 'كيف تعمل المنصة' : 'How it works'}
-     title={isArabic ? 'ابدأ في 3 خطوات بسيطة' : 'Start in 3 simple steps'}
-     subtitle={isArabic ? 'من إنشاء الحساب إلى التفوق — بدون تعقيد' : 'From signup to success — no complexity'}
+     eyebrow={t('inline.welcome-gate.how-it-works')}
+     title={t('inline.welcome-gate.start-in-3-simple')}
+     subtitle={t('inline.welcome-gate.from-signup-to-success')}
     />
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
      {steps.map((s, i) => {
@@ -319,7 +317,7 @@ export default function WelcomeGate() {
         </div>
         {i < steps.length - 1 && (
          <div className="hidden md:block absolute top-1/2 -right-3 text-slate-300 dark:text-white/20 text-2xl" aria-hidden="true">
-          {isArabic ? '←' : '→'}
+          {t('inline.welcome-gate.text')}
          </div>
         )}
        </Reveal>
@@ -329,7 +327,7 @@ export default function WelcomeGate() {
     <Reveal className="text-center mt-8">
      <MagneticLink to="/signup" className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl btn-primary font-semibold text-[15px] min-h-[48px]">
       <FiUserPlus size={18} className={isArabic ? 'rotate-180' : ''} />
-      {isArabic ? 'ابدأ الآن مجاناً' : 'Get started free'}
+      {t('inline.welcome-gate.get-started-free')}
      </MagneticLink>
     </Reveal>
    </div>
@@ -337,9 +335,9 @@ export default function WelcomeGate() {
    {/* ===== TESTIMONIALS ===== */}
    <div className="relative z-10 py-16 container-page">
     <SectionHeading
-     eyebrow={isArabic ? 'آراء الطلاب' : 'Student voices'}
-     title={isArabic ? 'ماذا يقول طلابنا' : 'What our students say'}
-     subtitle={isArabic ? 'تجارب حقيقية من طلبة يستخدمون المنصة' : 'Real experiences from students using the platform'}
+     eyebrow={t('inline.welcome-gate.student-voices')}
+     title={t('inline.welcome-gate.what-our-students-say')}
+     subtitle={t('inline.welcome-gate.real-experiences-from-students')}
     />
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
      {testimonials.map((tm, i) => (
@@ -365,9 +363,9 @@ export default function WelcomeGate() {
    {/* ===== FAQ ===== */}
    <div className="relative z-10 py-16 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
     <SectionHeading
-     eyebrow={isArabic ? 'الأسئلة الشائعة' : 'FAQ'}
-     title={isArabic ? 'لديك سؤال؟' : 'Have a question?'}
-     subtitle={isArabic ? 'إجابات لأكثر الأسئلة شيوعاً' : 'Answers to the most common questions'}
+     eyebrow={t('inline.welcome-gate.faq')}
+     title={t('inline.welcome-gate.have-a-question')}
+     subtitle={t('inline.welcome-gate.answers-to-the-most')}
     />
     <div className="space-y-3">
      {faqs.map((f, i) => <FaqItem key={i} q={f.q} a={f.a} isArabic={isArabic} />)}
@@ -379,14 +377,14 @@ export default function WelcomeGate() {
     <div className="relative overflow-hidden glass rounded-3xl border border-white/10 p-10 md:p-14 text-center">
      <div className="absolute -top-20 -left-20 w-64 h-64 bg-royal-500/15 rounded-full blur-3xl" />
      <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-cyan-500/15 rounded-full blur-3xl" />
-     <h2 className="relative text-2xl md:text-4xl font-bold gradient-text-spatial mb-4">{isArabic ? 'جاهز تبدأ رحلتك؟' : 'Ready to start?'}</h2>
-     <p className="relative text-slate-500 dark:text-white/60 text-lg mb-8 max-w-xl mx-auto">{isArabic ? 'انضم إلى زملائك وتابع المحاضرات والمصادر والخطط الدراسية من مكان واحد.' : 'Join your classmates and follow lectures, sources, and study plans all in one place.'}</p>
+     <h2 className="relative text-2xl md:text-4xl font-bold gradient-text-spatial mb-4">{t('inline.welcome-gate.ready-to-start')}</h2>
+     <p className="relative text-slate-500 dark:text-white/60 text-lg mb-8 max-w-xl mx-auto">{t('inline.welcome-gate.join-your-classmates-and')}</p>
      <div className="relative flex flex-col sm:flex-row gap-3 justify-center">
       <MagneticLink to="/signup" className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl btn-primary font-semibold text-[15px] min-h-[48px]">
-       <FiUserPlus size={18} className={isArabic ? 'rotate-180' : ''} /> {isArabic ? 'أنشئ حسابك مجاناً' : 'Create your free account'}
+       <FiUserPlus size={18} className={isArabic ? 'rotate-180' : ''} /> {t('inline.welcome-gate.create-your-free-account')}
       </MagneticLink>
       <MagneticLink to="/login" className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl btn-secondary font-semibold text-[15px] min-h-[48px]">
-       <FiLogIn size={18} className={isArabic ? 'rotate-180' : ''} /> {isArabic ? 'تسجيل الدخول' : 'Sign in'}
+       <FiLogIn size={18} className={isArabic ? 'rotate-180' : ''} /> {t('inline.welcome-gate.sign-in-2')}
       </MagneticLink>
      </div>
     </div>
@@ -426,7 +424,7 @@ export default function WelcomeGate() {
 
    {/* ===== FOOTER ===== */}
    <footer className="relative z-10 text-center py-6 text-slate-500 dark:text-white/30 text-xs">
-    AL-Azher IT Hub © {new Date().getFullYear()} · {isArabic ? 'صُنع لطلبة الأزهر' : 'Built for Al-Azhar students'}
+    AL-Azher IT Hub © {new Date().getFullYear()} · {t('inline.welcome-gate.built-for-al-azhar-students')}
    </footer>
   </div>
  )

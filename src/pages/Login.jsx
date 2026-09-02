@@ -48,7 +48,7 @@ export default function Login() {
   e.preventDefault()
   setError('')
   if (!form.studentId.trim() || !form.password) {
-   setError(isArabic ? 'أدخل رقمك الجامعي وكلمة المرور' : 'Enter your ID and password')
+   setError(t('inline.login.enter-your-id-and'))
    return
   }
    setLoading(true)
@@ -94,7 +94,7 @@ export default function Login() {
     isArabic={isArabic}
    />
 
-   <AuthAlert type="success" message={isArabic ? 'تم تسجيل الدخول بنجاح!' : 'Login successful!'} show={showSuccess} />
+   <AuthAlert type="success" message={t('inline.login.login-successful')} show={showSuccess} />
    <AuthAlert type="error" message={error} show={!showSuccess && !!error} />
 
    {!showSuccess && (
@@ -137,7 +137,7 @@ export default function Login() {
 
        <div className="flex justify-end -mt-1">
         <Link to="/forgot-password" className="text-xs font-medium text-royal-600 dark:text-cyan-400 hover:text-royal-700 dark:hover:text-cyan-300 transition">
-         {isArabic ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
+         {t('inline.login.forgot-password')}
         </Link>
        </div>
 

@@ -6,8 +6,9 @@ import { saveAdditions, saveStudyPlan, saveRoadmap, deleteAddition } from '../..
 import ConfirmDialog from '../shared/ConfirmDialog'
 import { INPUT_CLASS } from '../../utils/adminShared'
 import { uid } from '../../utils/helpers'
+import { useLanguage } from '../../context/LanguageContext'
 
-function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], isArabic, onRefresh }) {
+function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], isArabic, onRefresh }, t) {
  const [showAdditionForm, setShowAdditionForm] = useState(false)
  const [additionEdit, setAdditionEdit] = useState([])
 
@@ -63,16 +64,16 @@ function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], isArabic,
  const handleSaveAdditions = async () => {
   const valid = additionEdit.filter(x => x.subjectAr || x.subjectEn || x.titleAr || x.titleEn)
   if (valid.length === 0) {
-   toast.error(isArabic ? 'أدخل بيانات الإضافة' : 'Enter addition data')
+   toast.error(t('inline.settings-panel.enter-addition-data'))
    return
   }
   try {
    await saveAdditions(valid)
    setShowAdditionForm(false)
-   toast.success(isArabic ? 'تم حفظ الإضافات' : 'Additions saved')
+   toast.success(t('inline.settings-panel.additions-saved'))
    if (onRefresh) onRefresh()
   } catch (error) {
-   toast.error(isArabic ? 'فشل الحفظ' : 'Failed to save')
+   toast.error(t('inline.settings-panel.failed-to-save'))
   }
  }
 
@@ -96,10 +97,10 @@ const handleDeleteAddition = async (id) => {
    const remaining = (studyPlan?.links || []).filter((_, i) => i !== index)
    try {
     await saveStudyPlan({ links: remaining })
-    toast.success(isArabic ? 'تم حذف الرابط' : 'Link deleted')
+    toast.success(t('inline.settings-panel.link-deleted'))
     if (onRefresh) onRefresh()
    } catch (error) {
-    toast.error(isArabic ? 'فشل الحذف' : 'Failed to delete')
+    toast.error(t('inline.settings-panel.failed-to-delete'))
    }
   }
 
@@ -112,11 +113,11 @@ const handleDeleteAddition = async (id) => {
   if (!confirmDeleteId) return
   try {
    await deleteAddition(confirmDeleteId)
-   toast.success(isArabic ? 'تم الحذف' : 'Deleted')
+   toast.success(t('inline.settings-panel.deleted'))
    setConfirmDeleteId(null)
    if (onRefresh) onRefresh()
   } catch (error) {
-   toast.error(isArabic ? 'فشل الحذف' : 'Failed to delete')
+   toast.error(t('inline.settings-panel.failed-to-delete'))
   }
  }
 
@@ -137,10 +138,10 @@ const handleDeleteAddition = async (id) => {
   try {
    await saveStudyPlan({ links: valid })
    setShowPlanForm(false)
-   toast.success(isArabic ? 'تم حفظ الخطة' : 'Plan saved')
+   toast.success(t('inline.settings-panel.plan-saved'))
    if (onRefresh) onRefresh()
   } catch (error) {
-   toast.error(isArabic ? 'فشل الحفظ' : 'Failed to save')
+   toast.error(t('inline.settings-panel.failed-to-save'))
   }
  }
 
@@ -162,16 +163,16 @@ const handleDeleteAddition = async (id) => {
  const handleSaveRoadmap = async () => {
   const valid = roadmapEdit.filter(x => x.nameAr || x.nameEn)
   if (valid.length === 0) {
-   toast.error(isArabic ? 'أدخل بيانات المادة' : 'Enter course data')
+   toast.error(t('inline.settings-panel.enter-course-data'))
    return
   }
   try {
    await saveRoadmap(valid)
    setShowRoadmapForm(false)
-   toast.success(isArabic ? 'تم حفظ المسار' : 'Roadmap saved')
+   toast.success(t('inline.settings-panel.roadmap-saved'))
    if (onRefresh) onRefresh()
   } catch (error) {
-   toast.error(isArabic ? 'فشل الحفظ' : 'Failed to save')
+   toast.error(t('inline.settings-panel.failed-to-save'))
   }
  }
 
@@ -183,9 +184,9 @@ const handleDeleteAddition = async (id) => {
    {/* ========== ADDITIONS ========== */}
    <div className="glass rounded-xl p-5 border border-white/10">
     <div className="flex justify-between items-center mb-4">
-     <h3 className="font-bold text-sm text-ink uppercase tracking-wider">{isArabic ? 'الإضافات' : 'Additions'}</h3>
+     <h3 className="font-bold text-sm text-ink uppercase tracking-wider">{t('inline.settings-panel.additions')}</h3>
      <button onClick={addNewAddition} className="flex items-center gap-2 px-3 py-1.5 bg-royal-500 hover:bg-royal-600 text-white rounded-lg text-sm font-medium transition">
-      <FiPlus size={14} /> {isArabic ? 'إضافة جديدة' : 'Add New'}
+      <FiPlus size={14} /> {t('inline.settings-panel.add-new')}
      </button>
     </div>
 
@@ -203,39 +204,39 @@ const handleDeleteAddition = async (id) => {
           <div key={item.id} className="space-y-2">
            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="md:col-span-2">
-             <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'نوع الإضافة' : 'Type'}</label>
+             <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.type')}</label>
              <select value={item.type} onChange={e => updateAdditionField(idx, 'type', e.target.value)} className={INPUT_CLASS}>
-              <option value="post">{isArabic ? 'منشور' : 'Post'}</option>
-              <option value="whatsapp">{isArabic ? 'واتساب' : 'WhatsApp'}</option>
-              <option value="video">{isArabic ? 'فيديو' : 'Video'}</option>
+              <option value="post">{t('inline.settings-panel.post')}</option>
+              <option value="whatsapp">{t('inline.settings-panel.whatsapp')}</option>
+              <option value="video">{t('inline.settings-panel.video')}</option>
              </select>
             </div>
             <div>
-             <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة (عربي)' : 'Subject (AR)'}</label>
-             <input value={item.subjectAr} onChange={e => updateAdditionField(idx, 'subjectAr', e.target.value)} className={INPUT_CLASS} placeholder={isArabic ? 'المادة' : 'Subject'} />
+             <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.subject-ar')}</label>
+             <input value={item.subjectAr} onChange={e => updateAdditionField(idx, 'subjectAr', e.target.value)} className={INPUT_CLASS} placeholder={t('inline.settings-panel.subject')} />
             </div>
             <div>
-             <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة (إنجليزي)' : 'Subject (EN)'}</label>
+             <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.subject-en')}</label>
              <input value={item.subjectEn} onChange={e => updateAdditionField(idx, 'subjectEn', e.target.value)} className={INPUT_CLASS} placeholder="Subject" />
             </div>
             <div>
-             <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'العنوان (عربي)' : 'Title (AR)'}</label>
-             <input value={item.titleAr} onChange={e => updateAdditionField(idx, 'titleAr', e.target.value)} className={INPUT_CLASS} placeholder={isArabic ? 'العنوان' : 'Title'} />
+             <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.title-ar')}</label>
+             <input value={item.titleAr} onChange={e => updateAdditionField(idx, 'titleAr', e.target.value)} className={INPUT_CLASS} placeholder={t('inline.settings-panel.title')} />
             </div>
             <div>
-             <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'العنوان (إنجليزي)' : 'Title (EN)'}</label>
+             <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.title-en')}</label>
              <input value={item.titleEn} onChange={e => updateAdditionField(idx, 'titleEn', e.target.value)} className={INPUT_CLASS} placeholder="Title" />
             </div>
            <div className="md:col-span-2">
-            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'الوصف (عربي)' : 'Description (AR)'}</label>
-            <textarea value={item.descriptionAr} onChange={e => updateAdditionField(idx, 'descriptionAr', e.target.value)} className={`${INPUT_CLASS} h-16 resize-none`} placeholder={isArabic ? 'الوصف' : 'Description'} />
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.description-ar')}</label>
+            <textarea value={item.descriptionAr} onChange={e => updateAdditionField(idx, 'descriptionAr', e.target.value)} className={`${INPUT_CLASS} h-16 resize-none`} placeholder={t('inline.settings-panel.description')} />
            </div>
            <div className="md:col-span-2">
-            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'الوصف (إنجليزي)' : 'Description (EN)'}</label>
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.description-en')}</label>
             <textarea value={item.descriptionEn} onChange={e => updateAdditionField(idx, 'descriptionEn', e.target.value)} className={`${INPUT_CLASS} h-16 resize-none`} placeholder="Description" />
            </div>
            <div className="md:col-span-2">
-            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'الرابط' : 'URL'}</label>
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.url')}</label>
             <input value={item.url} onChange={e => updateAdditionField(idx, 'url', e.target.value)} className={INPUT_CLASS} placeholder="https://..." />
            </div>
           </div>
@@ -243,10 +244,10 @@ const handleDeleteAddition = async (id) => {
         ))}
         <div className="flex gap-3">
          <button onClick={handleSaveAdditions} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition">
-          <FiSave size={14} /> {isArabic ? 'حفظ' : 'Save'}
+          <FiSave size={14} /> {t('inline.settings-panel.save')}
          </button>
          <button onClick={() => setShowAdditionForm(false)} className="px-4 py-2 glass text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-sm transition">
-          {isArabic ? 'إلغاء' : 'Cancel'}
+          {t('inline.settings-panel.cancel')}
          </button>
         </div>
        </div>
@@ -263,10 +264,10 @@ const handleDeleteAddition = async (id) => {
          <p className="text-xs text-slate-500 dark:text-slate-400 ">{isArabic ? a.subjectAr : a.subjectEn}</p>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-         <button onClick={() => handleEditAddition(a)} className="p-2 text-royal-500 hover:bg-royal-500/10 rounded-lg transition-colors" aria-label={isArabic ? 'تعديل الإضافة' : 'Edit addition'}>
+         <button onClick={() => handleEditAddition(a)} className="p-2 text-royal-500 hover:bg-royal-500/10 rounded-lg transition-colors" aria-label={t('inline.settings-panel.edit-addition')}>
           <FiEdit2 size={14} />
          </button>
-         <button onClick={() => handleDeleteAddition(a.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={isArabic ? 'حذف الإضافة' : 'Delete addition'}>
+         <button onClick={() => handleDeleteAddition(a.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={t('inline.settings-panel.delete-addition')}>
           <FiTrash2 size={14} />
          </button>
         </div>
@@ -274,16 +275,16 @@ const handleDeleteAddition = async (id) => {
       ))}
      </div>
     ) : !showAdditionForm && (
-     <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">{isArabic ? 'لا توجد إضافات' : 'No additions yet'}</p>
+     <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">{t('inline.settings-panel.no-additions-yet')}</p>
     )}
    </div>
 
    {/* ========== STUDY PLAN ========== */}
    <div className="glass rounded-xl p-5 border border-white/10">
     <div className="flex justify-between items-center mb-4">
-     <h3 className="font-bold text-sm text-ink uppercase tracking-wider">{isArabic ? 'الخطة الدراسية' : 'Study Plan'}</h3>
+     <h3 className="font-bold text-sm text-ink uppercase tracking-wider">{t('inline.settings-panel.study-plan')}</h3>
      <button onClick={addStudyPlanLink} className="flex items-center gap-2 px-3 py-1.5 bg-royal-500 hover:bg-royal-600 text-white rounded-lg text-sm font-medium transition">
-      <FiPlus size={14} /> {isArabic ? 'إضافة رابط' : 'Add Link'}
+      <FiPlus size={14} /> {t('inline.settings-panel.add-link')}
      </button>
     </div>
 
@@ -299,20 +300,20 @@ const handleDeleteAddition = async (id) => {
        <div className="space-y-3 p-4 bg-black/5 dark:bg-white/5 rounded-lg">
         {planEdit.map((item, idx) => (
          <div key={item.id || idx} className="flex items-center gap-2">
-          <input value={item.titleAr} onChange={e => updatePlanField(idx, 'titleAr', e.target.value)} className={INPUT_CLASS} placeholder={isArabic ? 'العنوان (عربي)' : 'Title (AR)'} />
-          <input value={item.titleEn} onChange={e => updatePlanField(idx, 'titleEn', e.target.value)} className={INPUT_CLASS} placeholder={isArabic ? 'العنوان (إنجليزي)' : 'Title (EN)'} />
+          <input value={item.titleAr} onChange={e => updatePlanField(idx, 'titleAr', e.target.value)} className={INPUT_CLASS} placeholder={t('inline.settings-panel.title-ar')} />
+          <input value={item.titleEn} onChange={e => updatePlanField(idx, 'titleEn', e.target.value)} className={INPUT_CLASS} placeholder={t('inline.settings-panel.title-en')} />
           <input value={item.url} onChange={e => updatePlanField(idx, 'url', e.target.value)} className={INPUT_CLASS} placeholder="URL" />
-          <button onClick={() => handleDeletePlanLink(idx)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={isArabic ? 'حذف الرابط' : 'Delete link'}>
+          <button onClick={() => handleDeletePlanLink(idx)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={t('inline.settings-panel.delete-link')}>
            <FiTrash2 size={14} />
           </button>
          </div>
         ))}
         <div className="flex gap-3">
          <button onClick={handleSaveStudyPlan} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition">
-          <FiSave size={14} /> {isArabic ? 'حفظ' : 'Save'}
+          <FiSave size={14} /> {t('inline.settings-panel.save')}
          </button>
          <button onClick={() => setShowPlanForm(false)} className="px-4 py-2 glass text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-sm transition">
-          {isArabic ? 'إلغاء' : 'Cancel'}
+          {t('inline.settings-panel.cancel')}
          </button>
         </div>
        </div>
@@ -329,26 +330,26 @@ const handleDeleteAddition = async (id) => {
          <p className="text-sm text-ink truncate">{isArabic ? link.titleAr : link.titleEn}</p>
          {link.url && <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-xs text-royal-500 hover:underline truncate block">{link.url}</a>}
         </div>
-        <button onClick={handleEditPlanLinks} className="p-2 text-royal-500 hover:bg-royal-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={isArabic ? 'تعديل الروابط' : 'Edit links'}>
+        <button onClick={handleEditPlanLinks} className="p-2 text-royal-500 hover:bg-royal-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={t('inline.settings-panel.edit-links')}>
          <FiEdit2 size={14} />
         </button>
-        <button onClick={() => handleDeletePlanLinkFromList(i)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={isArabic ? 'حذف الرابط' : 'Delete link'}>
+        <button onClick={() => handleDeletePlanLinkFromList(i)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0" aria-label={t('inline.settings-panel.delete-link')}>
          <FiTrash2 size={14} />
         </button>
        </div>
       ))}
      </div>
     ) : !showPlanForm && (
-     <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">{isArabic ? 'لا توجد روابط' : 'No links yet'}</p>
+     <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">{t('inline.settings-panel.no-links-yet')}</p>
     )}
    </div>
 
    {/* ========== ROADMAP ========== */}
    <div className="glass rounded-xl p-5 border border-white/10">
     <div className="flex justify-between items-center mb-4">
-     <h3 className="font-bold text-sm text-ink uppercase tracking-wider">{isArabic ? 'المسار الدراسي' : 'Course Roadmap'}</h3>
+     <h3 className="font-bold text-sm text-ink uppercase tracking-wider">{t('inline.settings-panel.course-roadmap')}</h3>
      <button onClick={addRoadmapItem} className="flex items-center gap-2 px-3 py-1.5 bg-royal-500 hover:bg-royal-600 text-white rounded-lg text-sm font-medium transition">
-      <FiPlus size={14} /> {isArabic ? 'إضافة مادة' : 'Add Course'}
+      <FiPlus size={14} /> {t('inline.settings-panel.add-course')}
      </button>
     </div>
 
@@ -371,43 +372,43 @@ const handleDeleteAddition = async (id) => {
            </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-           <input value={item.nameAr || ''} onChange={e => updateRoadmapField(idx, 'nameAr', e.target.value)} className={INPUT_CLASS} placeholder={isArabic ? 'اسم المادة (عربي)' : 'Course Name (AR)'} />
-           <input value={item.nameEn || ''} onChange={e => updateRoadmapField(idx, 'nameEn', e.target.value)} className={INPUT_CLASS} placeholder={isArabic ? 'اسم المادة (إنجليزي)' : 'Course Name (EN)'} />
+           <input value={item.nameAr || ''} onChange={e => updateRoadmapField(idx, 'nameAr', e.target.value)} className={INPUT_CLASS} placeholder={t('inline.settings-panel.course-name-ar')} />
+           <input value={item.nameEn || ''} onChange={e => updateRoadmapField(idx, 'nameEn', e.target.value)} className={INPUT_CLASS} placeholder={t('inline.settings-panel.course-name-en')} />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
            <div>
-            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'السنة' : 'Year'}</label>
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.year')}</label>
             <select value={item.year || 1} onChange={e => updateRoadmapField(idx, 'year', parseInt(e.target.value))} className={INPUT_CLASS}>
              {[1,2,3,4].map(y => <option key={y} value={y}>{isArabic ? `السنة ${y}` : `Year ${y}`}</option>)}
             </select>
            </div>
            <div>
-            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'الفصل' : 'Semester'}</label>
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.semester')}</label>
             <select value={item.semester || 1} onChange={e => updateRoadmapField(idx, 'semester', parseInt(e.target.value))} className={INPUT_CLASS}>
              {[1,2].map(s => <option key={s} value={s}>{isArabic ? `الفصل ${s}` : `Semester ${s}`}</option>)}
             </select>
            </div>
            <div>
-            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'الترتيب' : 'Order'}</label>
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.order')}</label>
             <input type="number" value={item.order || 0} onChange={e => updateRoadmapField(idx, 'order', parseInt(e.target.value) || 0)} className={INPUT_CLASS} />
            </div>
            <div>
-            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'رابط' : 'URL'}</label>
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.url-2')}</label>
             <input value={item.url || ''} onChange={e => updateRoadmapField(idx, 'url', e.target.value)} className={INPUT_CLASS} placeholder="https://..." />
            </div>
           </div>
           <div>
-           <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المتطلبات السابقة' : 'Prerequisites'}</label>
-           <input value={(item.prerequisites || []).join(', ')} onChange={e => updateRoadmapField(idx, 'prerequisites', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} className={INPUT_CLASS} placeholder={isArabic ? 'مفصل بفاصلة' : 'Comma separated'} />
+           <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.settings-panel.prerequisites')}</label>
+           <input value={(item.prerequisites || []).join(', ')} onChange={e => updateRoadmapField(idx, 'prerequisites', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} className={INPUT_CLASS} placeholder={t('inline.settings-panel.comma-separated')} />
           </div>
          </div>
         ))}
         <div className="flex gap-3">
          <button onClick={handleSaveRoadmap} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition">
-          <FiSave size={14} /> {isArabic ? 'حفظ' : 'Save'}
+          <FiSave size={14} /> {t('inline.settings-panel.save')}
          </button>
          <button onClick={() => setShowRoadmapForm(false)} className="px-4 py-2 glass text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-sm transition">
-          {isArabic ? 'إلغاء' : 'Cancel'}
+          {t('inline.settings-panel.cancel')}
          </button>
         </div>
        </div>
@@ -424,24 +425,24 @@ const handleDeleteAddition = async (id) => {
          <p className="text-sm font-medium text-ink truncate">{isArabic ? item.nameAr : item.nameEn}</p>
          <p className="text-xs text-slate-500 dark:text-slate-400 ">
           {isArabic ? `السنة ${item.year} - الفصل ${item.semester}` : `Year ${item.year} - Semester ${item.semester}`}
-          {item.prerequisites?.length > 0 && ` • ${isArabic ? 'متطلبات' : 'Prereqs'}: ${item.prerequisites.length}`}
+          {item.prerequisites?.length > 0 && ` • ${t('inline.settings-panel.prereqs')}: ${item.prerequisites.length}`}
          </p>
         </div>
        </div>
       ))}
      </div>
     ) : !showRoadmapForm && (
-     <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">{isArabic ? 'لا توجد مواد' : 'No courses yet'}</p>
+     <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">{t('inline.settings-panel.no-courses-yet')}</p>
     )}
    </div>
    <ConfirmDialog
     isOpen={!!confirmDeleteId}
     onClose={() => setConfirmDeleteId(null)}
     onConfirm={confirmDeleteAddition}
-    title={isArabic ? 'تأكيد الحذف' : 'Confirm Deletion'}
-    message={isArabic ? 'هل أنت متأكد من حذف هذا العنصر؟' : 'Are you sure you want to delete this item?'}
-    confirmText={isArabic ? 'حذف' : 'Delete'}
-    cancelText={isArabic ? 'إلغاء' : 'Cancel'}
+    title={t('inline.settings-panel.confirm-deletion')}
+    message={t('inline.settings-panel.are-you-sure-you')}
+    confirmText={t('inline.settings-panel.delete')}
+    cancelText={t('inline.settings-panel.cancel')}
     variant="danger"
    />
   </motion.div>

@@ -58,18 +58,18 @@ export default memo(function FilterBar({ subjects, subjectCounts = {}, activeSub
      <button
       onClick={clearSearch}
       className="absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 hover:text-ink transition-colors end-4"
-      aria-label={isArabic ? 'مسح البحث' : 'Clear search'}
+      aria-label={t('inline.filter-bar.clear-search')}
      >
       <FiX size={16} />
      </button>
     )}
    </div>
 
-   <div className="flex flex-wrap items-center gap-2" role="group" aria-label={isArabic ? 'تصفية حسب الموضوع' : 'Filter by subject'}>
+   <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t('inline.filter-bar.filter-by-subject')}>
     <button
      onClick={() => onSubjectChange('all')}
      aria-pressed={activeSubject === 'all'}
-     aria-label={isArabic ? 'عرض الكل' : 'Show all'}
+     aria-label={t('inline.filter-bar.show-all')}
      className={`px-4 py-2 min-h-[44px] rounded-xl text-sm font-medium transition duration-200 inline-flex items-center gap-1.5 ${
       activeSubject === 'all'
        ? 'btn-spatial'
@@ -111,7 +111,7 @@ export default memo(function FilterBar({ subjects, subjectCounts = {}, activeSub
       <span>{resultCount} {t('common.results')}</span>
      )}
      {hasFilter && (
-      <button onClick={resetAll} className="text-accent hover:text-royal-600 dark:hover:text-cyan-300 font-medium transition-colors" aria-label={isArabic ? 'إعادة ضبط الفلاتر' : 'Reset filters'}>
+      <button onClick={resetAll} className="text-accent hover:text-royal-600 dark:hover:text-cyan-300 font-medium transition-colors" aria-label={t('inline.filter-bar.reset-filters')}>
        {t('common.reset')}
       </button>
      )}

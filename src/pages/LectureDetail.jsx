@@ -79,9 +79,9 @@ export default function LectureDetail() {
    window.open(`https://t.me/share/url?url=${url}&text=${title}`, '_blank', 'noopener,noreferrer')
   } else if (channel === 'copy') {
    navigator.clipboard?.writeText(`${window.location.origin}/lecture/${lecture.id}`).then(() => {
-    toast.success(isArabic ? 'تم نسخ الرابط' : 'Link copied')
+    toast.success(t('inline.lecture-detail.link-copied'))
    }).catch(() => {
-    toast.error(isArabic ? 'فشل النسخ' : 'Copy failed')
+    toast.error(t('inline.lecture-detail.copy-failed'))
    })
   }
  }, [lecture, isArabic])
@@ -220,10 +220,10 @@ export default function LectureDetail() {
      <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-5">
       <FiFileText className="text-rose-400" size={28} />
      </div>
-     <h1 className="text-xl font-bold text-ink mb-2">{isArabic ? 'المحاضرة غير موجودة' : 'Lecture not found'}</h1>
-     <p className="text-sm text-slate-500 dark:text-white/50 mb-6">{isArabic ? 'ربما تم حذف هذه المحاضرة' : 'This lecture may have been removed'}</p>
+     <h1 className="text-xl font-bold text-ink mb-2">{t('inline.lecture-detail.lecture-not-found')}</h1>
+     <p className="text-sm text-slate-500 dark:text-white/50 mb-6">{t('inline.lecture-detail.this-lecture-may-have')}</p>
      <Link to="/lectures" className="inline-flex items-center gap-2 px-6 py-3 btn-primary rounded-xl font-semibold text-sm">
-      <FiArrowRight className={isArabic ? 'rotate-180' : ''} /> {isArabic ? 'العودة للمحاضرات' : 'Back to lectures'}
+      <FiArrowRight className={isArabic ? 'rotate-180' : ''} /> {t('inline.lecture-detail.back-to-lectures')}
      </Link>
     </div>
    </div>
@@ -237,7 +237,7 @@ export default function LectureDetail() {
    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
     {/* Breadcrumb */}
-    <motion.nav variants={pageItem} aria-label={isArabic ? 'مسار التنقل' : 'Breadcrumb'} className="flex items-center gap-2 text-sm text-slate-500 dark:text-white/50 mb-6 flex-wrap">
+    <motion.nav variants={pageItem} aria-label={t('inline.lecture-detail.breadcrumb')} className="flex items-center gap-2 text-sm text-slate-500 dark:text-white/50 mb-6 flex-wrap">
      <Link to="/lectures" className="hover:text-royal-500 dark:hover:text-cyan-400 transition-colors">{t('lectures.title')}</Link>
      <span>›</span>
      <span className="text-navy-900 dark:text-white/80">{isArabic ? lecture.subjectAr : lecture.subjectEn}</span>
@@ -261,7 +261,7 @@ export default function LectureDetail() {
        <motion.div variants={revealItem} className="glass rounded-2xl p-5 border border-white/10 mt-6">
         <div className="flex items-center gap-2 mb-4">
          <FiBookOpen size={18} className="text-amber-500" />
-         <h2 className="font-bold text-ink">{isArabic ? 'مصادر المادة' : 'Subject sources'}</h2>
+         <h2 className="font-bold text-ink">{t('inline.lecture-detail.subject-sources')}</h2>
          <span className="text-xs text-slate-500 dark:text-white/50 ms-auto">{relatedSources.length}</span>
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
@@ -284,10 +284,10 @@ export default function LectureDetail() {
                  <button onClick={() => downloadFile(f.url, f.name)} className="p-0.5 rounded text-emerald-500 hover:bg-emerald-500/10" aria-label={isArabic ? `تحميل ${f.name}` : `Download ${f.name}`}><FiDownload size={11} /></button>
                 </div>
                ))}
-               {files.length > 3 && <p className="text-[10px] text-slate-500 dark:text-white/40">+{files.length - 3} {isArabic ? 'ملفات' : 'files'}</p>}
+               {files.length > 3 && <p className="text-[10px] text-slate-500 dark:text-white/40">+{files.length - 3} {t('inline.lecture-detail.files')}</p>}
               </div>
              ) : src.url ? (
-              <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline inline-flex items-center gap-1">{isArabic ? 'فتح الرابط' : 'Open link'} <FiExternalLink size={10} /></a>
+              <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline inline-flex items-center gap-1">{t('inline.lecture-detail.open-link')} <FiExternalLink size={10} /></a>
              ) : null}
             </div>
            </div>
@@ -325,14 +325,14 @@ export default function LectureDetail() {
         <div className="flex items-center gap-3">
          <span className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-500 flex-shrink-0"><FiUser size={14} /></span>
          <div>
-          <p className="text-xs text-slate-500 dark:text-white/50">{isArabic ? 'المادة' : 'Subject'}</p>
+          <p className="text-xs text-slate-500 dark:text-white/50">{t('inline.lecture-detail.subject')}</p>
           <p className="text-ink font-medium">{isArabic ? lecture.subjectAr : lecture.subjectEn}</p>
          </div>
         </div>
         <div className="flex items-center gap-3">
          <span className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-500 flex-shrink-0"><FiClock size={14} /></span>
          <div>
-          <p className="text-xs text-slate-500 dark:text-white/50">{isArabic ? 'التاريخ' : 'Date'}</p>
+          <p className="text-xs text-slate-500 dark:text-white/50">{t('inline.lecture-detail.date')}</p>
           <p className="text-ink font-medium">{lecture.date || '—'}</p>
          </div>
         </div>
@@ -340,7 +340,7 @@ export default function LectureDetail() {
          <div className="flex items-center gap-3">
           <span className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0"><FiUser size={14} /></span>
           <div>
-           <p className="text-xs text-slate-500 dark:text-white/50">{isArabic ? 'الدكتور' : 'Doctor'}</p>
+           <p className="text-xs text-slate-500 dark:text-white/50">{t('inline.lecture-detail.doctor')}</p>
            <p className="text-ink font-medium">{isArabic ? lecture.doctorAr : lecture.doctorEn}</p>
           </div>
          </div>
@@ -356,25 +356,25 @@ export default function LectureDetail() {
         <div className="mt-5 space-y-3">
          {lecture.url && (
           <a href={lecture.url} target="_blank" rel="noopener noreferrer" onClick={handleWatch} className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 btn-secondary rounded-xl font-semibold text-sm">
-           <FiExternalLink size={16} /> {isArabic ? 'فتح على YouTube' : 'Open on YouTube'}
+           <FiExternalLink size={16} /> {t('inline.lecture-detail.open-on-youtube')}
           </a>
          )}
          <Link to="/lectures" className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 btn-secondary rounded-xl font-semibold text-sm">
-           <FiArrowRight className={isArabic ? 'rotate-180' : ''} size={16} /> {isArabic ? 'كل المحاضرات' : 'All lectures'}
+           <FiArrowRight className={isArabic ? 'rotate-180' : ''} size={16} /> {t('inline.lecture-detail.all-lectures')}
          </Link>
         </div>
 
         {/* Share */}
         <div className="mt-5">
-         <p className="text-xs font-medium text-slate-500 dark:text-white/50 mb-2">{isArabic ? 'مشاركة المحاضرة' : 'Share lecture'}</p>
+         <p className="text-xs font-medium text-slate-500 dark:text-white/50 mb-2">{t('inline.lecture-detail.share-lecture')}</p>
          <div className="flex items-center gap-2">
-          <button onClick={() => shareLink('whatsapp')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/25 transition" aria-label={isArabic ? 'مشاركة عبر واتساب' : 'Share on WhatsApp'}>
+          <button onClick={() => shareLink('whatsapp')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/25 transition" aria-label={t('inline.lecture-detail.share-on-whatsapp')}>
            <FaWhatsapp size={16} />
           </button>
-          <button onClick={() => shareLink('telegram')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/25 transition" aria-label={isArabic ? 'مشاركة عبر تيليجرام' : 'Share on Telegram'}>
+          <button onClick={() => shareLink('telegram')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/25 transition" aria-label={t('inline.lecture-detail.share-on-telegram')}>
            <FaTelegramPlane size={16} />
           </button>
-          <button onClick={() => shareLink('copy')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-royal-500/10 hover:bg-royal-500/20 text-accent border border-royal-500/25 dark:border-cyan-500/25 transition" aria-label={isArabic ? 'نسخ الرابط' : 'Copy link'}>
+          <button onClick={() => shareLink('copy')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-royal-500/10 hover:bg-royal-500/20 text-accent border border-royal-500/25 dark:border-cyan-500/25 transition" aria-label={t('inline.lecture-detail.copy-link')}>
            <FiCopy size={16} />
           </button>
          </div>
@@ -386,11 +386,11 @@ export default function LectureDetail() {
         <div className="glass rounded-2xl p-5 border border-white/10">
          <div className="flex items-center gap-2 mb-3">
           <FiFileText size={16} className="text-amber-500" />
-          <h2 className="text-sm font-bold text-ink">{isArabic ? 'ملاحظاتي' : 'My notes'}</h2>
+          <h2 className="text-sm font-bold text-ink">{t('inline.lecture-detail.my-notes')}</h2>
           <span className="ms-auto flex items-center gap-1.5">
            {noteSaved && <FiCheckCircle size={14} className="text-emerald-500" />}
            <span className={`text-[10px] font-medium ${noteSaved ? 'text-emerald-500' : 'text-slate-400 dark:text-white/40'}`}>
-            {noteSaved ? (isArabic ? 'تم الحفظ تلقائياً' : 'Auto-saved') : (isArabic ? 'يُحفظ تلقائياً' : 'Auto-saves')}
+            {noteSaved ? (t('inline.lecture-detail.auto-saved')) : (t('inline.lecture-detail.auto-saves'))}
            </span>
           </span>
          </div>
@@ -398,9 +398,9 @@ export default function LectureDetail() {
           value={note}
           onChange={e => setNote(e.target.value)}
           rows="4"
-          placeholder={isArabic ? 'اكتب ملاحظاتك عن هذه المحاضرة...' : 'Write your notes about this lecture...'}
+          placeholder={t('inline.lecture-detail.write-your-notes-about')}
           className="input-spatial w-full rounded-xl px-3 py-2.5 text-sm text-ink placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none resize-none"
-          dir={isArabic ? 'rtl' : 'ltr'}
+          dir={t('inline.lecture-detail.ltr')}
           onKeyDown={(e) => {
            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
             e.preventDefault()
@@ -409,10 +409,10 @@ export default function LectureDetail() {
           }}
          />
          <p className="mt-1 text-[10px] text-slate-400 dark:text-white/40 text-end">
-          {note.length} {isArabic ? 'حرف' : 'chars'}
+          {note.length} {t('inline.lecture-detail.chars')}
          </p>
          <button onClick={saveNote} className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition">
-          <FiCheck size={14} /> {isArabic ? 'حفظ الملاحظة' : 'Save note'}
+          <FiCheck size={14} /> {t('inline.lecture-detail.save-note')}
          </button>
         </div>
        )}
@@ -420,9 +420,9 @@ export default function LectureDetail() {
       {/* Rating */}
       {user && (
        <div className="glass rounded-2xl p-6 border border-white/10">
-        <h2 className="text-sm font-bold text-ink mb-3">{isArabic ? 'قيّم هذه المحاضرة' : 'Rate this lecture'}</h2>
+        <h2 className="text-sm font-bold text-ink mb-3">{t('inline.lecture-detail.rate-this-lecture')}</h2>
         <StarRating value={localRatings[id] || 0} onRate={handleRate} size={22} />
-        <p className="text-xs text-slate-500 dark:text-white/50 mt-2">{isArabic ? 'اضغط على النجوم للتقييم' : 'Tap the stars to rate'}</p>
+        <p className="text-xs text-slate-500 dark:text-white/50 mt-2">{t('inline.lecture-detail.tap-the-stars-to')}</p>
        </div>
       )}
      </motion.div>
@@ -437,12 +437,12 @@ export default function LectureDetail() {
         <div className="flex items-center gap-1.5">
          {prevNext.prev && (
           <Link to={`/lecture/${prevNext.prev.id}`} className="flex items-center gap-1 px-3 py-1.5 btn-secondary rounded-lg text-xs font-medium">
-           <FiArrowRight className={isArabic ? '' : 'rotate-180'} size={14} /> {isArabic ? 'السابقة' : 'Prev'}
+           <FiArrowRight className={isArabic ? '' : 'rotate-180'} size={14} /> {t('inline.lecture-detail.prev')}
           </Link>
          )}
          {prevNext.next && (
           <Link to={`/lecture/${prevNext.next.id}`} className="flex items-center gap-1 px-3 py-1.5 btn-primary rounded-lg text-xs font-medium">
-            {isArabic ? 'التالية' : 'Next'} <FiArrowLeft className={isArabic ? '' : 'rotate-180'} size={14} />
+            {t('inline.lecture-detail.next')} <FiArrowLeft className={isArabic ? '' : 'rotate-180'} size={14} />
           </Link>
          )}
         </div>
@@ -482,7 +482,7 @@ export default function LectureDetail() {
           </div>
           {isCurrent && (
            <span className="flex-shrink-0 px-2.5 py-1 rounded-full bg-royal-500/15 dark:bg-cyan-500/15 text-royal-600 dark:text-cyan-400 text-xs font-medium">
-            {isArabic ? 'أنت هنا' : 'Now playing'}
+            {t('inline.lecture-detail.now-playing')}
            </span>
           )}
          </Link>

@@ -257,7 +257,7 @@ export default function ForgotPassword() {
            {loading ? (<><FiLoader size={18} className="animate-spin" />{t('forgotPassword.verifying')}</>) : (t('forgotPassword.verify'))}
           </motion.button>
           <button type="button" onClick={() => { setStep(2); setError('') }} className="w-full text-center text-xs text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/70 transition-colors">
-           {isArabic ? 'رجوع' : 'Back'}
+           {t('inline.forgot-password.back')}
           </button>
          </form>
         )}

@@ -61,16 +61,16 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
  const handleCopyUrl = async (url) => {
   try {
    await navigator.clipboard.writeText(url)
-   toast.success(isArabic ? 'تم نسخ الرابط' : 'URL copied')
+   toast.success(t('inline.lectures-table.url-copied'))
   } catch (e) {
-   toast.error(isArabic ? 'فشل النسخ' : 'Copy failed')
+   toast.error(t('inline.lectures-table.copy-failed'))
   }
  }
 
   const handleFixThumbnails = async () => {
    const missing = lectures.filter(l => !l.videoId && extractYouTubeId(l.url))
    if (missing.length === 0) {
-    toast.success(isArabic ? 'لا توجد محاضرات تحتاج إصلاح' : 'No lectures need fixing')
+    toast.success(t('inline.lectures-table.no-lectures-need-fixing'))
     return
    }
    setFixing(true)
@@ -87,7 +87,7 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
      ? `تم إصلاح ${ok} من ${missing.length} محاضرة`
      : `Fixed ${ok} of ${missing.length} lectures`)
    } catch (error) {
-    toast.error(isArabic ? 'فشل إصلاح الصور المصغرة' : 'Failed to fix thumbnails')
+    toast.error(t('inline.lectures-table.failed-to-fix-thumbnails'))
    }
    setFixing(false)
    if (ok > 0 && onRefresh) onRefresh()
@@ -108,16 +108,16 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
       onClick={handleFixThumbnails}
       disabled={fixing}
       className="flex items-center gap-2 px-3 py-1.5 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
-      title={isArabic ? 'استخراج الصور المصغرة من الروابط الناقصة' : 'Backfill missing thumbnails from URLs'}
+      title={t('inline.lectures-table.backfill-missing-thumbnails-from')}
      >
       <FiTool size={14} />
-      {fixing ? (isArabic ? 'جاري الإصلاح...' : 'Fixing...') : (isArabic ? 'إصلاح الصور المصغرة' : 'Fix thumbnails')}
+      {fixing ? (t('inline.lectures-table.fixing')) : (t('inline.lectures-table.fix-thumbnails'))}
      </button>
      <button
       onClick={() => exportToJson('lectures', t, lectures)}
       className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition"
      >
-      <FiDownload size={14} /> {t('admin.export') || (isArabic ? 'تصدير' : 'Export')}
+      <FiDownload size={14} /> {t('admin.export') || (t('inline.lectures-table.export'))}
      </button>
      <select
       value={filterCourse}
@@ -134,19 +134,19 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
       onChange={e => setSortBy(e.target.value)}
       className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
      >
-      <option value="order">{isArabic ? 'حسب الترتيب اليدوي' : 'Manual order'}</option>
-      <option value="dateNew">{isArabic ? 'الأحدث أولاً' : 'Newest first'}</option>
-      <option value="dateOld">{isArabic ? 'الأقدم أولاً' : 'Oldest first'}</option>
-      <option value="createdNew">{isArabic ? 'حسب تاريخ الإضافة' : 'By added date'}</option>
-      <option value="nameAr">{isArabic ? 'الاسم عربي' : 'Name (AR)'}</option>
-      <option value="nameEn">{isArabic ? 'الاسم إنجليزي' : 'Name (EN)'}</option>
+      <option value="order">{t('inline.lectures-table.manual-order')}</option>
+      <option value="dateNew">{t('inline.lectures-table.newest-first')}</option>
+      <option value="dateOld">{t('inline.lectures-table.oldest-first')}</option>
+      <option value="createdNew">{t('inline.lectures-table.by-added-date')}</option>
+      <option value="nameAr">{t('inline.lectures-table.name-ar')}</option>
+      <option value="nameEn">{t('inline.lectures-table.name-en')}</option>
      </select>
       <input
        type="text"
-       placeholder={isArabic ? 'بحث بالعنوان، المادة، الدكتور...' : 'Search title, subject, doctor...'}
+       placeholder={t('inline.lectures-table.search-title-subject-doctor')}
        value={search}
        onChange={e => { setSearch(e.target.value); setPage(1) }}
-       aria-label={isArabic ? 'بحث في المحاضرات' : 'Search lectures'}
+       aria-label={t('inline.lectures-table.search-lectures')}
        className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48"
       />
      <button
@@ -198,7 +198,7 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
             <span className="px-1.5 py-0.5 bg-royal-500/10 text-royal-500 rounded-full">{isArabic ? lecture.subjectAr : lecture.subjectEn}</span>
            )}
            {!videoId && lecture.url && (
-            <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-500 rounded-full">{isArabic ? 'بدون صورة' : 'No thumb'}</span>
+            <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-500 rounded-full">{t('inline.lectures-table.no-thumb')}</span>
            )}
           </p>
           {lecture.url && (
@@ -211,10 +211,10 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
         <div className="flex items-center gap-1 flex-shrink-0">
          {lecture.url && (
           <>
-           <a href={lecture.url} target="_blank" rel="noopener noreferrer" className="p-2 text-cyan-500 hover:bg-cyan-500/10 rounded-lg transition-colors" aria-label={isArabic ? 'فتح الفيديو' : 'Open video'}>
+           <a href={lecture.url} target="_blank" rel="noopener noreferrer" className="p-2 text-cyan-500 hover:bg-cyan-500/10 rounded-lg transition-colors" aria-label={t('inline.lectures-table.open-video')}>
             <FiExternalLink size={14} />
            </a>
-           <button onClick={() => handleCopyUrl(lecture.url)} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors" aria-label={isArabic ? 'نسخ الرابط' : 'Copy URL'}>
+           <button onClick={() => handleCopyUrl(lecture.url)} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors" aria-label={t('inline.lectures-table.copy-url')}>
             <FiCopy size={14} />
            </button>
           </>

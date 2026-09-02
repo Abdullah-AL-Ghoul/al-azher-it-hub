@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion'
 import { SiGoogle, SiGithub, SiLinkedin, SiMicrosoft } from 'react-icons/si'
 import { getSupabase } from '../../services/supabase'
+import { useLanguage } from '../../context/LanguageContext'
 
 const PROVIDERS = [
  { id: 'google', label: 'Google', icon: SiGoogle, color: '#DB4437' },
@@ -10,7 +11,8 @@ const PROVIDERS = [
  { id: 'linkedin_oidc', label: 'LinkedIn', icon: SiLinkedin, color: '#0A66C2' },
 ]
 
-export default function SocialAuth({ isArabic, delay = 1.2, disabled = false }) {
+export default function SocialAuth({ isArabic, delay = 1.2, disabled = false } ) {
+ const { t } = useLanguage()
  const [loading, setLoading] = useState('')
  const [error, setError] = useState('')
 
@@ -27,14 +29,14 @@ const handleClick = async (provider) => {
     })
    if (error) throw error
    if (!data?.url) {
-    setError(isArabic ? 'تعذّر بدء تسجيل الدخول. حاول مرة أخرى.' : 'Could not start sign-in. Try again.')
+    setError(t('inline.social-auth.could-not-start-sign-in'))
     setLoading('')
     return
    }
    window.location.href = data.url
   } catch (e) {
    console.error('OAuth error:', e)
-   setError(e?.message || (isArabic ? 'تعذّر بدء تسجيل الدخول. حاول مرة أخرى.' : 'Could not start sign-in. Try again.'))
+   setError(e?.message || (t('inline.social-auth.could-not-start-sign-in')))
    setLoading('')
   }
  }
@@ -49,7 +51,7 @@ const handleClick = async (provider) => {
    <div className="flex items-center gap-3 mb-4">
     <span className="flex-1 h-px bg-slate-200 dark:bg-white/10" />
     <span className="text-xs text-slate-500 dark:text-white/60 uppercase tracking-wider">
-     {isArabic ? 'أو سجّل دخولك عبر' : 'or continue with'}
+     {t('inline.social-auth.or-continue-with')}
     </span>
     <span className="flex-1 h-px bg-slate-200 dark:bg-white/10" />
    </div>

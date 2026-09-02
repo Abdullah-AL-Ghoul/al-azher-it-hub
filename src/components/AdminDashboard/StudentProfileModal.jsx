@@ -18,7 +18,7 @@ const ACTION_CONFIG = {
 }
 
 function StudentProfileModal({ student, isOpen, onClose }) {
- const { lang } = useLanguage()
+ const { t, lang } = useLanguage()
  const isArabic = lang === 'ar'
  const [stats, setStats] = useState({ viewed: [], lastVisit: null })
  const [favorites, setFavorites] = useState([])
@@ -110,23 +110,23 @@ function StudentProfileModal({ student, isOpen, onClose }) {
         <div className="glass rounded-xl p-4 border border-white/10">
          <h3 className="text-sm font-semibold text-ink mb-3 flex items-center gap-2">
           <FiUser size={14} className="text-royal-500" />
-          {isArabic ? 'معلومات الحساب' : 'Account Info'}
+          {t('inline.student-profile-modal.account-info')}
          </h3>
          <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-           <span className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'الاسم' : 'Name'}</span>
+           <span className="text-slate-500 dark:text-slate-400 ">{t('inline.student-profile-modal.name')}</span>
            <p className="text-ink font-medium">{student.name || '—'}</p>
           </div>
           <div>
-           <span className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'الرقم الجامعي' : 'Student ID'}</span>
+           <span className="text-slate-500 dark:text-slate-400 ">{t('inline.student-profile-modal.student-id')}</span>
            <p className="text-ink font-medium">{student.studentId}</p>
           </div>
           <div>
-           <span className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'التخصص' : 'Major'}</span>
+           <span className="text-slate-500 dark:text-slate-400 ">{t('inline.student-profile-modal.major')}</span>
            <p className="text-ink font-medium">{student.major || '—'}</p>
           </div>
           <div>
-           <span className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'البريد الإلكتروني' : 'Email'}</span>
+           <span className="text-slate-500 dark:text-slate-400 ">{t('inline.student-profile-modal.email')}</span>
            <p className="text-ink font-medium">{student.email || '—'}</p>
           </div>
           {student.linkedin && (
@@ -138,8 +138,8 @@ function StudentProfileModal({ student, isOpen, onClose }) {
           )}
           {student.createdAt && (
            <div className="col-span-2">
-            <span className="text-slate-500 dark:text-slate-400 ">{isArabic ? 'تاريخ التسجيل' : 'Registered'}</span>
-            <p className="text-ink font-medium">{new Date(student.createdAt).toLocaleDateString(isArabic ? 'ar' : 'en')}</p>
+            <span className="text-slate-500 dark:text-slate-400 ">{t('inline.student-profile-modal.registered')}</span>
+            <p className="text-ink font-medium">{new Date(student.createdAt).toLocaleDateString(t('inline.student-profile-modal.en'))}</p>
            </div>
           )}
          </div>
@@ -150,24 +150,24 @@ function StudentProfileModal({ student, isOpen, onClose }) {
          <div className="glass rounded-xl p-3 border border-white/10 text-center">
           <FiEye size={20} className="mx-auto text-violet-500 mb-1" />
           <p className="text-xl font-bold text-ink">{stats.viewed?.length || 0}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 ">{isArabic ? 'مشاهدة' : 'Viewed'}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 ">{t('inline.student-profile-modal.viewed')}</p>
          </div>
          <div className="glass rounded-xl p-3 border border-white/10 text-center">
           <FiHeart size={20} className="mx-auto text-rose-500 mb-1" />
           <p className="text-xl font-bold text-ink">{favorites.length}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 ">{isArabic ? 'مفضلة' : 'Favorites'}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 ">{t('inline.student-profile-modal.favorites')}</p>
          </div>
          <div className="glass rounded-xl p-3 border border-white/10 text-center">
           <FiStar size={20} className="mx-auto text-amber-500 mb-1" />
           <p className="text-xl font-bold text-ink">{ratingsCount}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 ">{isArabic ? 'تقييم' : 'Ratings'}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 ">{t('inline.student-profile-modal.ratings')}</p>
          </div>
          <div className="glass rounded-xl p-3 border border-white/10 text-center">
           <FiClock size={20} className="mx-auto text-cyan-500 mb-1" />
           <p className="text-sm font-bold text-ink">
-           {stats.lastVisit ? new Date(stats.lastVisit).toLocaleDateString(isArabic ? 'ar' : 'en') : '—'}
+           {stats.lastVisit ? new Date(stats.lastVisit).toLocaleDateString(t('inline.student-profile-modal.en')) : '—'}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 ">{isArabic ? 'آخر زيارة' : 'Last Visit'}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 ">{t('inline.student-profile-modal.last-visit')}</p>
          </div>
         </div>
 
@@ -175,7 +175,7 @@ function StudentProfileModal({ student, isOpen, onClose }) {
         {ratingsCount > 0 && (
          <div className="glass rounded-xl p-4 border border-white/10">
           <div className="flex items-center justify-between">
-           <span className="text-sm text-slate-500 dark:text-slate-400 ">{isArabic ? 'متوسط التقييم' : 'Average Rating'}</span>
+           <span className="text-sm text-slate-500 dark:text-slate-400 ">{t('inline.student-profile-modal.average-rating')}</span>
            <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-amber-500">{avgRating}</span>
             <FiStar size={16} className="text-amber-500 fill-amber-500" />
@@ -200,10 +200,10 @@ function StudentProfileModal({ student, isOpen, onClose }) {
         <div className="glass rounded-xl p-4 border border-white/10">
          <h3 className="text-sm font-semibold text-ink mb-3 flex items-center gap-2">
           <FiClock size={14} className="text-royal-500" />
-          {isArabic ? 'سجل النشاط' : 'Activity Log'}
+          {t('inline.student-profile-modal.activity-log')}
          </h3>
          {logs.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">{isArabic ? 'لا يوجد نشاط' : 'No activity yet'}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">{t('inline.student-profile-modal.no-activity-yet')}</p>
          ) : (
           <div className="space-y-2 max-h-64 overflow-y-auto">
            {logs.slice(0, 30).map((log) => {
@@ -219,7 +219,7 @@ function StudentProfileModal({ student, isOpen, onClose }) {
                {log.detail && <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{log.detail}</p>}
               </div>
               <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
-               {new Date(log.timestamp).toLocaleString(isArabic ? 'ar' : 'en')}
+               {new Date(log.timestamp).toLocaleString(t('inline.student-profile-modal.en'))}
               </span>
              </div>
             )

@@ -28,9 +28,7 @@ const responseTimes = [
 ]
 
 function buildWhatsAppLink(isArabic) {
- const message = isArabic
-  ? 'مرحباً! أنا أستخدم منصة AL-Azher IT Hub وأحتاج مساعدة في حل مشكلة:'
-  : 'Hello! I\'m using the AL-Azher IT Hub platform and I need help with an issue:'
+ const message = t('inline.contact.hello-i-m-using')
  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
 }
 
@@ -72,8 +70,8 @@ export default function Contact() {
 
  const contactInfo = [
   { icon: FiUser, text: t('contact.info.address'), gradient: 'from-royal-500 to-cyan-500' },
-  { icon: FiPhone, text: t('contact.info.phone'), sublabel: isArabic ? 'متاح في أوقات العمل' : 'Available during work hours', gradient: 'from-emerald-500 to-teal-500' },
-  { icon: FiMail, text: t('contact.info.email'), sublabel: isArabic ? 'نرد خلال 24 ساعة' : 'We reply within 24h', gradient: 'from-violet-500 to-purple-500' },
+  { icon: FiPhone, text: t('contact.info.phone'), sublabel: t('inline.contact.available-during-work-hours'), gradient: 'from-emerald-500 to-teal-500' },
+  { icon: FiMail, text: t('contact.info.email'), sublabel: t('inline.contact.we-reply-within-24h'), gradient: 'from-violet-500 to-purple-500' },
  ]
 
  return (
@@ -95,7 +93,7 @@ export default function Contact() {
       className="inline-flex items-center gap-2 px-4 py-2 glass rounded-full text-sm font-medium text-royal-600 dark:text-cyan-400 mb-6"
      >
       <FiMessageSquare size={16} />
-      {isArabic ? 'نحن هنا لمساعدتك' : "We're here to help"}
+      {t('inline.contact.we-re-here-to')}
      </motion.div>
 
      <motion.h1
@@ -104,8 +102,8 @@ export default function Contact() {
       transition={{ duration: 0.6, delay: 0.1 }}
       className="text-4xl md:text-5xl lg:text-6xl font-bold text-ink mb-4"
      >
-      {isArabic ? 'تواصل' : 'Get in'}{' '}
-      <span className="gradient-text-spatial">{isArabic ? 'معنا' : 'Touch'}</span>
+      {t('inline.contact.get-in')}{' '}
+      <span className="gradient-text-spatial">{t('inline.contact.touch')}</span>
      </motion.h1>
 
      <motion.p
@@ -151,7 +149,7 @@ export default function Contact() {
         </div>
         <div>
          <h2 className="text-xl font-bold text-ink">{t('contact.form.send')}</h2>
-         <p className="text-sm text-slate-500 dark:text-white/50">{isArabic ? 'نرد على رسائلك بسرعة!' : 'We respond quickly!'}</p>
+         <p className="text-sm text-slate-500 dark:text-white/50">{t('inline.contact.we-respond-quickly')}</p>
         </div>
        </div>
 
@@ -178,18 +176,16 @@ export default function Contact() {
            <FiCheck className="text-4xl text-emerald-500 dark:text-emerald-400" />
           </div>
           <h3 className="text-2xl font-bold text-ink mb-2">
-           {isArabic ? 'تم الإرسال بنجاح!' : 'Message Sent!'}
+           {t('inline.contact.message-sent')}
           </h3>
           <p className="text-slate-500 dark:text-white/50 max-w-md mx-auto">
-           {isArabic
-            ? 'يجب أن يفتح بريدك الإلكتروني. إذا لم يحدث، أرسل لنا على abdallhalghoul200@gmail.com'
-            : 'Your email client should open. If not, email us at abdallhalghoul200@gmail.com'}
+           {t('inline.contact.your-email-client-should')}
           </p>
           <button
            onClick={() => setSent(false)}
            className="mt-6 inline-flex items-center gap-2 text-accent font-medium hover:underline"
           >
-           {isArabic ? 'إرسال رسالة أخرى' : 'Send another message'}
+           {t('inline.contact.send-another-message')}
            {isArabic ? <FiArrowLeft size={16} /> : <FiArrowRight size={16} />}
           </button>
          </motion.div>
@@ -284,19 +280,19 @@ export default function Contact() {
              onFocus={() => setFocusedField('message')}
              onBlur={() => setFocusedField(null)}
              className={`input-spatial w-full rounded-xl ps-11 pe-4 py-3.5 text-ink placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none resize-none transition-all duration-200 ${focusedField === 'message' ? 'ring-2 ring-royal-500/50 dark:ring-cyan-400/50' : ''}`}
-             dir={isArabic ? 'rtl' : 'ltr'}
+             dir={t('inline.contact.ltr')}
             />
            </div>
            <div className="flex justify-between items-center mt-2">
             <div className="text-xs text-slate-500 dark:text-white/60">
              {messageLen > 0 && (
               <span className={messageLen > 500 ? 'text-amber-600 dark:text-amber-400' : ''}>
-               {messageLen} {isArabic ? 'حرف' : 'chars'}
+               {messageLen} {t('inline.contact.chars')}
               </span>
              )}
             </div>
             {messageLen > 500 && (
-             <span className="text-xs text-amber-600 dark:text-amber-400">{isArabic ? 'رسالة طويلة' : 'Long message'}</span>
+             <span className="text-xs text-amber-600 dark:text-amber-400">{t('inline.contact.long-message')}</span>
             )}
            </div>
           </div>
@@ -318,7 +314,7 @@ export default function Contact() {
             </>
            )}
            <span className="relative z-10">
-            {submitting ? (isArabic ? 'جاري الإرسال...' : 'Sending...') : t('contact.form.send')}
+            {submitting ? (t('inline.contact.sending')) : t('contact.form.send')}
            </span>
           </motion.button>
          </motion.form>
@@ -355,7 +351,7 @@ export default function Contact() {
            <a
             href={`mailto:${info.text}`}
             className="p-2 rounded-lg text-slate-400 hover:text-royal-500 dark:hover:text-cyan-400 hover:bg-royal-50 dark:hover:bg-cyan-500/10 transition-all"
-            aria-label={isArabic ? 'إرسال بريد' : 'Send email'}
+            aria-label={t('inline.contact.send-email')}
            >
             <FiArrowRight size={16} className={isArabic ? 'rotate-180' : ''} />
            </a>
@@ -379,8 +375,8 @@ export default function Contact() {
          <FaWhatsapp size={26} />
         </div>
         <div className="flex-1 min-w-0">
-         <h3 className="font-bold text-ink">{isArabic ? 'تواصل عبر واتساب' : 'WhatsApp Us'}</h3>
-         <p className="text-sm text-slate-500 dark:text-white/60">{isArabic ? 'الرد الأسرع والأسهل — اضغط وابدأ المحادثة' : 'Fastest and easiest — tap to start chatting'}</p>
+         <h3 className="font-bold text-ink">{t('inline.contact.whatsapp-us')}</h3>
+         <p className="text-sm text-slate-500 dark:text-white/60">{t('inline.contact.fastest-and-easiest-tap')}</p>
         </div>
         <a
          href={buildWhatsAppLink(isArabic)}
@@ -389,18 +385,18 @@ export default function Contact() {
          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition flex-shrink-0 shadow-lg shadow-emerald-500/25"
         >
          <FaWhatsapp size={16} />
-         {isArabic ? 'ابدأ المحادثة' : 'Start chat'}
+         {t('inline.contact.start-chat')}
         </a>
        </div>
        <p className="relative mt-3 text-xs text-slate-400 dark:text-white/40">
-        {isArabic ? 'ستُفتح رسالة جاهزة: "أنا من منصة AL-Azher IT Hub وأحتاج مساعدة في حل مشكلة..."' : 'A ready message will open: "I\'m from AL-Azher IT Hub and need help with an issue..."'}
+        {t('inline.contact.a-ready-message-will')}
        </p>
       </motion.div>
 
       {/* Social Links */}
       <motion.div variants={itemVariants} className="glass rounded-xl p-6">
        <h3 className="text-lg font-bold text-ink mb-4">
-        {isArabic ? 'تابعنا' : 'Follow Us'}
+        {t('inline.contact.follow-us')}
        </h3>
        <div className="grid grid-cols-2 gap-3">
         {socialLinks.map((social, idx) => (
@@ -423,13 +419,13 @@ export default function Contact() {
       {/* Quick Response */}
       <motion.div variants={itemVariants} className="glass rounded-xl p-6">
        <h3 className="text-lg font-bold text-ink mb-4">
-        {isArabic ? 'الاستجابة السريعة' : 'Quick Response'}
+        {t('inline.contact.quick-response')}
        </h3>
        <div className="space-y-3">
         {[
-         { icon: FiCheck, text: isArabic ? 'رد خلال 24 ساعة' : 'Reply within 24 hours' },
-         { icon: FiCheck, text: isArabic ? 'دعم فني متخصص' : 'Dedicated tech support' },
-         { icon: FiCheck, text: isArabic ? 'حل المشاكل العاجلة' : 'Urgent issue resolution' },
+         { icon: FiCheck, text: t('inline.contact.reply-within-24-hours') },
+         { icon: FiCheck, text: t('inline.contact.dedicated-tech-support') },
+         { icon: FiCheck, text: t('inline.contact.urgent-issue-resolution') },
         ].map((item, idx) => (
          <div key={idx} className="flex items-center gap-3">
           <div className="w-6 h-6 rounded-full bg-emerald-500/10 dark:bg-emerald-400/10 flex items-center justify-center flex-shrink-0">

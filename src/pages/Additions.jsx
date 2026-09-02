@@ -311,7 +311,7 @@ export default function Additions() {
            <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${types.find(t => t.key === item.type)?.color || 'bg-slate-500'}`}>
             {typeLabels[item.type]}
            </span>
-           <button onClick={() => removeItem(item.id)} aria-label={isArabic ? 'حذف' : 'Delete'} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
+           <button onClick={() => removeItem(item.id)} aria-label={t('inline.additions.delete')} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
             <FiTrash2 size={14} />
            </button>
           </div>
@@ -391,7 +391,7 @@ export default function Additions() {
                   <p className="text-sm text-slate-600 dark:text-slate-300 mt-0.5">{c.text}</p>
                  </div>
                   {(c.isMine || isAdmin) && (
-                  <button onClick={() => handleDeleteComment(item.id, c.id)} aria-label={isArabic ? 'حذف التعليق' : 'Delete comment'} className="p-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-400 hover:text-red-500 transition-colors shrink-0">
+                  <button onClick={() => handleDeleteComment(item.id, c.id)} aria-label={t('inline.additions.delete-comment')} className="p-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-400 hover:text-red-500 transition-colors shrink-0">
                    <FiTrash2 size={12} />
                   </button>
                  )}
@@ -436,8 +436,8 @@ export default function Additions() {
     isOpen={!!confirmDelete}
     onClose={() => setConfirmDelete(null)}
     onConfirm={performDeleteComment}
-    title={isArabic ? 'حذف التعليق' : 'Delete comment'}
-    message={isArabic ? 'هل أنت متأكد من حذف هذا التعليق؟ لا يمكن التراجع.' : 'Are you sure you want to delete this comment? This cannot be undone.'}
+    title={t('inline.additions.delete-comment')}
+    message={t('inline.additions.are-you-sure-you')}
    />
   </>
  )

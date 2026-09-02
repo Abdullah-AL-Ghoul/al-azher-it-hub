@@ -13,11 +13,12 @@ import AuthSuccessAnimation from '../components/auth/AuthSuccessAnimation'
 import SocialAuth from '../components/auth/SocialAuth'
 
 function PasswordStrength({ password, isArabic }) {
+ const { t } = useLanguage()
  const criteria = [
-  { test: (p) => p.length >= 8, label: isArabic ? '8 أحرف على الأقل' : 'At least 8 characters' },
-  { test: (p) => /[A-Z]/.test(p), label: isArabic ? 'حرف كبير (A-Z)' : 'Uppercase letter (A-Z)' },
-  { test: (p) => /[0-9]/.test(p), label: isArabic ? 'رقم (0-9)' : 'Number (0-9)' },
-  { test: (p) => /[^A-Za-z0-9]/.test(p), label: isArabic ? 'رمز خاص (!@#$...)' : 'Special character (!@#$...)' },
+  { test: (p) => p.length >= 8, label: t('inline.signup.at-least-8-characters') },
+  { test: (p) => /[A-Z]/.test(p), label: t('inline.signup.uppercase-letter-a-z') },
+  { test: (p) => /[0-9]/.test(p), label: t('inline.signup.number-0-9') },
+  { test: (p) => /[^A-Za-z0-9]/.test(p), label: t('inline.signup.special-character') },
  ]
 
  let score = 0
@@ -26,11 +27,11 @@ function PasswordStrength({ password, isArabic }) {
  }
 
  const levels = [
-  { label: isArabic ? 'ضعيفة' : 'Weak', color: 'bg-red-500', width: '20%', textColor: 'text-red-400' },
-  { label: isArabic ? 'متوسطة' : 'Fair', color: 'bg-amber-500', width: '40%', textColor: 'text-amber-400' },
-  { label: isArabic ? 'جيدة' : 'Good', color: 'bg-yellow-400', width: '60%', textColor: 'text-yellow-400' },
-  { label: isArabic ? 'قوية' : 'Strong', color: 'bg-emerald-500', width: '80%', textColor: 'text-emerald-400' },
-  { label: isArabic ? 'قوية جداً' : 'Very Strong', color: 'bg-emerald-400', width: '100%', textColor: 'text-emerald-400' },
+  { label: t('inline.signup.weak'), color: 'bg-red-500', width: '20%', textColor: 'text-red-400' },
+  { label: t('inline.signup.fair'), color: 'bg-amber-500', width: '40%', textColor: 'text-amber-400' },
+  { label: t('inline.signup.good'), color: 'bg-yellow-400', width: '60%', textColor: 'text-yellow-400' },
+  { label: t('inline.signup.strong'), color: 'bg-emerald-500', width: '80%', textColor: 'text-emerald-400' },
+  { label: t('inline.signup.very-strong'), color: 'bg-emerald-400', width: '100%', textColor: 'text-emerald-400' },
  ]
 
  if (!password) return null
@@ -100,12 +101,12 @@ export default function Signup() {
   e.preventDefault()
   setError('')
   if (!form.name.trim() || !form.studentId.trim()) {
-   setError(isArabic ? 'أدخل الاسم الكامل والرقم الجامعي' : 'Enter your full name and university ID')
+   setError(t('inline.signup.enter-your-full-name'))
    return
   }
   const normalizedId = form.studentId.trim()
   if (normalizedId.length < 3) {
-   setError(isArabic ? 'الرقم الجامعي قصير جداً (3 أحرف على الأقل)' : 'University ID is too short (min 3 characters)')
+   setError(t('inline.signup.university-id-is-too'))
    return
   }
   if (form.password !== form.confirmPassword) {
@@ -141,13 +142,11 @@ export default function Signup() {
   } else if (result.error === 'EMAIL_RATE_LIMIT') {
    setError(t('signup.error.rateLimit'))
   } else if (result.error === 'EMAIL_EXISTS') {
-   setError(isArabic
-    ? 'هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول أو استخدم بريداً آخر.'
-    : 'This email is already registered. Try signing in or use a different email.')
+   setError(t('inline.signup.this-email-is-already'))
   } else if (result.error === 'PASSWORD_TOO_SHORT') {
    setError(t('forgotPassword.passwordMin8'))
   } else if (result.error === 'REGISTER_FAILED') {
-   setError(isArabic ? 'حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.' : 'An error occurred while creating the account. Try again.')
+   setError(t('inline.signup.an-error-occurred-while'))
   } else {
    setError(t('signup.error.generic'))
   }
@@ -168,7 +167,7 @@ export default function Signup() {
     isArabic={isArabic}
    />
 
-   <AuthAlert type="success" message={needsConfirmation ? t('signup.checkEmail') : (isArabic ? 'تم إنشاء الحساب بنجاح!' : 'Account created successfully!')} show={showSuccess} />
+   <AuthAlert type="success" message={needsConfirmation ? t('signup.checkEmail') : (t('inline.signup.account-created-successfully'))} show={showSuccess} />
    <AuthAlert type="error" message={error} show={!showSuccess && !!error} />
 
    {!showSuccess && (
@@ -236,7 +235,7 @@ export default function Signup() {
        </AnimatePresence>
        {form.password && form.password.length < 8 && (
         <p id="signup-password-hint" className="text-xs text-amber-400/80 mt-1 ms-1">
-         {isArabic ? '8 أحرف على الأقل' : 'At least 8 characters'}
+         {t('inline.signup.at-least-8-characters')}
         </p>
        )}
       </motion.div>

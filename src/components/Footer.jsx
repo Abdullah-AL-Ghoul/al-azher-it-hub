@@ -77,22 +77,22 @@ export default memo(function Footer() {
       <div className="flex items-center gap-3">
         <a href="https://www.linkedin.com/in/abdullah-al-ghoul-a254763a6/" target="_blank" rel="noopener noreferrer"
          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/20 border border-black/8 dark:border-white/10 hover:border-royal-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-royal-500 dark:hover:text-royal-400 transition-colors duration-300"
-         aria-label={isArabic ? 'لينكد إن - LinkedIn' : 'LinkedIn'}>
+         aria-label={t('inline.footer.linkedin')}>
         <FiLinkedin size={18} />
        </a>
        <a href="mailto:abdallhalghoul200@gmail.com"
          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/20 border border-black/8 dark:border-white/10 hover:border-royal-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors duration-300"
-         aria-label={isArabic ? 'البريد الإلكتروني - Email' : 'Email'}>
+         aria-label={t('inline.footer.email')}>
         <FiMail size={18} />
        </a>
        <a href="https://wa.me/970592127061" target="_blank" rel="noopener noreferrer"
          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-emerald-500/20 border border-black/8 dark:border-white/10 hover:border-emerald-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors duration-300"
-         aria-label={isArabic ? 'واتساب - WhatsApp' : 'WhatsApp'}>
+         aria-label={t('inline.footer.whatsapp')}>
         <FaWhatsapp size={18} />
        </a>
        <a href="tel:+970592127061"
          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-amber-500/20 border border-black/8 dark:border-white/10 hover:border-amber-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors duration-300"
-         aria-label={isArabic ? 'الهاتف - Phone' : 'Phone'}>
+         aria-label={t('inline.footer.phone')}>
         <FiPhone size={18} />
        </a>
       </div>

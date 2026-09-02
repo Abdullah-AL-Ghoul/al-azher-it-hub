@@ -1,7 +1,9 @@
 ﻿import { memo } from 'react'
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+import { useLanguage } from '../../context/LanguageContext'
 
 function Pagination({ page, totalPages, totalItems, onPageChange, isArabic }) {
+ const { t } = useLanguage()
  if (totalPages <= 1) return null
 
  return (
@@ -10,7 +12,7 @@ function Pagination({ page, totalPages, totalItems, onPageChange, isArabic }) {
     onClick={() => onPageChange(page - 1)}
     disabled={page <= 1}
     className="p-2 glass text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition"
-    aria-label={isArabic ? 'السابق' : 'Previous'}
+    aria-label={t('inline.pagination.previous')}
    >
     {isArabic ? <FiChevronRight size={16} /> : <FiChevronLeft size={16} />}
    </button>
@@ -21,12 +23,12 @@ function Pagination({ page, totalPages, totalItems, onPageChange, isArabic }) {
     onClick={() => onPageChange(page + 1)}
     disabled={page >= totalPages}
     className="p-2 glass text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition"
-    aria-label={isArabic ? 'التالي' : 'Next'}
+    aria-label={t('inline.pagination.next')}
    >
     {isArabic ? <FiChevronLeft size={16} /> : <FiChevronRight size={16} />}
    </button>
    <span className="text-xs text-slate-500 dark:text-slate-400 ms-2">
-    ({totalItems} {isArabic ? 'عنصر' : 'items'})
+    ({totalItems} {t('inline.pagination.items')})
    </span>
   </div>
  )

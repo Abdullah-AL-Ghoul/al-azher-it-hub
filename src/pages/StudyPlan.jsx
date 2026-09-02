@@ -206,7 +206,7 @@ export default function StudyPlan() {
        <div key={item.id} className="glass rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
          <span className="text-xs text-slate-500 dark:text-slate-400">{t('studyPlan.newLink')}</span>
-         <button onClick={() => removeItem(item.id)} aria-label={isArabic ? 'حذف' : 'Delete'} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
+         <button onClick={() => removeItem(item.id)} aria-label={t('inline.study-plan.delete')} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
           <FiTrash2 size={14} />
          </button>
         </div>
@@ -261,7 +261,7 @@ export default function StudyPlan() {
     onClose={() => setConfirmDeleteId(null)}
     onConfirm={() => { if (confirmDeleteId) persistDelete(confirmDeleteId) }}
     title={t('common.delete')}
-    message={isArabic ? 'هل أنت متأكد من حذف هذا الرابط من الخطة الدراسية؟' : 'Are you sure you want to remove this link from the study plan?'}
+    message={t('inline.study-plan.are-you-sure-you')}
    />
   </motion.div>
  )

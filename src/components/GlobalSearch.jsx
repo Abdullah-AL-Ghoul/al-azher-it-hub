@@ -204,8 +204,8 @@ export default function GlobalSearch({ autoOpen = false }) {
    <button
     onClick={openModal}
     className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-600 dark:text-white/60 hover:text-ink hover:bg-black/5 dark:hover:bg-white/10 transition"
-    title={isArabic ? 'بحث (Ctrl+K)' : 'Search (Ctrl+K)'}
-    aria-label={isArabic ? 'بحث عالمي' : 'Global search'}
+    title={t('inline.global-search.search-ctrl-k')}
+    aria-label={t('inline.global-search.global-search')}
    >
     <FiSearch size={18} />
    </button>
@@ -218,7 +218,7 @@ export default function GlobalSearch({ autoOpen = false }) {
       onClick={closeModal}
       role="dialog"
       aria-modal="true"
-      aria-label={isArabic ? 'بحث عالمي' : 'Global search'}
+      aria-label={t('inline.global-search.global-search')}
      >
       <motion.div
        {...modalContent}
@@ -233,14 +233,14 @@ export default function GlobalSearch({ autoOpen = false }) {
          value={query}
          onChange={e => setQuery(e.target.value)}
          onKeyDown={handleKeyDown}
-         placeholder={isArabic ? 'ابحث عن محاضرة، مصدر، صفحة...' : 'Search lectures, sources, pages...'}
+         placeholder={t('inline.global-search.search-lectures-sources-pages')}
          className="flex-1 bg-transparent text-ink placeholder-slate-400 dark:placeholder-white/40 text-sm outline-none"
          autoComplete="off"
          role="combobox"
          aria-expanded="true"
          aria-controls="global-search-results"
          aria-autocomplete="list"
-         aria-label={isArabic ? 'بحث عالمي' : 'Global search'}
+         aria-label={t('inline.global-search.global-search')}
         />
         <button onClick={closeModal} className="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors" aria-label={t('common.close')}>
          <FiX size={16} className="text-slate-400 dark:text-white/40" />
@@ -250,7 +250,7 @@ export default function GlobalSearch({ autoOpen = false }) {
        <div ref={listRef} className="max-h-[60vh] overflow-y-auto overscroll-contain">
         {loading && query.trim() && (
          <div className="py-10 text-center text-sm text-slate-400 dark:text-white/40">
-          {isArabic ? 'جارٍ البحث...' : 'Searching...'}
+          {t('inline.global-search.searching')}
          </div>
         )}
 
@@ -258,7 +258,7 @@ export default function GlobalSearch({ autoOpen = false }) {
          <div className="py-10 text-center">
           <FiSearch size={32} className="mx-auto mb-3 text-slate-300 dark:text-white/20" />
           <p className="text-sm text-slate-400 dark:text-white/40">
-           {isArabic ? 'لا توجد نتائج' : 'No results found'}
+           {t('inline.global-search.no-results-found')}
           </p>
          </div>
         )}
@@ -267,17 +267,17 @@ export default function GlobalSearch({ autoOpen = false }) {
          <div className="py-10 text-center">
           <FiSearch size={32} className="mx-auto mb-3 text-slate-300 dark:text-white/20" />
           <p className="text-sm text-slate-400 dark:text-white/40">
-           {isArabic ? 'ابدأ الكتابة للبحث' : 'Start typing to search'}
+           {t('inline.global-search.start-typing-to-search')}
           </p>
           <div className="flex items-center justify-center gap-1 mt-2 text-xs text-slate-400 dark:text-white/30">
            <kbd className="px-1.5 py-0.5 bg-black/5 dark:bg-white/5 rounded text-[10px] font-mono">Ctrl+K</kbd>
-           <span>{isArabic ? 'للفتح' : 'to open'}</span>
+           <span>{t('inline.global-search.to-open')}</span>
           </div>
          </div>
         )}
 
         {results.length > 0 && (
-         <div id="global-search-results" role="listbox" aria-label={isArabic ? 'نتائج البحث' : 'Search results'} className="py-2">
+         <div id="global-search-results" role="listbox" aria-label={t('inline.global-search.search-results')} className="py-2">
           {results.map((item, i) => {
            const Icon = typeIcons[item.type]
            return (
@@ -309,7 +309,7 @@ export default function GlobalSearch({ autoOpen = false }) {
               )}
              </div>
              <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-white/30 font-medium shrink-0">
-              {item.type === 'lecture' ? (isArabic ? 'محاضرة' : 'Lecture') : item.type === 'source' ? (isArabic ? 'مصدر' : 'Source') : item.type === 'addition' ? (isArabic ? 'إضافة' : 'Addition') : (isArabic ? 'صفحة' : 'Page')}
+              {item.type === 'lecture' ? (t('inline.global-search.lecture')) : item.type === 'source' ? (t('inline.global-search.source')) : item.type === 'addition' ? (t('inline.global-search.addition')) : (t('inline.global-search.page'))}
              </span>
             </button>
            )
@@ -320,12 +320,12 @@ export default function GlobalSearch({ autoOpen = false }) {
 
        <div className="flex items-center justify-between px-4 py-2 border-t border-slate-200 dark:border-white/10 text-[10px] text-slate-500 dark:text-white/50">
         <div className="flex items-center gap-2">
-         <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">↑↓</kbd> {isArabic ? 'تنقل' : 'navigate'}</span>
-         <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">↵</kbd> {isArabic ? 'اختيار' : 'select'}</span>
-         <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">esc</kbd> {isArabic ? 'إغلاق' : 'close'}</span>
+         <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">↑↓</kbd> {t('inline.global-search.navigate')}</span>
+         <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">↵</kbd> {t('inline.global-search.select')}</span>
+         <span><kbd className="px-1 py-0.5 bg-black/5 dark:bg-white/5 rounded font-mono">esc</kbd> {t('inline.global-search.close')}</span>
         </div>
         {results.length > 0 && (
-         <span>{results.length} {isArabic ? 'نتيجة' : 'results'}</span>
+         <span>{results.length} {t('inline.global-search.results')}</span>
         )}
        </div>
       </motion.div>

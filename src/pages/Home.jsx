@@ -164,7 +164,7 @@ export default function Home() {
           </h1>
           {userStats.lastVisit && (
            <p className="text-sm text-slate-500 dark:text-white/50 mt-1">
-            {isArabic ? 'آخر زيارة' : 'Last visit'}: {new Date(userStats.lastVisit).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            {t('inline.home.last-visit')}: {new Date(userStats.lastVisit).toLocaleDateString(t('inline.home.en-us'), { year: 'numeric', month: 'long', day: 'numeric' })}
            </p>
           )}
          </div>
@@ -173,7 +173,7 @@ export default function Home() {
          to="/profile"
          className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl btn-spatial text-sm font-medium"
         >
-         {isArabic ? 'الملف الشخصي' : 'Profile'} <FiChevronLeft size={16} className={isArabic ? '' : 'rotate-180'} />
+         {t('inline.home.profile')} <FiChevronLeft size={16} className={isArabic ? '' : 'rotate-180'} />
         </Link>
        </div>
       </div>
@@ -194,10 +194,10 @@ export default function Home() {
       <div className="flex items-center justify-between mb-6">
        <h2 className="text-2xl md:text-3xl font-bold gradient-text-spatial flex items-center gap-2">
         <FiPlay size={24} className="text-accent" />
-        {isArabic ? 'متابعة المشاهدة' : 'Continue watching'}
+        {t('inline.home.continue-watching')}
        </h2>
        <Link to="/lectures" className="text-accent hover:text-royal-600 dark:hover:text-cyan-300 font-medium text-sm transition-colors flex items-center gap-1">
-        {isArabic ? 'عرض الكل' : 'View all'} <FiArrowLeft className={isArabic ? '' : 'rotate-180'} />
+        {t('inline.home.view-all')} <FiArrowLeft className={isArabic ? '' : 'rotate-180'} />
        </Link>
       </div>
       <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -215,7 +215,7 @@ export default function Home() {
              </div>
             </div>
             <span className="absolute top-2 end-2 px-2 py-0.5 bg-black/55 backdrop-blur-sm rounded-full text-[10px] text-white font-medium border border-white/15">
-             {isArabic ? 'أكمل' : 'Resume'}
+             {t('inline.home.resume')}
             </span>
            </div>
            <div className="p-3">
@@ -243,10 +243,10 @@ export default function Home() {
      <div className="container-page">
       <div className="flex items-center gap-2 mb-8">
        <FiBookOpen size={22} className="text-emerald-500 dark:text-emerald-400" />
-       <h2 className="text-2xl md:text-3xl font-bold gradient-text-spatial">{isArabic ? 'تقدمك في المواد' : 'Your subject progress'}</h2>
+       <h2 className="text-2xl md:text-3xl font-bold gradient-text-spatial">{t('inline.home.your-subject-progress')}</h2>
        <span className="ms-3 hidden sm:inline-flex items-center gap-1 text-[10px] tracking-widest uppercase font-semibold text-slate-500 dark:text-white/40">
         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        {isArabic ? 'شريط تقدم تفاعلي' : 'Tape timeline'}
+        {t('inline.home.tape-timeline')}
        </span>
       </div>
       <div className="relative">
@@ -282,7 +282,7 @@ export default function Home() {
             />
             {pct > 0 && pct < 100 && <span className="absolute inset-y-0 w-px bg-white/60" style={{ insetInlineStart: `${pct}%` }} />}
            </div>
-           <p className="text-xs text-slate-500 dark:text-white/50 mt-2.5 tabular-nums">{isArabic ? `${sp.watched} من ${sp.total} محاضرة` : `${sp.watched} of ${sp.total} lectures`} {done && (isArabic ? '· مكتمل' : '· done')}</p>
+           <p className="text-xs text-slate-500 dark:text-white/50 mt-2.5 tabular-nums">{isArabic ? `${sp.watched} من ${sp.total} محاضرة` : `${sp.watched} of ${sp.total} lectures`} {done && (t('inline.home.done'))}</p>
           </motion.div>
          )
         })}
@@ -302,7 +302,7 @@ export default function Home() {
         { icon: FiLink, value: sources.length, label: t('home.stats.totalSources'), gradient: 'from-emerald-500 to-cyan-500' },
         { icon: FiEye, value: viewed?.length || 0, label: t('home.stats.watched'), gradient: 'from-cyan-500 to-royal-600' },
         { icon: FiHeart, value: favorites.length, label: t('home.stats.favorites'), gradient: 'from-rose-500 to-pink-500' },
-        { icon: FiGrid, value: materialsCount, label: isArabic ? 'عدد المواد' : 'Materials', gradient: 'from-amber-500 to-orange-500' },
+        { icon: FiGrid, value: materialsCount, label: t('inline.home.materials'), gradient: 'from-amber-500 to-orange-500' },
        ].map((stat, i) => {
         const Icon = stat.icon
         return (
@@ -340,14 +340,14 @@ export default function Home() {
     >
      <div className="container-page mb-6">
       <div className="flex items-center justify-between">
-       <h2 className="text-2xl md:text-3xl font-bold gradient-text-spatial">{isArabic ? 'آخر الإضافات' : 'Latest Additions'}</h2>
+       <h2 className="text-2xl md:text-3xl font-bold gradient-text-spatial">{t('inline.home.latest-additions')}</h2>
        <Link to="/additions" className="text-accent hover:text-royal-600 dark:hover:text-cyan-300 font-medium text-sm transition-colors flex items-center gap-1">
-        {isArabic ? 'عرض الكل' : 'View All'} <FiArrowLeft className={isArabic ? '' : 'rotate-180'} />
+        {t('inline.home.view-all')} <FiArrowLeft className={isArabic ? '' : 'rotate-180'} />
        </Link>
       </div>
      </div>
       <div className="relative">
-       <div tabIndex={0} role="region" aria-label={isArabic ? 'آخر الإضافات' : 'Latest additions'} className="flex gap-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500/50 rounded-xl">
+       <div tabIndex={0} role="region" aria-label={t('inline.home.latest-additions')} className="flex gap-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500/50 rounded-xl">
        {latestAdditions.map((addition, i) => {
         const typeConf = additionTypeConfig[addition.type] || additionTypeConfig.post
         const TypeIcon = typeConf.icon
@@ -377,7 +377,7 @@ export default function Home() {
             </span>
             {addition.createdAt && (
              <span className="ms-auto text-[10px] text-slate-400 dark:text-white/30">
-              {new Date(addition.createdAt).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short' })}
+              {new Date(addition.createdAt).toLocaleDateString(t('inline.home.en-us'), { day: 'numeric', month: 'short' })}
              </span>
             )}
            </div>
@@ -507,10 +507,10 @@ export default function Home() {
       <p className="relative text-slate-500 dark:text-white/60 text-lg mb-8 max-w-2xl mx-auto">{t('home.cta.subtitle')}</p>
       <div className="relative flex flex-col sm:flex-row gap-3 justify-center">
        <Link to="/lectures" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl btn-spatial font-semibold text-[15px] shadow-lg shadow-royal-500/20">
-        <FiVideo size={16} /> {isArabic ? 'ابدأ التعلم الآن' : 'Start Learning Now'}
+        <FiVideo size={16} /> {t('inline.home.start-learning-now')}
        </Link>
        <Link to="/contact" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl glass font-semibold text-[15px] text-ink">
-        <FiSend size={16} /> {isArabic ? 'تواصل معنا' : 'Contact Us'}
+        <FiSend size={16} /> {t('inline.home.contact-us')}
        </Link>
       </div>
      </motion.div>

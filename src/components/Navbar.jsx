@@ -81,7 +81,7 @@ export default memo(function Navbar() {
     <>
       <div ref={progressRef} className="scroll-progress" style={{ width: '0%' }} />
 
-      <nav aria-label={isArabic ? 'التنقل الرئيسي' : 'Primary navigation'} className={`fixed top-0 inset-x-0 z-50 transition duration-300 ${navBg}`}>
+      <nav aria-label={t('inline.navbar.primary-navigation')} className={`fixed top-0 inset-x-0 z-50 transition duration-300 ${navBg}`}>
         <div className="container-page">
           <div className="flex items-center justify-between h-16 md:h-20">
             <Link to="/home" className="flex items-center gap-2 group">
@@ -152,8 +152,8 @@ export default memo(function Navbar() {
                   <button
                     onClick={() => { setShowNotifications(!showNotifications); if (!showNotifications) markAsRead() }}
                     className={`relative ${iconBtn}`}
-                    title={isArabic ? 'الإشعارات' : 'Notifications'}
-                    aria-label={isArabic ? 'الإشعارات' : 'Notifications'}
+                    title={t('inline.navbar.notifications')}
+                    aria-label={t('inline.navbar.notifications')}
                     aria-expanded={showNotifications}
                   >
                     <FiBell size={16} />
@@ -172,12 +172,12 @@ export default memo(function Navbar() {
                         animate={prefersReduced ? {} : { opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.96 }}
                         transition={{ duration: 0.2 }}
-                        className={`absolute mt-2 ${isArabic ? 'start-0' : 'end-0'} w-80 max-w-[calc(100vw-1rem)] modal-spatial rounded-2xl overflow-hidden z-[60]`}
+                        className={`absolute mt-2 ${t('inline.navbar.end-0')} w-80 max-w-[calc(100vw-1rem)] modal-spatial rounded-2xl overflow-hidden z-[60]`}
                         role="dialog"
-                        aria-label={isArabic ? 'الإشعارات' : 'Notifications'}
+                        aria-label={t('inline.navbar.notifications')}
                       >
                         <div className="px-4 py-3 border-b border-line flex items-center justify-between">
-                          <h3 className="text-sm font-bold text-ink">{isArabic ? 'الإشعارات' : 'Notifications'}</h3>
+                          <h3 className="text-sm font-bold text-ink">{t('inline.navbar.notifications')}</h3>
                           <button onClick={() => setShowNotifications(false)} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors" aria-label={t('common.close')}>
                             <FiX size={14} className="text-slate-400" />
                           </button>
@@ -186,7 +186,7 @@ export default memo(function Navbar() {
                           {notifications.length === 0 ? (
                             <div className="py-8 text-center">
                               <FiBell size={24} className="mx-auto mb-2 text-slate-300 dark:text-white/20" />
-                              <p className="text-xs text-slate-400 dark:text-white/40">{isArabic ? 'لا يوجد إشعارات بعد' : 'No notifications yet'}</p>
+                              <p className="text-xs text-slate-400 dark:text-white/40">{t('inline.navbar.no-notifications-yet')}</p>
                             </div>
                           ) : (
                             notifications.map((item, i) => {
@@ -204,7 +204,7 @@ export default memo(function Navbar() {
                                         <span className="font-semibold">{item.detail || item.type}</span>
                                       </p>
                                       <p className="text-[10px] text-slate-400 dark:text-white/30 mt-0.5">
-                                        {item.timestamp ? new Date(item.timestamp).toLocaleString(isArabic ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
+                                        {item.timestamp ? new Date(item.timestamp).toLocaleString(t('inline.navbar.en-us'), { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
                                       </p>
                                     </div>
                                   </div>
@@ -222,7 +222,7 @@ export default memo(function Navbar() {
               <button
                 onClick={toggleLang}
                 className={`px-3 py-1.5 min-h-[44px] rounded-lg text-xs font-medium transition duration-200 border border-slate-300 dark:border-white/20 text-slate-600 dark:text-white/70 hover:bg-black/5 dark:hover:bg-white/10`}
-                aria-label={`${t('nav.language')} — ${isArabic ? 'Switch to English' : 'التبديل إلى العربية'}`}
+                aria-label={`${t('nav.language')} — ${t('inline.navbar.التبديل-إلى-العربية')}`}
               >
                 {t('nav.language')}
               </button>
@@ -274,7 +274,7 @@ export default memo(function Navbar() {
               ref={mobileTrapRef}
               role="dialog"
               aria-modal="true"
-              aria-label={isArabic ? 'قائمة التنقل' : 'Navigation menu'}
+              aria-label={t('inline.navbar.navigation-menu')}
               initial={prefersReduced ? {} : { opacity: 0, height: 0, y: -10 }}
               animate={prefersReduced ? {} : { opacity: 1, height: 'auto', y: 0 }}
               exit={{ opacity: 0, height: 0, y: -10 }}

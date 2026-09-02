@@ -1,7 +1,9 @@
 ﻿import { motion, useReducedMotion } from 'framer-motion'
 import { FiArrowLeft, FiArrowRight } from 'react-icons/fi'
+import { useLanguage } from '../../context/LanguageContext'
 
-export default function AuthLayout({ children, isArabic, onBack }) {
+export default function AuthLayout({ children, isArabic, onBack } ) {
+ const { t } = useLanguage()
  const prefersReduced = useReducedMotion()
 
   return (
@@ -45,7 +47,7 @@ export default function AuthLayout({ children, isArabic, onBack }) {
       <motion.span className="group-hover:-translate-x-1 transition-transform">
        {isArabic ? <FiArrowRight size={14} /> : <FiArrowLeft size={14} />}
       </motion.span>
-      {isArabic ? 'العودة' : 'Back'}
+      {t('inline.auth-layout.back')}
      </button>
     </motion.div>
    </motion.div>

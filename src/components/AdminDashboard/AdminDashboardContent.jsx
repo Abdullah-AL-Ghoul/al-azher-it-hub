@@ -19,6 +19,7 @@ import CourseProfileModal from './CourseProfileModal'
 import OverviewPanel from './OverviewPanel'
 import { INPUT_CLASS } from '../../utils/adminShared'
 import { computeActiveStudents, computeNewStudents } from '../../utils/adminStatsLogic'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default memo(function AdminDashboardContent({
  courses,
@@ -35,7 +36,8 @@ export default memo(function AdminDashboardContent({
  selectedTab = 'overview',
  onRefresh,
  onNavigate
-}) {
+} ) {
+ const { t } = useLanguage()
   const [showCourseForm, setShowCourseForm] = useState(false)
  const [editingCourseId, setEditingCourseId] = useState(null)
  const [courseForm, setCourseForm] = useState({ nameAr: '', nameEn: '', doctorAr: '', doctorEn: '' })
@@ -106,29 +108,29 @@ export default memo(function AdminDashboardContent({
 
  const saveCourse = async () => {
   if (!courseForm.nameAr && !courseForm.nameEn) {
-   toast.error(isArabic ? 'أدخل اسم المادة' : 'Enter course name')
+   toast.error(t('inline.admin-dashboard-content.enter-course-name'))
    return
   }
   try {
    if (editingCourseId) {
     await updateCourse(editingCourseId, courseForm)
-    toast.success(isArabic ? 'تم تحديث المادة' : 'Course updated')
+    toast.success(t('inline.admin-dashboard-content.course-updated'))
    } else {
     await addCourse({ ...courseForm, lectures: [], sources: [] })
-    toast.success(isArabic ? 'تم إنشاء المادة' : 'Course created')
+    toast.success(t('inline.admin-dashboard-content.course-created'))
    }
    setCourseForm({ nameAr: '', nameEn: '', doctorAr: '', doctorEn: '' })
    setEditingCourseId(null)
    setShowCourseForm(false)
    if (onRefresh) onRefresh()
   } catch (error) {
-   toast.error(isArabic ? 'فشل حفظ المادة' : 'Failed to save course')
+   toast.error(t('inline.admin-dashboard-content.failed-to-save-course'))
   }
  }
 
  const saveLecture = async () => {
   if (!lectureForm.titleAr && !lectureForm.titleEn) {
-   toast.error(isArabic ? 'أدخل عنوان المحاضرة' : 'Enter lecture title')
+   toast.error(t('inline.admin-dashboard-content.enter-lecture-title'))
    return
   }
   try {
@@ -138,10 +140,10 @@ export default memo(function AdminDashboardContent({
    if (lectureCourseId && lectureCourseId !== '__custom__') data.courseId = lectureCourseId
    if (editingLectureId) {
     await updateLecture(editingLectureId, data)
-    toast.success(isArabic ? 'تم تحديث المحاضرة' : 'Lecture updated')
+    toast.success(t('inline.admin-dashboard-content.lecture-updated'))
    } else {
     await addLecture(data)
-    toast.success(isArabic ? 'تم إنشاء المحاضرة' : 'Lecture created')
+    toast.success(t('inline.admin-dashboard-content.lecture-created'))
    }
     setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString().slice(0, 10), subjectAr: '', subjectEn: '', videoId: '', sortOrder: 0, doctorAr: '', doctorEn: '' })
     setLectureCourseId('')
@@ -151,21 +153,21 @@ export default memo(function AdminDashboardContent({
     setShowLectureForm(false)
     if (onRefresh) onRefresh()
   } catch (error) {
-   toast.error(isArabic ? 'فشل حفظ المحاضرة' : 'Failed to save lecture')
+   toast.error(t('inline.admin-dashboard-content.failed-to-save-lecture'))
   }
  }
 
  const saveSource = async () => {
   if (!sourceForm.titleAr && !sourceForm.titleEn) {
-   toast.error(isArabic ? 'أدخل عنوان المصدر' : 'Enter source title')
+   toast.error(t('inline.admin-dashboard-content.enter-source-title'))
    return
   }
   if (!sourceForm.url && sourceUpload.files.length === 0 && !sourceForm.fileData) {
-   toast.error(isArabic ? 'أدخل رابط أو ارفع ملف' : 'Enter a URL or upload at least one file')
+   toast.error(t('inline.admin-dashboard-content.enter-a-url-or'))
    return
   }
   if (sourceUpload.uploading) {
-   toast.error(isArabic ? 'انتظر حتى ينتهي الرفع' : 'Please wait for uploads to finish')
+   toast.error(t('inline.admin-dashboard-content.please-wait-for-uploads'))
    return
   }
   try {
@@ -180,10 +182,10 @@ export default memo(function AdminDashboardContent({
    }
    if (editingSourceId) {
     await updateSource(editingSourceId, data)
-    toast.success(isArabic ? 'تم تحديث المصدر' : 'Source updated')
+    toast.success(t('inline.admin-dashboard-content.source-updated'))
    } else {
     await addSource(data)
-    toast.success(isArabic ? 'تم إنشاء المصدر' : 'Source created')
+    toast.success(t('inline.admin-dashboard-content.source-created'))
    }
    setSourceForm({ titleAr: '', titleEn: '', url: '', subjectAr: '', subjectEn: '', fileData: null, fileName: '', files: [] })
    sourceUpload.reset()
@@ -191,7 +193,7 @@ export default memo(function AdminDashboardContent({
    setShowSourceForm(false)
    if (onRefresh) onRefresh()
   } catch (error) {
-   toast.error(isArabic ? 'فشل حفظ المصدر' : 'Failed to save source')
+   toast.error(t('inline.admin-dashboard-content.failed-to-save-source'))
   }
  }
 
@@ -225,32 +227,32 @@ export default memo(function AdminDashboardContent({
       show={showCourseForm}
       formRef={courseFormRef}
       title={editingCourseId
-       ? (isArabic ? 'تعديل المادة' : 'Edit Course')
-       : (isArabic ? 'إضافة مادة جديدة' : 'Add New Course')}
+       ? (t('inline.admin-dashboard-content.edit-course'))
+       : (t('inline.admin-dashboard-content.add-new-course'))}
       onClose={() => { setShowCourseForm(false); setEditingCourseId(null) }}
       isArabic={isArabic}
      >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
        <FormField
-        label={isArabic ? 'الاسم (عربي)' : 'Name (AR)'}
+        label={t('inline.admin-dashboard-content.name-ar')}
         value={courseForm.nameAr}
         onChange={e => setCourseForm({ ...courseForm, nameAr: e.target.value })}
-        placeholder={isArabic ? 'اسم المادة بالعربي' : 'Course name in Arabic'}
+        placeholder={t('inline.admin-dashboard-content.course-name-in-arabic')}
        />
        <FormField
-        label={isArabic ? 'الاسم (إنجليزي)' : 'Name (EN)'}
+        label={t('inline.admin-dashboard-content.name-en')}
         value={courseForm.nameEn}
         onChange={e => setCourseForm({ ...courseForm, nameEn: e.target.value })}
         placeholder="Course name in English"
        />
        <FormField
-        label={isArabic ? 'الدكتور (عربي)' : 'Doctor (AR)'}
+        label={t('inline.admin-dashboard-content.doctor-ar')}
         value={courseForm.doctorAr}
         onChange={e => setCourseForm({ ...courseForm, doctorAr: e.target.value })}
-        placeholder={isArabic ? 'اسم الدكتور' : 'Doctor name in Arabic'}
+        placeholder={t('inline.admin-dashboard-content.doctor-name-in-arabic')}
        />
        <FormField
-        label={isArabic ? 'الدكتور (إنجليزي)' : 'Doctor (EN)'}
+        label={t('inline.admin-dashboard-content.doctor-en')}
         value={courseForm.doctorEn}
         onChange={e => setCourseForm({ ...courseForm, doctorEn: e.target.value })}
         placeholder="Doctor name in English"
@@ -287,22 +289,22 @@ export default memo(function AdminDashboardContent({
       show={showLectureForm}
       formRef={lectureFormRef}
       title={editingLectureId
-       ? (isArabic ? 'تعديل المحاضرة' : 'Edit Lecture')
-       : (isArabic ? 'إضافة محاضرة جديدة' : 'Add New Lecture')}
+       ? (t('inline.admin-dashboard-content.edit-lecture'))
+       : (t('inline.admin-dashboard-content.add-new-lecture'))}
       onClose={() => { setShowLectureForm(false); setEditingLectureId(null); setLectureCourseSearch('') }}
       isArabic={isArabic}
      >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
-         <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المادة' : 'Course / Subject'}</label>
+         <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.admin-dashboard-content.course-subject')}</label>
          {!lectureCustomSubject ? (
           <div className="flex gap-2 flex-col sm:flex-row">
            <div className="relative flex-1">
             <input
              value={lectureCourseSearch}
              onChange={e => setLectureCourseSearch(e.target.value)}
-             placeholder={isArabic ? 'ابحث عن المادة...' : 'Search courses...'}
-             aria-label={isArabic ? 'بحث عن المادة' : 'Search courses'}
+             placeholder={t('inline.admin-dashboard-content.search-courses')}
+             aria-label={t('inline.admin-dashboard-content.search-courses-2')}
              className={`${INPUT_CLASS} mb-1.5 sm:mb-0`}
             />
            </div>
@@ -323,7 +325,7 @@ export default memo(function AdminDashboardContent({
             }}
             className={INPUT_CLASS}
            >
-            <option value="">{isArabic ? 'اختر المادة...' : 'Select course...'}</option>
+            <option value="">{t('inline.admin-dashboard-content.select-course')}</option>
             {courses
              .filter(c => {
               const q = lectureCourseSearch.toLowerCase()
@@ -332,7 +334,7 @@ export default memo(function AdminDashboardContent({
              .map(c => (
               <option key={c.id} value={c.id}>{isArabic ? c.nameAr : c.nameEn}</option>
              ))}
-            <option value="__custom__">{isArabic ? '...أخرى (كتابة يدوية)' : '...Other (custom)'}</option>
+            <option value="__custom__">{t('inline.admin-dashboard-content.other-custom')}</option>
            </select>
           </div>
          ) : (
@@ -342,18 +344,18 @@ export default memo(function AdminDashboardContent({
             value={lectureForm.subjectAr}
             onChange={e => setLectureForm({ ...lectureForm, subjectAr: e.target.value })}
             className={INPUT_CLASS}
-            placeholder={isArabic ? 'اسم المادة (عربي)' : 'Subject name (AR)'}
+            placeholder={t('inline.admin-dashboard-content.subject-name-ar')}
            />
            <input
             value={lectureForm.subjectEn}
             onChange={e => setLectureForm({ ...lectureForm, subjectEn: e.target.value })}
             className={INPUT_CLASS}
-            placeholder={isArabic ? 'اسم المادة (إنجليزي)' : 'Subject name (EN)'}
+            placeholder={t('inline.admin-dashboard-content.subject-name-en')}
            />
            <button
             onClick={() => { setLectureCustomSubject(false); setLectureCourseId('') }}
             className="px-3 py-2 glass text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-sm transition flex-shrink-0"
-            title={isArabic ? 'رجوع للقائمة' : 'Back to list'}
+            title={t('inline.admin-dashboard-content.back-to-list')}
            >
             <FiX size={14} />
            </button>
@@ -362,25 +364,25 @@ export default memo(function AdminDashboardContent({
         )}
         {lectureForm.subjectAr && (
          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          {isArabic ? 'المادة:' : 'Subject:'} {isArabic ? lectureForm.subjectAr : lectureForm.subjectEn}
+          {t('inline.admin-dashboard-content.subject')} {isArabic ? lectureForm.subjectAr : lectureForm.subjectEn}
          </p>
         )}
        </div>
        <FormField
-        label={isArabic ? 'العنوان (عربي)' : 'Title (AR)'}
+        label={t('inline.admin-dashboard-content.title-ar')}
         value={lectureForm.titleAr}
         onChange={e => setLectureForm({ ...lectureForm, titleAr: e.target.value })}
-        placeholder={isArabic ? 'عنوان المحاضرة' : 'Lecture title in Arabic'}
+        placeholder={t('inline.admin-dashboard-content.lecture-title-in-arabic')}
        />
 <FormField
-         label={isArabic ? 'العنوان (إنجليزي)' : 'Title (EN)'}
+         label={t('inline.admin-dashboard-content.title-en')}
          value={lectureForm.titleEn}
          onChange={e => setLectureForm({ ...lectureForm, titleEn: e.target.value })}
          placeholder="Lecture title in English"
         />
         <div className="md:col-span-2 space-y-2">
          <FormField
-          label={isArabic ? 'رابط الفيديو' : 'Video URL'}
+          label={t('inline.admin-dashboard-content.video-url')}
           value={lectureForm.url}
           onChange={e => {
            const url = e.target.value
@@ -394,7 +396,7 @@ export default memo(function AdminDashboardContent({
            <img src={lectureThumb(lectureForm.videoId, 'mq')} alt="" width="120" height="68" className="rounded-lg object-cover flex-shrink-0" />
            <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-             <FiYoutube size={14} /> {isArabic ? 'تم التعرف على الفيديو' : 'Video detected'}
+             <FiYoutube size={14} /> {t('inline.admin-dashboard-content.video-detected')}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">ID: {lectureForm.videoId}</p>
            </div>
@@ -402,31 +404,31 @@ export default memo(function AdminDashboardContent({
          )}
          {lectureForm.url && !lectureForm.videoId && (
           <p className="text-xs text-amber-500 dark:text-amber-400 flex items-center gap-1">
-           <FiAlertCircle size={12} /> {isArabic ? 'رابط يوتيوب غير صالح، لن تظهر صورة مصغّرة' : 'Invalid YouTube URL, thumbnail will not appear'}
+           <FiAlertCircle size={12} /> {t('inline.admin-dashboard-content.invalid-youtube-url-thumbnail')}
           </p>
          )}
         </div>
         <FormField
-         label={isArabic ? 'التاريخ' : 'Date'}
+         label={t('inline.admin-dashboard-content.date')}
          type="date"
          value={lectureForm.date}
          onChange={e => setLectureForm({ ...lectureForm, date: e.target.value })}
         />
         <FormField
-         label={isArabic ? 'الترتيب (الأصغر أولاً)' : 'Order (smaller first)'}
+         label={t('inline.admin-dashboard-content.order-smaller-first')}
          type="number"
          value={lectureForm.sortOrder}
          onChange={e => setLectureForm({ ...lectureForm, sortOrder: parseInt(e.target.value) || 0 })}
          placeholder="0"
         />
         <FormField
-         label={isArabic ? 'الدكتور (عربي)' : 'Doctor (AR)'}
+         label={t('inline.admin-dashboard-content.doctor-ar')}
          value={lectureForm.doctorAr}
          onChange={e => setLectureForm({ ...lectureForm, doctorAr: e.target.value })}
-         placeholder={isArabic ? 'اسم الدكتور' : 'Doctor name'}
+         placeholder={t('inline.admin-dashboard-content.doctor-name')}
         />
         <FormField
-         label={isArabic ? 'الدكتور (إنجليزي)' : 'Doctor (EN)'}
+         label={t('inline.admin-dashboard-content.doctor-en')}
          value={lectureForm.doctorEn}
          onChange={e => setLectureForm({ ...lectureForm, doctorEn: e.target.value })}
          placeholder="Doctor name in English"
@@ -467,38 +469,38 @@ setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString
       show={showSourceForm}
       formRef={sourceFormRef}
       title={editingSourceId
-       ? (isArabic ? 'تعديل المصدر' : 'Edit Source')
-       : (isArabic ? 'إضافة مصدر جديد' : 'Add New Source')}
+       ? (t('inline.admin-dashboard-content.edit-source'))
+       : (t('inline.admin-dashboard-content.add-new-source'))}
       onClose={() => { setShowSourceForm(false); setEditingSourceId(null) }}
       isArabic={isArabic}
      >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
        <FormField
-        label={isArabic ? 'المادة (عربي)' : 'Subject (AR)'}
+        label={t('inline.admin-dashboard-content.subject-ar')}
         value={sourceForm.subjectAr}
         onChange={e => setSourceForm({ ...sourceForm, subjectAr: e.target.value })}
-        placeholder={isArabic ? 'اسم المادة' : 'Subject name'}
+        placeholder={t('inline.admin-dashboard-content.subject-name')}
        />
        <FormField
-        label={isArabic ? 'المادة (إنجليزي)' : 'Subject (EN)'}
+        label={t('inline.admin-dashboard-content.subject-en')}
         value={sourceForm.subjectEn}
         onChange={e => setSourceForm({ ...sourceForm, subjectEn: e.target.value })}
         placeholder="Subject name"
        />
        <FormField
-        label={isArabic ? 'العنوان (عربي)' : 'Title (AR)'}
+        label={t('inline.admin-dashboard-content.title-ar')}
         value={sourceForm.titleAr}
         onChange={e => setSourceForm({ ...sourceForm, titleAr: e.target.value })}
-        placeholder={isArabic ? 'عنوان المصدر' : 'Source title'}
+        placeholder={t('inline.admin-dashboard-content.source-title')}
        />
        <FormField
-        label={isArabic ? 'العنوان (إنجليزي)' : 'Title (EN)'}
+        label={t('inline.admin-dashboard-content.title-en')}
         value={sourceForm.titleEn}
         onChange={e => setSourceForm({ ...sourceForm, titleEn: e.target.value })}
         placeholder="Source title"
        />
        <FormField
-        label={isArabic ? 'الرابط' : 'URL'}
+        label={t('inline.admin-dashboard-content.url')}
         value={sourceForm.url}
         onChange={e => setSourceForm({ ...sourceForm, url: e.target.value })}
         placeholder="https://..."
@@ -507,7 +509,7 @@ setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString
        />
        <div className="md:col-span-2">
         <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-         {isArabic ? 'ارفع ملف أو عدة ملفات (PDF, صور, ZIP - حد أقصى 100MB لكل ملف)' : 'Upload one or more files (PDF, images, ZIP - max 100MB each)'}
+         {t('inline.admin-dashboard-content.upload-one-or-more')}
         </label>
         <input
          ref={sourceFileRef}
@@ -521,7 +523,7 @@ setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString
         {sourceUpload.uploading && (
          <div className="flex items-center gap-2 mb-2 text-royal-500 text-sm">
           <FiLoader size={14} className="animate-spin" />
-          {isArabic ? 'جاري الرفع...' : 'Uploading...'}
+          {t('inline.admin-dashboard-content.uploading')}
          </div>
         )}
 
@@ -551,7 +553,7 @@ setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString
               type="button"
               onClick={() => sourceUpload.removeFile(idx)}
               className="p-1 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded text-rose-500 flex-shrink-0"
-              aria-label={isArabic ? 'حذف' : 'Remove'}
+              aria-label={t('inline.admin-dashboard-content.remove')}
              >
               <FiTrash2 size={14} />
              </button>
@@ -564,7 +566,7 @@ setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString
            disabled={sourceUpload.uploading}
            className="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 hover:border-royal-400 hover:text-royal-500 transition-colors text-sm disabled:opacity-50"
           >
-           <FiUpload size={14} /> {isArabic ? 'إضافة ملف آخر' : 'Add another file'}
+           <FiUpload size={14} /> {t('inline.admin-dashboard-content.add-another-file')}
           </button>
          </div>
         ) : (
@@ -574,7 +576,7 @@ setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString
           className="w-full flex flex-col items-center gap-2 px-4 py-6 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 hover:border-royal-400 hover:text-royal-500 transition-colors text-sm"
          >
           <FiUpload size={20} />
-          <span>{isArabic ? 'اسحب الملفات أو اضغط للاختيار' : 'Drop files or click to select'}</span>
+          <span>{t('inline.admin-dashboard-content.drop-files-or-click')}</span>
           <span className="text-xs text-slate-500 dark:text-slate-400">PDF, JPG, PNG, ZIP, DOC (max 100MB)</span>
          </button>
         )}

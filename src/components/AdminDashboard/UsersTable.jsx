@@ -20,16 +20,16 @@ const USER_COLUMNS = [
 ]
 
 function getTimeAgo(lastVisit, isArabic) {
- if (!lastVisit) return isArabic ? 'لم يسجل دخول بعد' : 'Never logged in'
+ if (!lastVisit) return t('inline.users-table.never-logged-in')
  const diff = Date.now() - new Date(lastVisit).getTime()
  const minutes = Math.floor(diff / 60000)
  const hours = Math.floor(diff / 3600000)
  const days = Math.floor(diff / 86400000)
  
- if (minutes < 1) return isArabic ? 'نشط الآن' : 'Active now'
- if (minutes < 60) return `${minutes} ${isArabic ? 'دقيقة مضت' : 'min ago'}`
- if (hours < 24) return `${hours} ${isArabic ? 'ساعة مضت' : 'hours ago'}`
- return `${days} ${isArabic ? 'يوم مضى' : 'days ago'}`
+ if (minutes < 1) return t('inline.users-table.active-now')
+ if (minutes < 60) return `${minutes} ${t('inline.users-table.min-ago')}`
+ if (hours < 24) return `${hours} ${t('inline.users-table.hours-ago')}`
+ return `${days} ${t('inline.users-table.days-ago')}`
 }
 
 function UsersTable({ users, loading, onRefresh, isArabic }) {
@@ -85,23 +85,23 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
 
  const handlePasswordChange = async (studentId) => {
   if (!passwordForm.password || passwordForm.password.length < 8) {
-   toast.error(isArabic ? 'كلمة المرور قصيرة جداً (8 أحرف على الأقل)' : 'Password too short (min 8 characters)')
+   toast.error(t('inline.users-table.password-too-short-min'))
    return
   }
   if (passwordForm.password !== passwordForm.confirm) {
-   toast.error(isArabic ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match')
+   toast.error(t('inline.users-table.passwords-do-not-match'))
    return
   }
   try {
    const result = await resetPassword(studentId, passwordForm.password, { asAdmin: true })
    if (result) {
     setPasswordForm({ studentId: '', password: '', confirm: '' })
-    toast.success(isArabic ? 'تم تغيير كلمة المرور' : 'Password changed')
+    toast.success(t('inline.users-table.password-changed'))
    } else {
-    toast.error(isArabic ? 'لم يتم العثور على الطالب' : 'Student not found')
+    toast.error(t('inline.users-table.student-not-found'))
    }
   } catch (error) {
-   toast.error(isArabic ? 'فشل تغيير كلمة المرور' : 'Failed to change password')
+   toast.error(t('inline.users-table.failed-to-change-password'))
   }
  }
 
@@ -158,10 +158,10 @@ const handleBulkDelete = async () => {
      <FiSearch className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 start-3`} size={16} />
      <input
       type="text"
-      placeholder={isArabic ? 'بحث بالاسم، الرقم، البريد، التخصص...' : 'Search by name, ID, email, major...'}
+      placeholder={t('inline.users-table.search-by-name-id')}
       value={search}
       onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-      aria-label={isArabic ? 'بحث عن طالب' : 'Search students'}
+      aria-label={t('inline.users-table.search-students')}
       className={`ps-9 pe-4 py-2 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-64`}
      />
     </div>
@@ -187,12 +187,12 @@ const handleBulkDelete = async () => {
     <div className="glass rounded-xl p-12 text-center border border-white/10">
      <FiUser className="mx-auto text-5xl text-slate-300 dark:text-slate-600 mb-4" />
      <p className="text-slate-500 dark:text-slate-400 ">
-      {isArabic ? 'لا يوجد طلاب مسجلين' : 'No students registered'}
+      {t('inline.users-table.no-students-registered')}
      </p>
     </div>
    ) : (
     <>
-     <div className="space-y-3" role="list" aria-label={isArabic ? 'الطلاب' : 'Students'}>
+     <div className="space-y-3" role="list" aria-label={t('inline.users-table.students')}>
       <label className="flex items-center gap-3 px-4 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-pointer">
        <input
         type="checkbox"
@@ -200,7 +200,7 @@ const handleBulkDelete = async () => {
         onChange={toggleSelectAll}
         className="w-4 h-4 rounded border-slate-300 text-royal-500 focus:ring-royal-400"
        />
-       {isArabic ? 'تحديد الكل' : 'Select all'}
+       {t('inline.users-table.select-all')}
       </label>
       {paginatedUsers.map((user) => {
        const isActive = user.lastVisit && (Date.now() - new Date(user.lastVisit).getTime()) < 3600000
@@ -217,22 +217,22 @@ const handleBulkDelete = async () => {
              value={editForm.name}
              onChange={e => setEditForm({ ...editForm, name: e.target.value })}
              className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
-             placeholder={isArabic ? 'الاسم' : 'Name'}
+             placeholder={t('inline.users-table.name')}
             />
             <input
               value={editForm.email}
               onChange={e => setEditForm({ ...editForm, email: e.target.value })}
               className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
-              placeholder={isArabic ? 'البريد الإلكتروني' : 'Email'}
+              placeholder={t('inline.users-table.email')}
              />
              <select
               value={editForm.role}
               onChange={e => setEditForm({ ...editForm, role: e.target.value })}
               className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
-              aria-label={isArabic ? 'الدور' : 'Role'}
+              aria-label={t('inline.users-table.role')}
              >
-              <option value="student">{isArabic ? 'طالب' : 'Student'}</option>
-              <option value="admin">{isArabic ? 'أدمن' : 'Admin'}</option>
+              <option value="student">{t('inline.users-table.student')}</option>
+              <option value="admin">{t('inline.users-table.admin')}</option>
              </select>
              <button onClick={() => handleSaveEdit(user.studentId)} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors" aria-label={t('common.save')}>
              <FiSave size={14} />
@@ -281,13 +281,13 @@ const handleBulkDelete = async () => {
              )}
              {user.createdAt && (
               <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 ">
-               <FiCalendar size={12} /> {new Date(user.createdAt).toLocaleDateString(isArabic ? 'ar' : 'en')}
+               <FiCalendar size={12} /> {new Date(user.createdAt).toLocaleDateString(t('inline.users-table.en'))}
               </span>
              )}
             </div>
            </div>
            <div className="flex items-center gap-1 flex-shrink-0">
-            <button onClick={() => setProfileStudent(user)} className="p-2 text-cyan-500 hover:bg-cyan-500/10 rounded-lg transition-colors" aria-label={isArabic ? 'عرض الملف' : 'View profile'}>
+            <button onClick={() => setProfileStudent(user)} className="p-2 text-cyan-500 hover:bg-cyan-500/10 rounded-lg transition-colors" aria-label={t('inline.users-table.view-profile')}>
              <FiExternalLink size={14} />
             </button>
             <button onClick={() => handleEdit(user)} className="p-2 text-royal-500 hover:bg-royal-500/10 rounded-lg transition-colors" aria-label={t('common.edit')}>
@@ -296,7 +296,7 @@ const handleBulkDelete = async () => {
             <button
              onClick={() => setPasswordForm(passwordForm.studentId === user.studentId ? { studentId: '', password: '', confirm: '' } : { studentId: user.studentId, password: '', confirm: '' })}
              className={`p-2 rounded-lg transition-colors ${passwordForm.studentId === user.studentId ? 'text-amber-500 bg-amber-500/10' : 'text-amber-500 hover:bg-amber-500/10'}`}
-             aria-label={isArabic ? 'تغيير كلمة المرور' : 'Change password'}
+             aria-label={t('inline.users-table.change-password')}
             >
              <FiKey size={14} />
             </button>
@@ -309,7 +309,7 @@ const handleBulkDelete = async () => {
          {passwordForm.studentId === user.studentId && (
           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 space-y-2">
            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            {isArabic ? 'تغيير كلمة المرور' : 'Change Password'}
+            {t('inline.users-table.change-password')}
            </p>
            <div className="flex items-center gap-2 flex-wrap">
             <input
@@ -317,7 +317,7 @@ const handleBulkDelete = async () => {
              value={passwordForm.password}
              onChange={e => setPasswordForm({ ...passwordForm, password: e.target.value })}
              className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
-             placeholder={isArabic ? 'كلمة المرور الجديدة' : 'New password'}
+             placeholder={t('inline.users-table.new-password')}
             />
             <input
              type="password"
@@ -325,9 +325,9 @@ const handleBulkDelete = async () => {
              onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
              onKeyDown={e => e.key === 'Enter' && handlePasswordChange(user.studentId)}
              className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
-             placeholder={isArabic ? 'تأكيد كلمة المرور' : 'Confirm password'}
+             placeholder={t('inline.users-table.confirm-password')}
             />
-            <button onClick={() => handlePasswordChange(user.studentId)} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors" aria-label={isArabic ? 'حفظ كلمة المرور' : 'Save password'}>
+            <button onClick={() => handlePasswordChange(user.studentId)} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors" aria-label={t('inline.users-table.save-password')}>
              <FiSave size={14} />
             </button>
             <button onClick={() => setPasswordForm({ studentId: '', password: '', confirm: '' })} className="p-2 text-slate-500 hover:bg-slate-500/10 rounded-lg transition-colors" aria-label={t('common.cancel')}>
@@ -345,7 +345,7 @@ const handleBulkDelete = async () => {
       onClose={() => setConfirmDeleteId(null)}
       onConfirm={() => handleDelete(confirmDeleteId)}
       title={t('admin.confirmDelete')}
-      message={isArabic ? 'هل أنت متأكد من حذف هذا الطالب؟' : 'Are you sure you want to delete this student?'}
+      message={t('inline.users-table.are-you-sure-you')}
       confirmText={t('common.delete')}
       cancelText={t('common.cancel')}
       variant="danger"
@@ -354,7 +354,7 @@ const handleBulkDelete = async () => {
       isOpen={confirmBulkDelete}
       onClose={() => setConfirmBulkDelete(false)}
       onConfirm={handleBulkDelete}
-      title={isArabic ? 'حذف جماعي' : 'Bulk Delete'}
+      title={t('inline.users-table.bulk-delete')}
       message={isArabic ? `هل أنت متأكد من حذف ${selectedIds.size} طالب؟` : `Are you sure you want to delete ${selectedIds.size} students?`}
       confirmText={t('common.delete')}
       cancelText={t('common.cancel')}

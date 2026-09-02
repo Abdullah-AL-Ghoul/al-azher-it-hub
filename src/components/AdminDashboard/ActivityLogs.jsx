@@ -95,7 +95,7 @@ function ActivityLogs({ logs, loading, isArabic, onRefresh }) {
     </div>
     <div className="flex items-center gap-2 flex-wrap">
      <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-      <span>{isArabic ? 'من' : 'From'}</span>
+      <span>{t('inline.activity-logs.from')}</span>
       <input
        type="date"
        value={fromDate}
@@ -104,7 +104,7 @@ function ActivityLogs({ logs, loading, isArabic, onRefresh }) {
       />
      </label>
      <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-      <span>{isArabic ? 'إلى' : 'To'}</span>
+      <span>{t('inline.activity-logs.to')}</span>
       <input
        type="date"
        value={toDate}
@@ -117,7 +117,7 @@ function ActivityLogs({ logs, loading, isArabic, onRefresh }) {
        onClick={() => { setFromDate(''); setToDate('') }}
        className="flex items-center gap-1 px-2 py-1.5 text-xs text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
       >
-       <FiX size={12} /> {isArabic ? 'مسح' : 'Clear'}
+       <FiX size={12} /> {t('inline.activity-logs.clear')}
       </button>
      )}
     </div>
@@ -190,7 +190,7 @@ function ActivityLogs({ logs, loading, isArabic, onRefresh }) {
           </div>
          </div>
         </div>
-        <FiChevronRight size={16} className={`text-slate-300 dark:text-slate-400 flex-shrink-0 mt-1 transition-transform duration-300 ${expandedLog === log.id ? (isArabic ? '-rotate-90' : 'rotate-90') : ''}`} />
+        <FiChevronRight size={16} className={`text-slate-300 dark:text-slate-400 flex-shrink-0 mt-1 transition-transform duration-300 ${expandedLog === log.id ? (t('inline.activity-logs.rotate-90')) : ''}`} />
        </div>
        <AnimatePresence>
         {expandedLog === log.id && (
@@ -202,10 +202,10 @@ function ActivityLogs({ logs, loading, isArabic, onRefresh }) {
           className="overflow-hidden"
          >
           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600 text-xs text-slate-500 dark:text-slate-400 space-y-1">
-            <p><span className="font-medium">{isArabic ? 'الاسم:' : 'Name:'}</span> {log.name || log.studentId || '—'}</p>
-           <p><span className="font-medium">{isArabic ? 'النوع:' : 'Type:'}</span> {log.type}</p>
-           {log.detail && <p><span className="font-medium">{isArabic ? 'التفاصيل:' : 'Detail:'}</span> {log.detail}</p>}
-           <p><span className="font-medium">{isArabic ? 'الوقت:' : 'Time:'}</span> {new Date(log.timestamp || Date.now()).toLocaleString()}</p>
+            <p><span className="font-medium">{t('inline.activity-logs.name')}</span> {log.name || log.studentId || '—'}</p>
+           <p><span className="font-medium">{t('inline.activity-logs.type')}</span> {log.type}</p>
+           {log.detail && <p><span className="font-medium">{t('inline.activity-logs.detail')}</span> {log.detail}</p>}
+           <p><span className="font-medium">{t('inline.activity-logs.time')}</span> {new Date(log.timestamp || Date.now()).toLocaleString()}</p>
           </div>
          </motion.div>
         )}

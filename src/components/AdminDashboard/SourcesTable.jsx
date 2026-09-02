@@ -62,9 +62,9 @@ function SourcesTable({ sources, loading, isArabic, onEdit, onAdd, onRefresh }) 
       onChange={e => setSortBy(e.target.value)}
       className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50"
      >
-      <option value="default">{isArabic ? 'بدون ترتيب' : 'Default'}</option>
-      <option value="nameAr">{isArabic ? 'الاسم عربي' : 'Name (AR)'}</option>
-      <option value="nameEn">{isArabic ? 'الاسم إنجليزي' : 'Name (EN)'}</option>
+      <option value="default">{t('inline.sources-table.default')}</option>
+      <option value="nameAr">{t('inline.sources-table.name-ar')}</option>
+      <option value="nameEn">{t('inline.sources-table.name-en')}</option>
      </select>
      <input
       type="text"
@@ -108,7 +108,7 @@ function SourcesTable({ sources, loading, isArabic, onEdit, onAdd, onRefresh }) 
           </p>
           {source.fileData ? (
            <span className="inline-flex items-center gap-1 text-xs text-emerald-500 mt-1">
-            <FiUpload size={10} /> {source.fileName || (isArabic ? 'ملف مرفوع' : 'Uploaded file')}
+            <FiUpload size={10} /> {source.fileName || (t('inline.sources-table.uploaded-file'))}
            </span>
           ) : source.url ? (
            <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-xs text-royal-500 hover:underline truncate block mt-1">

@@ -47,7 +47,7 @@ export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount =
     className="absolute inset-0"
     scene={() => import('./three/ParticlesScene')}
     sceneProps={{ theme: theme === 'light' ? 'light' : 'dark' }}
-    fallbackLabel={isArabic ? 'حقل جسيمات متحرك' : 'Animated particle field'}
+    fallbackLabel={t('inline.hero-section.animated-particle-field')}
     fallback={
      <div className="absolute inset-0" aria-hidden="true">
       <div className="absolute top-20 left-10 w-64 h-64 bg-royal-500/20 rounded-full blur-3xl animate-depth-breathe" />
@@ -128,7 +128,7 @@ export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount =
      transition={{ delay: 1.2 }}
      onClick={scrollToContent}
      className="absolute bottom-10 left-1/2 -translate-x-1/2 group cursor-pointer"
-     aria-label={isArabic ? 'التمرير للأسفل' : 'Scroll down'}
+     aria-label={t('inline.hero-section.scroll-down')}
     >
     <div className="relative">
      <div className="absolute inset-0 bg-black/5 dark:bg-white/5 rounded-full blur-xl group-hover:bg-royal-500/15 transition-colors duration-500 scale-150" />

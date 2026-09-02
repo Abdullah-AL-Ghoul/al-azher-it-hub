@@ -1,8 +1,10 @@
 ﻿import { memo, useState, useRef, useId } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { FiEye, FiEyeOff } from 'react-icons/fi'
+import { useLanguage } from '../../context/LanguageContext'
 
 function SpatialInput({ label, error, icon: Icon, type = 'text', className = '', value, onChange, placeholder, disabled, isArabic, showToggle, onToggle, showPassword, autoComplete, id: idProp, ...props }) {
+ const { t } = useLanguage()
  const prefersReduced = useReducedMotion()
  const [focused, setFocused] = useState(false)
  const inputRef = useRef(null)
@@ -10,11 +12,11 @@ function SpatialInput({ label, error, icon: Icon, type = 'text', className = '',
  const inputId = idProp || generatedId
  const errorId = `${inputId}-error`
 
-const iconPosition = isArabic ? 'right' : 'left'
-  const togglePosition = isArabic ? 'left' : 'right'
+const iconPosition = t('inline.spatial-input.left')
+  const togglePosition = t('inline.spatial-input.right')
 
-  const padLeft = Icon && !isArabic ? '44px' : (showToggle && isArabic ? '44px' : '16px')
-  const padRight = Icon && isArabic ? '44px' : (showToggle && !isArabic ? '44px' : '16px')
+  const padLeft = Icon && !isArabic ? '44px' : (showToggle && t('inline.spatial-input.16px'))
+  const padRight = Icon && isArabic ? '44px' : (showToggle && !t('inline.spatial-input.16px'))
 
  return (
   <div className={`relative ${className}`}>
@@ -54,7 +56,7 @@ const iconPosition = isArabic ? 'right' : 'left'
       whileHover={prefersReduced ? {} : { scale: 1.1 }}
       whileTap={prefersReduced ? {} : { scale: 0.9 }}
       onClick={onToggle}
-      aria-label={showPassword ? (isArabic ? 'إخفاء كلمة المرور' : 'Hide password') : (isArabic ? 'إظهار كلمة المرور' : 'Show password')}
+      aria-label={showPassword ? (t('inline.spatial-input.hide-password')) : (t('inline.spatial-input.show-password'))}
       aria-pressed={showPassword}
       className="absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-white/60 hover:text-slate-600 dark:hover:text-white/60 transition-colors z-10"
       style={{ [togglePosition]: '16px' }}

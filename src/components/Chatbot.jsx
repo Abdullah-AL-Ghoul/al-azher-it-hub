@@ -132,19 +132,19 @@ const CopyButton = memo(function CopyButton({ text, isArabic }) {
     document.body.removeChild(ta)
    }
    setCopied(true)
-   toast.success(isArabic ? 'تم النسخ!' : 'Copied!')
+   toast.success(t('inline.chatbot.copied'))
    setTimeout(() => setCopied(false), 2000)
   } catch {
-   toast.error(isArabic ? 'فشل النسخ' : 'Copy failed')
+   toast.error(t('inline.chatbot.copy-failed'))
   }
  }, [text, isArabic])
 
   return (
    <button
-    aria-label={isArabic ? 'نسخ الرسالة' : 'Copy message'}
+    aria-label={t('inline.chatbot.copy-message')}
     className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-navy-600 transition-colors opacity-0 group-hover:opacity-100"
     onClick={handleCopy}
-    title={isArabic ? 'نسخ' : 'Copy'}
+    title={t('inline.chatbot.copy')}
    >
     {copied ? <FiCheck size={12} className="text-green-500" /> : <FiCopy size={12} className="text-slate-500 dark:text-slate-400" />}
    </button>
@@ -296,9 +296,7 @@ export default function Chatbot() {
     id: '1',
     quick: true,
     role: 'bot',
-    text: `${greeting}${name ? ' ' + name : ''}! 👋\n\n${isArabic
-     ? 'أنا مساعد AL-Azher IT Hub الذكي. اسألني عن أي شي وسأحاول أساعدك!'
-     : 'I\'m the AL-Azher IT Hub smart assistant. Ask me anything and I\'ll do my best to help!'}`,
+    text: `${greeting}${name ? ' ' + name : ''}! 👋\n\n${t('inline.chatbot.i-m-the-al-azher')}`,
     time: formatTime()
    }])
   }
@@ -397,9 +395,7 @@ export default function Chatbot() {
     id: nextId(),
     quick: true,
     role: 'bot',
-    text: `${greeting}${name ? ' ' + name : ''}! 👋\n\n${isArabic
-     ? 'تم مسح المحادثة. اسألني عن أي شي!'
-     : 'Chat cleared. Ask me anything!'}`,
+    text: `${greeting}${name ? ' ' + name : ''}! 👋\n\n${t('inline.chatbot.chat-cleared-ask-me')}`,
     time: formatTime()
    }])
    }, 100)
@@ -451,15 +447,15 @@ export default function Chatbot() {
        </div>
        <div className="flex items-center gap-1">
         <button
-         aria-label={isArabic ? 'مسح المحادثة' : 'Clear chat'}
+         aria-label={t('inline.chatbot.clear-chat')}
          className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
          onClick={clearChat}
-         title={isArabic ? 'مسح المحادثة' : 'Clear chat'}
+         title={t('inline.chatbot.clear-chat')}
         >
          <FiTrash2 size={16} className="text-white" />
         </button>
         <button
-         aria-label={isArabic ? 'إغلاق' : 'Close'}
+         aria-label={t('inline.chatbot.close')}
          className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
          onClick={() => setOpen(false)}
         >
@@ -492,7 +488,7 @@ export default function Chatbot() {
        {showQuickReplies && (
 <motion.div
           role="group"
-          aria-label={isArabic ? 'اقتراحات سريعة' : 'Quick suggestions'}
+          aria-label={t('inline.chatbot.quick-suggestions')}
           animate={{ height: 'auto', opacity: 1 }}
           className="px-3 pb-2.5 pt-1 flex flex-wrap gap-1.5 bg-black/[0.02] dark:bg-black/20 border-t border-line overflow-hidden"
           exit={{ height: 0, opacity: 0 }}

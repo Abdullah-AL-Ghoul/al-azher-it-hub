@@ -37,13 +37,13 @@ const CourseRoadmap = lazy(() => import('./pages/CourseRoadmap'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 function PageLoader() {
- const { lang } = useLanguage()
+ const { t, lang } = useLanguage()
  const isArabic = lang === 'ar'
  return (
   <div className="min-h-screen flex items-center justify-center bg-spatial-page">
    <div className="text-center">
     <div className="w-12 h-12 border-4 border-royal-500/20 border-t-royal-500 rounded-full animate-spin mx-auto mb-4" />
-    <p className="text-slate-500 dark:text-white/50 text-sm">{isArabic ? 'جارٍ التحميل...' : 'Loading...'}</p>
+    <p className="text-slate-500 dark:text-white/50 text-sm">{t('inline.app.loading')}</p>
    </div>
   </div>
  )

@@ -120,7 +120,7 @@ export default function CourseRoadmap() {
 
  const handleSaveCourse = async () => {
   if (!formData.nameAr.trim() && !formData.nameEn.trim()) {
-   toast.error(isArabic ? 'أدخل اسم المادة' : 'Enter course name')
+   toast.error(t('inline.course-roadmap.enter-course-name'))
    return
   }
 
@@ -134,9 +134,9 @@ export default function CourseRoadmap() {
   resetForm()
   try {
    await saveRoadmap(next)
-   toast.success(isArabic ? 'تم الحفظ' : 'Saved')
+   toast.success(t('inline.course-roadmap.saved'))
   } catch (e) {
-   toast.error(isArabic ? 'فشل الحفظ' : 'Save failed')
+   toast.error(t('inline.course-roadmap.save-failed'))
   }
  }
 
@@ -149,9 +149,9 @@ export default function CourseRoadmap() {
    await saveRoadmap(editData)
    setRoadmap(editData)
    setEditing(false)
-   toast.success(isArabic ? 'تم الحفظ' : 'Saved')
+   toast.success(t('inline.course-roadmap.saved'))
   } catch (e) {
-   toast.error(isArabic ? 'فشل الحفظ' : 'Save failed')
+   toast.error(t('inline.course-roadmap.save-failed'))
   }
  }
 
@@ -198,7 +198,7 @@ export default function CourseRoadmap() {
       className="absolute inset-0 opacity-60"
       scene={() => import('../components/three/RoadmapScene')}
       sceneProps={{ theme: 'dark' }}
-      fallbackLabel={isArabic ? 'مسار ثلاثي الأبعاد' : '3D learning path'}
+      fallbackLabel={t('inline.course-roadmap.3d-learning-path')}
       fallback={
        <div className="absolute inset-0" aria-hidden="true">
         <div className="floating-motif top-[18%] left-[8%] w-12 h-12" />
@@ -233,7 +233,7 @@ export default function CourseRoadmap() {
       ) : (
        <>
         <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition">
-         <FiPlus size={16} /> {isArabic ? 'إضافة مادة' : 'Add Course'}
+         <FiPlus size={16} /> {t('inline.course-roadmap.add-course')}
         </button>
         <button onClick={() => { setEditing(true); setEditData(roadmap) }} className="flex items-center gap-2 px-4 py-2 btn-spatial rounded-xl text-sm font-medium transition">
          <FiEdit2 size={16} /> {t('common.edit')}
@@ -253,47 +253,47 @@ export default function CourseRoadmap() {
       >
        <div className="glass rounded-xl p-5 border border-slate-200 dark:border-slate-700">
         <h3 className="text-sm font-semibold text-ink mb-4">
-         {editingId ? (isArabic ? 'تعديل المادة' : 'Edit Course') : (isArabic ? 'إضافة مادة جديدة' : 'Add New Course')}
+         {editingId ? (t('inline.course-roadmap.edit-course')) : (t('inline.course-roadmap.add-new-course'))}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
          <div>
-          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'الاسم بالعربي' : 'Name (AR)'}</label>
-          <input value={formData.nameAr} onChange={e => setFormData({ ...formData, nameAr: e.target.value })} placeholder={isArabic ? 'اسم المادة' : 'Course name'} className={inputClass} />
+          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.course-roadmap.name-ar')}</label>
+          <input value={formData.nameAr} onChange={e => setFormData({ ...formData, nameAr: e.target.value })} placeholder={t('inline.course-roadmap.course-name')} className={inputClass} />
          </div>
          <div>
-          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'الاسم بالإنجليزي' : 'Name (EN)'}</label>
+          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.course-roadmap.name-en')}</label>
           <input value={formData.nameEn} onChange={e => setFormData({ ...formData, nameEn: e.target.value })} placeholder="Course name" className={inputClass} />
          </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
          <div>
-          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'السنة' : 'Year'}</label>
+          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.course-roadmap.year')}</label>
           <select value={formData.year} onChange={e => setFormData({ ...formData, year: parseInt(e.target.value) })} className={inputClass}>
            {[1,2,3,4].map(y => <option key={y} value={y}>{isArabic ? `السنة ${y}` : `Year ${y}`}</option>)}
           </select>
          </div>
          <div>
-          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'الفصل' : 'Semester'}</label>
+          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.course-roadmap.semester')}</label>
           <select value={formData.semester} onChange={e => setFormData({ ...formData, semester: parseInt(e.target.value) })} className={inputClass}>
            {[1,2].map(s => <option key={s} value={s}>{isArabic ? `الفصل ${s}` : `Semester ${s}`}</option>)}
           </select>
          </div>
          <div>
-          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'الترتيب' : 'Order'}</label>
+          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.course-roadmap.order')}</label>
           <input type="number" value={formData.order} onChange={e => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })} className={inputClass} />
          </div>
          <div>
-          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'رابط' : 'Link'}</label>
+          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.course-roadmap.link')}</label>
           <input value={formData.url} onChange={e => setFormData({ ...formData, url: e.target.value })} placeholder="https://..." className={inputClass} />
          </div>
         </div>
         <div className="mb-4">
-         <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{isArabic ? 'المتطلبات السابقة' : 'Prerequisites'}</label>
-         <input value={formData.prerequisites.join(', ')} onChange={e => setFormData({ ...formData, prerequisites: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder={isArabic ? 'مفصل بفاصلة' : 'Comma separated'} className={inputClass} />
+         <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('inline.course-roadmap.prerequisites')}</label>
+         <input value={formData.prerequisites.join(', ')} onChange={e => setFormData({ ...formData, prerequisites: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder={t('inline.course-roadmap.comma-separated')} className={inputClass} />
         </div>
         <div className="flex gap-2">
          <button onClick={handleSaveCourse} className="flex items-center gap-2 px-4 py-2 bg-royal-500 hover:bg-royal-600 text-white rounded-xl text-sm font-medium transition">
-          <FiSave size={16} /> {editingId ? t('common.save') : (isArabic ? 'إضافة' : 'Add')}
+          <FiSave size={16} /> {editingId ? t('common.save') : (t('inline.course-roadmap.add'))}
          </button>
          <button onClick={resetForm} className="flex items-center gap-2 px-4 py-2 glass text-slate-600 dark:text-slate-300 rounded-xl text-sm font-medium transition">
           <FiX size={16} /> {t('common.cancel')}
@@ -438,8 +438,8 @@ export default function CourseRoadmap() {
     isOpen={!!confirmDelete}
     onClose={() => setConfirmDelete(null)}
     onConfirm={() => { if (confirmDelete) handleDeleteCourse(confirmDelete) }}
-    title={isArabic ? 'حذف المادة' : 'Delete course'}
-    message={isArabic ? 'هل أنت متأكد من حذف هذه المادة من المسار الدراسي؟' : 'Are you sure you want to remove this course from the roadmap?'}
+    title={t('inline.course-roadmap.delete-course')}
+    message={t('inline.course-roadmap.are-you-sure-you')}
    />
   </motion.div>
  )

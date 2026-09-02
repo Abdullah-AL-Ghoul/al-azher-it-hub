@@ -155,40 +155,40 @@ export default function Profile() {
    }).catch(() => {})
    updateUser(clean)
    setProfileData(clean)
-   toast.success(isArabic ? 'تم حفظ المعلومات' : 'Profile updated')
+   toast.success(t('inline.profile.profile-updated'))
    setEditing(false)
   } catch (e) {
-   toast.error(isArabic ? 'خطأ في الحفظ' : 'Save error')
+   toast.error(t('inline.profile.save-error'))
   }
  }
 
  const handleChangePassword = async () => {
   if (!pwForm.current || !pwForm.newPw) {
-   toast.error(isArabic ? 'املأ جميع الحقول' : 'Fill all fields')
+   toast.error(t('inline.profile.fill-all-fields'))
    return
   }
   if (pwForm.newPw.length < 8) {
-   toast.error(isArabic ? 'كلمة المرور 8 أحرف على الأقل' : 'Password must be at least 8 characters')
+   toast.error(t('inline.profile.password-must-be-at'))
    return
   }
   if (pwForm.newPw !== pwForm.confirm) {
-   toast.error(isArabic ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match')
+   toast.error(t('inline.profile.passwords-do-not-match'))
    return
   }
   setPwSaving(true)
   try {
    const auth = await authenticateUser(user.studentId, pwForm.current)
    if (!auth.ok) {
-    toast.error(isArabic ? 'كلمة المرور الحالية خاطئة' : 'Current password is incorrect')
+    toast.error(t('inline.profile.current-password-is-incorrect'))
     setPwSaving(false)
     return
    }
    await resetPassword(user.studentId, pwForm.newPw, { email: user.email || '' })
-   toast.success(isArabic ? 'تم تغيير كلمة المرور' : 'Password changed successfully')
+   toast.success(t('inline.profile.password-changed-successfully'))
    setShowPasswordForm(false)
    setPwForm({ current: '', newPw: '', confirm: '' })
   } catch (e) {
-   toast.error(isArabic ? 'خطأ في تغيير كلمة المرور' : 'Failed to change password')
+   toast.error(t('inline.profile.failed-to-change-password'))
   }
   setPwSaving(false)
  }
@@ -250,7 +250,7 @@ export default function Profile() {
       { value: stats.viewed, label: t('profile.statsWatched'), icon: FiEye, color: 'text-cyan-400', border: 'border-cyan-500/20', bg: 'bg-cyan-500/10', delay: 0 },
       { value: stats.favorites, label: t('profile.statsFavorites'), icon: FiHeart, color: 'text-rose-400', border: 'border-rose-500/20', bg: 'bg-rose-500/10', delay: 0.1 },
       { value: stats.lectures, label: t('profile.statsTotal'), icon: FiBookOpen, color: 'text-amber-400', border: 'border-amber-500/20', bg: 'bg-amber-500/10', delay: 0.2 },
-      { value: stats.sources || 0, label: isArabic ? 'المصادر' : 'Sources', icon: FiLink, color: 'text-emerald-400', border: 'border-emerald-500/20', bg: 'bg-emerald-500/10', delay: 0.3 },
+      { value: stats.sources || 0, label: t('inline.profile.sources'), icon: FiLink, color: 'text-emerald-400', border: 'border-emerald-500/20', bg: 'bg-emerald-500/10', delay: 0.3 },
      ].map((stat, i) => {
       const Icon = stat.icon
       return (
@@ -285,17 +285,17 @@ export default function Profile() {
      <div className="flex items-center justify-between mb-4">
       <h2 className="text-lg font-bold text-ink flex items-center gap-2">
        <FiActivity size={18} className="text-accent" />
-       {isArabic ? 'نشاطك خلال 12 أسبوعاً' : 'Your activity — 12 weeks'}
+       {t('inline.profile.your-activity-12-weeks')}
       </h2>
      </div>
      <div className="flex items-start justify-between gap-4 flex-wrap">
-      <div className="flex gap-[3px]" role="img" aria-label={isArabic ? 'خريطة نشاط 12 أسبوعاً' : '12-week activity map'}>
+      <div className="flex gap-[3px]" role="img" aria-label={t('inline.profile.12-week-activity-map')}>
        {heatmap.map((week, wi) => (
         <div key={wi} className="flex flex-col gap-[3px]">
          {week.map((cell, di) => (
           <span
            key={di}
-           title={`${cell.label} — ${cell.count} ${isArabic ? 'حدث' : 'events'}`}
+           title={`${cell.label} — ${cell.count} ${t('inline.profile.events')}`}
            className={`w-3 h-3 rounded-[3px] ${cell.future ? 'opacity-0 pointer-events-none' : cell.count === 0 ? HEAT_LEVELS[0] : cell.count < 3 ? HEAT_LEVELS[1] : cell.count < 6 ? HEAT_LEVELS[2] : HEAT_LEVELS[3]}`}
           />
          ))}
@@ -303,7 +303,7 @@ export default function Profile() {
        ))}
       </div>
       <div className="flex items-center gap-1.5">
-       <span className="text-xs text-slate-500 dark:text-white/50">{isArabic ? 'أكثر' : 'More'}</span>
+       <span className="text-xs text-slate-500 dark:text-white/50">{t('inline.profile.more')}</span>
        {HEAT_LEVELS.map((lvl) => (
         <span key={lvl} aria-hidden="true" className={`w-3 h-3 rounded-[3px] ${lvl}`} />
        ))}
@@ -391,37 +391,37 @@ export default function Profile() {
      <div className="flex items-center justify-between mb-4">
       <h2 className="text-lg font-bold text-ink flex items-center gap-2">
        <FiLock size={18} />
-       {isArabic ? 'تغيير كلمة المرور' : 'Change Password'}
+       {t('inline.profile.change-password')}
       </h2>
       {!showPasswordForm && (
        <button onClick={() => setShowPasswordForm(true)} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial rounded-xl text-sm font-medium">
-        <FiLock size={14} /> {isArabic ? 'تغيير' : 'Change'}
+        <FiLock size={14} /> {t('inline.profile.change')}
        </button>
       )}
      </div>
      {showPasswordForm ? (
       <div className="space-y-4">
        <div>
-        <label htmlFor="profile-current-password" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{isArabic ? 'كلمة المرور الحالية' : 'Current Password'}</label>
+        <label htmlFor="profile-current-password" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{t('inline.profile.current-password')}</label>
         <input id="profile-current-password" name="currentPassword" type="password" autoComplete="current-password" value={pwForm.current} onChange={e => setPwForm(p => ({ ...p, current: e.target.value }))} className={inputClass} />
        </div>
        <div>
-        <label htmlFor="profile-new-password" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{isArabic ? 'كلمة المرور الجديدة' : 'New Password'}</label>
+        <label htmlFor="profile-new-password" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{t('inline.profile.new-password')}</label>
         <input id="profile-new-password" name="newPassword" type="password" autoComplete="new-password" value={pwForm.newPw} onChange={e => setPwForm(p => ({ ...p, newPw: e.target.value }))} className={inputClass} />
         {pwForm.newPw && pwForm.newPw.length < 8 && (
-         <p className="text-xs text-amber-500 mt-1">{isArabic ? '8 أحرف على الأقل' : 'At least 8 characters'}</p>
+         <p className="text-xs text-amber-500 mt-1">{t('inline.profile.at-least-8-characters')}</p>
         )}
        </div>
        <div>
-        <label htmlFor="profile-confirm-password" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{isArabic ? 'تأكيد كلمة المرور' : 'Confirm Password'}</label>
+        <label htmlFor="profile-confirm-password" className="block text-xs text-slate-500 dark:text-white/60 mb-1">{t('inline.profile.confirm-password')}</label>
         <input id="profile-confirm-password" name="confirmPassword" type="password" autoComplete="new-password" value={pwForm.confirm} onChange={e => setPwForm(p => ({ ...p, confirm: e.target.value }))} className={inputClass} />
         {pwForm.confirm && pwForm.newPw !== pwForm.confirm && (
-         <p className="text-xs text-red-500 mt-1">{isArabic ? 'غير متطابقة' : 'Passwords do not match'}</p>
+         <p className="text-xs text-red-500 mt-1">{t('inline.profile.passwords-do-not-match-2')}</p>
         )}
        </div>
        <div className="flex gap-2">
         <button onClick={handleChangePassword} disabled={pwSaving} className="flex items-center gap-2 px-4 py-2 min-h-[44px] btn-spatial rounded-xl text-sm font-medium disabled:opacity-50">
-         <FiSave size={14} /> {pwSaving ? (isArabic ? 'جاري الحفظ...' : 'Saving...') : (isArabic ? 'حفظ' : 'Save')}
+         <FiSave size={14} /> {pwSaving ? (t('inline.profile.saving')) : (t('inline.profile.save'))}
         </button>
         <button onClick={() => { setShowPasswordForm(false); setPwForm({ current: '', newPw: '', confirm: '' }) }} className="flex items-center gap-2 px-4 py-2 min-h-[44px] glass text-slate-600 dark:text-white/60 rounded-xl text-sm font-medium">
          <FiX size={14} /> {t('profile.cancel')}
@@ -429,7 +429,7 @@ export default function Profile() {
        </div>
       </div>
      ) : (
-      <p className="text-sm text-slate-500 dark:text-white/60">{isArabic ? 'لم يتم تغيير كلمة المرور بعد' : 'No password changes yet'}</p>
+      <p className="text-sm text-slate-500 dark:text-white/60">{t('inline.profile.no-password-changes-yet')}</p>
      )}
     </motion.div>
 

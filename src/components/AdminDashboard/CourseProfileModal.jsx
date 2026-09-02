@@ -8,7 +8,7 @@ import { getAllUserStats, getAllRatings } from '../../services/adminStats'
 import { computeCourseStats } from '../../utils/courseStats'
 
 function CourseProfileModal({ course, lectures = [], sources = [], isOpen, onClose }) {
-  const { lang } = useLanguage()
+  const { t, lang } = useLanguage()
   const isArabic = lang === 'ar'
 
   const [stats, setStats] = useState({ courseLectures: [], courseSources: [], views: 0, ratings: [], perLecture: [], ratingsCount: 0, avgRating: '—', topViews: 0 })
@@ -81,29 +81,29 @@ function CourseProfileModal({ course, lectures = [], sources = [], isOpen, onClo
                 <div className="glass rounded-xl p-3 border border-white/10 text-center">
                   <FiVideo size={20} className="mx-auto text-violet-500 mb-1" />
                   <p className="text-xl font-bold text-ink">{courseLectures.length}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{isArabic ? 'المحاضرات' : 'Lectures'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t('inline.course-profile-modal.lectures')}</p>
                 </div>
                 <div className="glass rounded-xl p-3 border border-white/10 text-center">
                   <FiFile size={20} className="mx-auto text-cyan-500 mb-1" />
                   <p className="text-xl font-bold text-ink">{courseSources.length}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{isArabic ? 'المصادر' : 'Sources'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t('inline.course-profile-modal.sources')}</p>
                 </div>
                 <div className="glass rounded-xl p-3 border border-white/10 text-center">
                   <FiEye size={20} className="mx-auto text-royal-500 mb-1" />
                   <p className="text-xl font-bold text-ink">{views}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{isArabic ? 'إجمالي المشاهدات' : 'Total views'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t('inline.course-profile-modal.total-views')}</p>
                 </div>
                 <div className="glass rounded-xl p-3 border border-white/10 text-center">
                   <FiUsers size={20} className="mx-auto text-amber-500 mb-1" />
                   <p className="text-xl font-bold text-ink">{topViews}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{isArabic ? 'أعلى مشاهدات' : 'Top views'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t('inline.course-profile-modal.top-views')}</p>
                 </div>
               </div>
 
               {ratingsCount > 0 && (
                 <div className="glass rounded-xl p-4 border border-white/10">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-500 dark:text-slate-400">{isArabic ? 'متوسط التقييم' : 'Average Rating'}</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">{t('inline.course-profile-modal.average-rating')}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-bold text-amber-500">{avgRating}</span>
                       <FiStar size={16} className="text-amber-500 fill-amber-500" />
@@ -133,7 +133,7 @@ function CourseProfileModal({ course, lectures = [], sources = [], isOpen, onClo
                 <div className="glass rounded-xl p-4 border border-white/10">
                   <h3 className="text-sm font-semibold text-ink mb-3 flex items-center gap-2">
                     <FiVideo size={14} className="text-royal-500" />
-                    {isArabic ? 'المشاهدات لكل محاضرة' : 'Views per lecture'}
+                    {t('inline.course-profile-modal.views-per-lecture')}
                   </h3>
                   <div className="space-y-2">
                     {[...perLecture].sort((a, b) => b.views - a.views).slice(0, 8).map(p => {

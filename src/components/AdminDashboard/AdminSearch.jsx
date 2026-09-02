@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { FiSearch, FiX, FiVideo, FiBook, FiGrid, FiUsers } from 'react-icons/fi'
+import { useLanguage } from '../../context/LanguageContext'
 
 /**
  * Global jump-search for the admin dashboard: searches users, lectures,
@@ -13,7 +14,8 @@ export default function AdminSearch({
   users = [],
   isArabic,
   onNavigate,
-}) {
+} ) {
+ const { t } = useLanguage()
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
@@ -28,22 +30,22 @@ export default function AdminSearch({
     const match = (v) => (v || '').toLowerCase().includes(q)
     const groups = [
       {
-        key: 'users', tab: 'users', icon: FiUsers, label: isArabic ? 'الطلاب' : 'Students',
+        key: 'users', tab: 'users', icon: FiUsers, label: t('inline.admin-search.students'),
         items: users.filter(u => match(u.name) || match(u.studentId) || match(u.email) || match(u.major)).slice(0, 6),
         nameOf: (u) => `${u.name || ''} (${u.studentId})`,
       },
       {
-        key: 'lectures', tab: 'lectures', icon: FiVideo, label: isArabic ? 'المحاضرات' : 'Lectures',
+        key: 'lectures', tab: 'lectures', icon: FiVideo, label: t('inline.admin-search.lectures'),
         items: lectures.filter(l => match(l.titleAr) || match(l.titleEn) || match(l.subjectAr) || match(l.subjectEn)).slice(0, 6),
         nameOf: (l) => (isArabic ? l.titleAr : l.titleEn),
       },
       {
-        key: 'sources', tab: 'sources', icon: FiGrid, label: isArabic ? 'المصادر' : 'Sources',
+        key: 'sources', tab: 'sources', icon: FiGrid, label: t('inline.admin-search.sources'),
         items: sources.filter(s => match(s.titleAr) || match(s.titleEn) || match(s.subjectAr) || match(s.subjectEn)).slice(0, 6),
         nameOf: (s) => (isArabic ? s.titleAr : s.titleEn),
       },
       {
-        key: 'courses', tab: 'courses', icon: FiBook, label: isArabic ? 'المواد' : 'Courses',
+        key: 'courses', tab: 'courses', icon: FiBook, label: t('inline.admin-search.courses'),
         items: courses.filter(c => match(c.nameAr) || match(c.nameEn) || match(c.doctorAr) || match(c.doctorEn)).slice(0, 6),
         nameOf: (c) => (isArabic ? c.nameAr : c.nameEn),
       },
@@ -106,8 +108,8 @@ export default function AdminSearch({
         onChange={e => { setQuery(e.target.value); setOpen(true); setActiveIndex(-1) }}
         onFocus={() => setOpen(true)}
         onKeyDown={onInputKeyDown}
-        placeholder={isArabic ? 'بحث شامل...' : 'Global search...'}
-        aria-label={isArabic ? 'بحث شامل في لوحة التحكم' : 'Global dashboard search'}
+        placeholder={t('inline.admin-search.global-search')}
+        aria-label={t('inline.admin-search.global-dashboard-search')}
         aria-expanded={open && total > 0}
         aria-controls={listId}
         aria-activedescendant={activeIndex >= 0 && flat[activeIndex] ? `admin-search-${flat[activeIndex].itemKey}` : undefined}
@@ -118,7 +120,7 @@ export default function AdminSearch({
       {query && (
         <button
           onClick={() => { setQuery(''); setActiveIndex(-1); setOpen(true) }}
-          aria-label={isArabic ? 'مسح البحث' : 'Clear search'}
+          aria-label={t('inline.admin-search.clear-search')}
           className="absolute top-1/2 -translate-y-1/2 end-2 p-1 text-slate-400 hover:text-ink rounded transition"
         >
           <FiX size={14} />
@@ -129,12 +131,12 @@ export default function AdminSearch({
         <div
           id={listId}
           role="listbox"
-          aria-label={isArabic ? 'نتائج البحث' : 'Search results'}
+          aria-label={t('inline.admin-search.search-results')}
           className="absolute top-full mt-1.5 start-0 end-0 max-h-80 overflow-y-auto glass rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 py-1.5 scrollbar-thin"
         >
           {total === 0 ? (
             <p className="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 text-center">
-              {isArabic ? 'لا توجد نتائج' : 'No results found'}
+              {t('inline.admin-search.no-results-found')}
             </p>
           ) : (
             results.map(group => {

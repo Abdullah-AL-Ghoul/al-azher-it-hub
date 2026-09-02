@@ -8,8 +8,10 @@ import { pageContainer, pageItem, pageContainerReduced, pageItemReduced } from '
 import ConfirmDialog from '../shared/ConfirmDialog'
 import SkeletonRow from './SkeletonRow'
 import Pagination from './Pagination'
+import { useLanguage } from '../../context/LanguageContext'
 
 function CoursesTable({ courses, loading, isArabic, onEdit, onAdd, onRefresh }) {
+ const { t } = useLanguage()
   const prefersReduced = useReducedMotion()
  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
  const [search, setSearch] = useState('')
@@ -33,10 +35,10 @@ function CoursesTable({ courses, loading, isArabic, onEdit, onAdd, onRefresh }) 
   try {
    await deleteCourse(courseId)
    addActivity('courses', 'DELETE', courseId)
-   toast.success(isArabic ? 'تم حذف المادة' : 'Course deleted')
+   toast.success(t('inline.courses-table.course-deleted'))
    if (onRefresh) onRefresh()
   } catch (error) {
-   toast.error(isArabic ? 'فشل حذف المادة' : 'Failed to delete course')
+   toast.error(t('inline.courses-table.failed-to-delete-course'))
   }
  }
 
@@ -55,10 +57,10 @@ function CoursesTable({ courses, loading, isArabic, onEdit, onAdd, onRefresh }) 
        <FiSearch className={`absolute top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 start-3`} size={14} />
        <input
         type="text"
-        placeholder={isArabic ? 'بحث بالاسم أو الدكتور...' : 'Search name or doctor...'}
+        placeholder={t('inline.courses-table.search-name-or-doctor')}
         value={search}
         onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-        aria-label={isArabic ? 'بحث في المواد' : 'Search courses'}
+        aria-label={t('inline.courses-table.search-courses')}
         className={`ps-8 pe-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48`}
        />
       </div>
@@ -66,14 +68,14 @@ function CoursesTable({ courses, loading, isArabic, onEdit, onAdd, onRefresh }) 
      <button
       onClick={() => onAdd && onAdd()}
       className="flex items-center gap-2 px-3 py-1.5 bg-royal-500 hover:bg-royal-600 text-white rounded-lg text-sm font-medium transition">
-      <FiPlus size={14} /> {isArabic ? 'إضافة مادة' : 'Add Course'}
+      <FiPlus size={14} /> {t('inline.courses-table.add-course')}
      </button>
     </div>
 
     {filteredCourses.length === 0 && (
      <div className="glass rounded-xl p-12 text-center border border-white/10">
       <FiBookOpen className="mx-auto text-5xl text-slate-300 dark:text-slate-600 mb-4" />
-      <p className="text-slate-500 dark:text-slate-400 ">{search ? (isArabic ? 'لا توجد نتائج للبحث' : 'No search results') : (isArabic ? 'لا توجد مواد مسجلة' : 'No courses registered')}</p>
+      <p className="text-slate-500 dark:text-slate-400 ">{search ? (t('inline.courses-table.no-search-results')) : (t('inline.courses-table.no-courses-registered'))}</p>
      </div>
     )}
 
@@ -104,13 +106,13 @@ function CoursesTable({ courses, loading, isArabic, onEdit, onAdd, onRefresh }) 
        </div>
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">
-       <button onClick={() => handleEditCourse(course)} className="p-2 text-royal-500 hover:bg-royal-500/10 rounded-lg transition-colors" aria-label={isArabic ? 'تعديل المادة' : 'Edit course'}>
+       <button onClick={() => handleEditCourse(course)} className="p-2 text-royal-500 hover:bg-royal-500/10 rounded-lg transition-colors" aria-label={t('inline.courses-table.edit-course')}>
         <FiEdit2 size={14} />
        </button>
        <button
         onClick={() => setConfirmDeleteId(course.id)}
         className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-        aria-label={isArabic ? 'حذف المادة' : 'Delete course'}
+        aria-label={t('inline.courses-table.delete-course')}
        >
         <FiTrash2 size={14} />
        </button>
@@ -123,10 +125,10 @@ function CoursesTable({ courses, loading, isArabic, onEdit, onAdd, onRefresh }) 
     isOpen={!!confirmDeleteId}
     onClose={() => setConfirmDeleteId(null)}
     onConfirm={() => handleDeleteCourse(confirmDeleteId)}
-    title={isArabic ? 'تأكيد الحذف' : 'Confirm Deletion'}
-    message={isArabic ? 'هل أنت متأكد من حذف هذه المادة؟' : 'Are you sure you want to delete this course?'}
-    confirmText={isArabic ? 'حذف' : 'Delete'}
-    cancelText={isArabic ? 'إلغاء' : 'Cancel'}
+    title={t('inline.courses-table.confirm-deletion')}
+    message={t('inline.courses-table.are-you-sure-you')}
+    confirmText={t('inline.courses-table.delete')}
+    cancelText={t('inline.courses-table.cancel')}
     variant="danger"
    />
   </motion.div>
