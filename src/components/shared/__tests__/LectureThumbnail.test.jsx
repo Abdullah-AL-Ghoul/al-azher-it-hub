@@ -43,4 +43,18 @@ describe('LectureThumbnail', () => {
     expect(img.getAttribute('loading')).toBe('eager')
     expect(img.getAttribute('fetchpriority')).toBe('high')
   })
+
+  it('restarts the ladder when the videoId changes on a reused instance', () => {
+    const { container, rerender } = render(<LectureThumbnail videoId="abc12345678" />)
+    // Degrade twice → sitting at mq
+    fireEvent.error(container.querySelector('img'))
+    fireEvent.error(container.querySelector('img'))
+    expect(container.querySelector('img').getAttribute('src')).toContain('mqdefault')
+
+    // Same component instance, new video → back at the top of the ladder
+    rerender(<LectureThumbnail videoId="xyz98765432" />)
+    const img = container.querySelector('img')
+    expect(img.getAttribute('src')).toContain('maxresdefault')
+    expect(img.getAttribute('src')).toContain('xyz98765432')
+  })
 })

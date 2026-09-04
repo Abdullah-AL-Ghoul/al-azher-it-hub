@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { lectureThumb } from '../../utils/helpers'
 
 // Quality ladder: start at maxres (true 16:9); YouTube serves 404 + a gray
@@ -26,6 +26,12 @@ const SRC_SETS = [
 export default function LectureThumbnail({ videoId, alt = '', sizes, width = 320, height = 180, priority = false, className = '' }) {
   const [step, setStep] = useState(0)
 
+  // A reused instance (modal, re-ordered list) must restart the ladder when
+  // the video changes, or one missing-maxres video degrades every later one.
+  useEffect(() => {
+    setStep(0)
+  }, [videoId])
+
   if (!videoId || step >= LADDER.length) {
     return (
       <div
@@ -38,6 +44,7 @@ export default function LectureThumbnail({ videoId, alt = '', sizes, width = 320
   const id = videoId
   return (
     <img
+      key={id}
       src={lectureThumb(id, LADDER[step])}
       srcSet={SRC_SETS[step](id)}
       sizes={sizes}

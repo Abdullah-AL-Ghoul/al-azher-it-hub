@@ -104,11 +104,14 @@ export function AuthProvider({ children }) {
   // Keep React state in sync with the real Supabase session. When the token
   // expires, is revoked, or the user signs out elsewhere, clear the local user
   // so ProtectedRoute stops trusting a stale/privileged cached session.
+  // Only SIGNED_OUT clears the identity: INITIAL_SESSION also fires with a
+  // null session on boot (before the cached identity restores), and reacting
+  // to it would sign the user out on every page load.
   useEffect(() => {
    let sub
    try {
-    const { data: { subscription } } = getSupabase().auth.onAuthStateChange((_event, session) => {
-     if (!session) {
+    const { data: { subscription } } = getSupabase().auth.onAuthStateChange((event, session) => {
+     if (event === 'SIGNED_OUT' && !session) {
       setUser(null)
       setLoading(false)
       try { sessionStorage.removeItem(STORAGE_KEY) } catch (_e) { /* ignore */ }
