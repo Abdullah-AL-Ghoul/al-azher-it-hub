@@ -20,16 +20,16 @@ const USER_COLUMNS = [
 ]
 
 function getTimeAgo(lastVisit, isArabic) {
- if (!lastVisit) return t('inline.users-table.never-logged-in')
+ if (!lastVisit) return isArabic ? 'لم يسجّل دخولاً بعد' : 'Never logged in'
  const diff = Date.now() - new Date(lastVisit).getTime()
  const minutes = Math.floor(diff / 60000)
  const hours = Math.floor(diff / 3600000)
  const days = Math.floor(diff / 86400000)
- 
- if (minutes < 1) return t('inline.users-table.active-now')
- if (minutes < 60) return `${minutes} ${t('inline.users-table.min-ago')}`
- if (hours < 24) return `${hours} ${t('inline.users-table.hours-ago')}`
- return `${days} ${t('inline.users-table.days-ago')}`
+
+ if (minutes < 1) return isArabic ? 'نشط الآن' : 'Active now'
+ if (minutes < 60) return isArabic ? `قبل ${minutes} د` : `${minutes}m ago`
+ if (hours < 24) return isArabic ? `قبل ${hours} س` : `${hours}h ago`
+ return isArabic ? `قبل ${days} ي` : `${days}d ago`
 }
 
 function UsersTable({ users, loading, onRefresh, isArabic }) {

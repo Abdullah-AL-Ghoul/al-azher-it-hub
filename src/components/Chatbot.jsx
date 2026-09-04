@@ -115,6 +115,7 @@ function TypingIndicator() {
 }
 
 const CopyButton = memo(function CopyButton({ text, isArabic }) {
+ const { t } = useLanguage()
  const [copied, setCopied] = useState(false)
 
  const handleCopy = useCallback(async() => {

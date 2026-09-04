@@ -12,7 +12,7 @@ import AuthSubmitButton from '../components/auth/AuthSubmitButton'
 import AuthSuccessAnimation from '../components/auth/AuthSuccessAnimation'
 import SocialAuth from '../components/auth/SocialAuth'
 
-function PasswordStrength({ password, isArabic }) {
+function PasswordStrength({ password }) {
  const { t } = useLanguage()
  const criteria = [
   { test: (p) => p.length >= 8, label: t('inline.signup.at-least-8-characters') },

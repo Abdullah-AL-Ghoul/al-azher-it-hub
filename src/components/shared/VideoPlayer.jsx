@@ -15,7 +15,7 @@ function buildEmbedSrc(videoId, autoplay = true) {
   return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`
 }
 
-export default function VideoPlayer({ videoId, url, title, isArabic, onWatch, autoPlay = false } ) {
+export default function VideoPlayer({ videoId, url, title, onWatch, autoPlay = false }) {
  const { t } = useLanguage()
   const [inline, setInline] = useState(autoPlay)
   const [loading, setLoading] = useState(false)

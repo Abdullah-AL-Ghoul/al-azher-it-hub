@@ -47,7 +47,6 @@ export default memo(function Navbar() {
   const [showNotifications, setShowNotifications] = useState(false)
   const notifTrapRef = useFocusTrap(showNotifications)
   const mobileTrapRef = useFocusTrap(isOpen)
-  const isArabic = lang === 'ar'
   const { notifications, unreadCount, markAsRead } = useNotifications(user)
   useEffect(() => {
     if (!isOpen && !showNotifications) return

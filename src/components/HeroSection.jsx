@@ -24,7 +24,6 @@ export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount =
  const { lang, t } = useLanguage()
  const { theme } = useTheme()
  const prefersReduced = useReducedMotion()
- const isArabic = lang === 'ar'
  // The 3D layer drifts up as the user scrolls — depth cue, GPU-cheap.
  const { ref: parallaxRef, style: parallaxStyle } = useParallax({ distance: 70 })
 

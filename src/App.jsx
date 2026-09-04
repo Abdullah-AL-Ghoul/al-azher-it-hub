@@ -37,8 +37,7 @@ const CourseRoadmap = lazy(() => import('./pages/CourseRoadmap'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 function PageLoader() {
- const { t, lang } = useLanguage()
- const isArabic = lang === 'ar'
+ const { t } = useLanguage()
  return (
   <div className="min-h-screen flex items-center justify-center bg-spatial-page">
    <div className="text-center">

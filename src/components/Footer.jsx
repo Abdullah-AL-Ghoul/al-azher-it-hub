@@ -8,8 +8,7 @@ import { FaWhatsapp } from 'react-icons/fa'
 import SiteLogo from './shared/SiteLogo'
 
 export default memo(function Footer() {
-  const { t, lang } = useLanguage()
-  const isArabic = lang === 'ar'
+  const { t } = useLanguage()
   const prefersReduced = useReducedMotion()
 
  const links = [

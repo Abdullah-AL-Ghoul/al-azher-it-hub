@@ -64,11 +64,11 @@ export default function OverviewPanel({
           <FiUsers size={14} /> {t('inline.overview-panel.students')}
         </button>
         <button onClick={() => {
-          const t = (key) => ({
+          const msgMap = (key) => ({
             'usersTable.exported': t('inline.overview-panel.backup-exported'),
             'usersTable.exportFailed': t('inline.overview-panel.backup-export-failed')
           })[key] || 'Exported!'
-          exportToJson('al-azher-backup' )
+          exportToJson('al-azher-backup', msgMap)
         }} className="flex items-center gap-2 px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition">
           <FiDownload size={14} /> {t('inline.overview-panel.backup')}
         </button>

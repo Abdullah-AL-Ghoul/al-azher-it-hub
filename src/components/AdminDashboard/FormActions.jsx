@@ -1,7 +1,7 @@
 import { useLanguage } from '../../context/LanguageContext'
-﻿import { FiSave } from 'react-icons/fi'
+import { FiSave } from 'react-icons/fi'
 
-export default function FormActions({ onSave, onCancel, isEditing, isArabic } ) {
+export default function FormActions({ onSave, onCancel, isEditing }) {
  const { t } = useLanguage()
  return (
   <div className="flex gap-3 mt-4">

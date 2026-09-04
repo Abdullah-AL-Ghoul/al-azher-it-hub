@@ -8,7 +8,8 @@ import { INPUT_CLASS } from '../../utils/adminShared'
 import { uid } from '../../utils/helpers'
 import { useLanguage } from '../../context/LanguageContext'
 
-function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], isArabic, onRefresh }, t) {
+function SettingsPanel({ additions = [], studyPlan = {}, roadmap = [], isArabic, onRefresh }) {
+ const { t } = useLanguage()
  const [showAdditionForm, setShowAdditionForm] = useState(false)
  const [additionEdit, setAdditionEdit] = useState([])
 

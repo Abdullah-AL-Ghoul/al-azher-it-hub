@@ -562,8 +562,7 @@
       "quick-response": "Quick Response",
       "reply-within-24-hours": "Reply within 24 hours",
       "dedicated-tech-support": "Dedicated tech support",
-      "urgent-issue-resolution": "Urgent issue resolution",
-      "hello-i-m-using": "Hello! I'm using the AL-Azher IT Hub platform and I need help with an issue:"
+      "urgent-issue-resolution": "Urgent issue resolution"
     },
     "app": {
       "loading": "Loading..."

@@ -348,6 +348,7 @@ export default function Lectures() {
 }
 
 function VideoPlayerModal({ lecture, onClose, isArabic, onWatch, localFavorites, localRatings, onToggleFavorite, onRate }) {
+ const { t } = useLanguage()
  const isFavorite = lecture ? localFavorites.includes(lecture.id) : false
  const rating = lecture ? localRatings[lecture.id] || 0 : 0
 

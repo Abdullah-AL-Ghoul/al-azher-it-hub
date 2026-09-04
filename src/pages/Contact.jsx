@@ -28,7 +28,9 @@ const responseTimes = [
 ]
 
 function buildWhatsAppLink(isArabic) {
- const message = t('inline.contact.hello-i-m-using')
+ const message = isArabic
+  ? 'مرحباً! أنا أستخدم منصة AL-Azher IT Hub وأحتاج مساعدة في حل مشكلة:'
+  : 'Hello! I\'m using the AL-Azher IT Hub platform and I need help with an issue:'
  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
 }
 
@@ -55,9 +57,11 @@ export default function Contact() {
   e.preventDefault()
   setSubmitting(true)
   const form = e.target
-  const subject = encodeURIComponent(form.subject.value)
+  // form.elements avoids the HTMLFormElement.name/subject IDL shadowing.
+  const fields = form.elements
+  const subject = encodeURIComponent(fields.subject.value)
   const body = encodeURIComponent(
-   `${t('contact.form.name')}: ${form.name.value}\n${t('contact.form.emailPlaceholder')}: ${form.email.value}\n${t('contact.form.message')}:\n${form.message.value}`
+   `${t('contact.form.name')}: ${fields.name.value}\n${t('contact.form.emailPlaceholder')}: ${fields.email.value}\n${t('contact.form.message')}:\n${fields.message.value}`
   )
   submitTimer.current = setTimeout(() => {
    window.location.href = `mailto:abdallhalghoul200@gmail.com?subject=${subject}&body=${body}`

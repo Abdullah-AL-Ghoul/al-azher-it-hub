@@ -5,7 +5,6 @@ import { useLocation } from 'react-router-dom'
 import { renderWithProviders as render, screen, waitFor, within } from '../../test-utils/renderWithProviders'
 import GlobalSearch from '../GlobalSearch'
 import { createTestSupabase } from '../../test-utils/renderWithProviders'
-import { __setSupabaseMock } from '../../test-utils/mockSupabase'
 
 const LECTURES = [
   { id: 'l1', titleAr: 'مقدمة في الشبكات', titleEn: 'Intro to Networks', subjectAr: 'شبكات', subjectEn: 'Networks' },
