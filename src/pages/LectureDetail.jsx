@@ -3,11 +3,11 @@ import { useParams, Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { getLectures, getSources, getFavorites, getRatings, getViewed, toggleFavorite, setRating, markViewed, addStudentLog, getSignedSourceUrls } from '../services'
-import { resolveFileUrl } from '../hooks/useSignedSources'
+import { getLectures, getSources, getFavorites, getRatings, getViewed, toggleFavorite, setRating, markViewed, addStudentLog, signSourceForFetch } from '../services'
+import useSecureSourceFile from '../hooks/useSecureSourceFile'
 import { useScrollFrame } from '../hooks/useScrollManager.jsx'
 import { pageContainer, pageItem, revealItem } from '../utils/motionTokens'
-import { lectureVideoId, lectureThumb, downloadFile, getSourceFiles } from '../utils/helpers'
+import { lectureVideoId, lectureThumb, getSourceFiles } from '../utils/helpers'
 import VideoPlayer from '../components/shared/VideoPlayer'
 import StarRating from '../components/shared/StarRating'
 import { FiPlay, FiHeart, FiCheck, FiExternalLink, FiBookOpen, FiFileText, FiClock, FiUser, FiArrowRight, FiArrowLeft, FiLink, FiCopy, FiCheckCircle, FiDownload, FiFile } from 'react-icons/fi'
@@ -135,15 +135,15 @@ export default function LectureDetail() {
   )
  }, [sources, lecture])
 
- // Storage-backed source files are private: resolve short-lived signed URLs.
- const [sourceSigned, setSourceSigned] = useState({})
- useEffect(() => {
-  let active = true
-  const paths = [...new Set(relatedSources.flatMap(s => getSourceFiles(s).map(f => f.path).filter(Boolean)))]
-  if (paths.length === 0) { setSourceSigned({}); return }
-  getSignedSourceUrls(paths).then(map => { if (active) setSourceSigned(map) }).catch(() => {})
-  return () => { active = false }
- }, [relatedSources])
+ // Storage-backed source files are private: bytes are fetched per access
+ // under the user's session and opened as blob URLs (nothing shareable).
+ const secureFile = useSecureSourceFile()
+ const signer = (path, opts) => signSourceForFetch(path, { download: opts?.download === true, name: opts?.name })
+ const openSourceSecure = async (f, mode) => {
+  if (!f.path) { if (f.url) window.open(f.url, '_blank', 'noopener,noreferrer'); return }
+  try { await secureFile.open(f.path, { name: f.name || 'file', mode, signIn: signer }) }
+  catch { toast.error(isArabic ? 'تعذّر الوصول للملف. أعد المحاولة.' : 'Could not open the file. Try again.') }
+ }
 
  const subjectLectures = useMemo(() => {
   if (!lecture) return []
@@ -287,17 +287,14 @@ export default function LectureDetail() {
              <p className="text-sm font-medium text-ink truncate group-hover:text-royal-500 dark:group-hover:text-cyan-400 transition-colors">{isArabic ? src.titleAr : src.titleEn}</p>
              {files.length > 0 ? (
               <div className="mt-1.5 space-y-1">
-               {files.slice(0, 3).map((f, i) => {
-                const fileUrl = resolveFileUrl(f, sourceSigned)
-                return (
+               {files.slice(0, 3).map((f, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-xs">
                  <FiFile size={10} className="text-emerald-500 flex-shrink-0" />
                  <span className="text-slate-600 dark:text-white/60 truncate flex-1">{f.name}</span>
-                 <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="p-0.5 rounded text-cyan-500 hover:bg-cyan-500/10" aria-label={isArabic ? `فتح ${f.name}` : `Open ${f.name}`}><FiExternalLink size={11} /></a>
-                 <button onClick={() => downloadFile(fileUrl, f.name)} className="p-0.5 rounded text-emerald-500 hover:bg-emerald-500/10" aria-label={isArabic ? `تحميل ${f.name}` : `Download ${f.name}`}><FiDownload size={11} /></button>
+                 <button onClick={() => openSourceSecure(f, 'view')} className="p-0.5 rounded text-cyan-500 hover:bg-cyan-500/10" aria-label={isArabic ? `فتح ${f.name}` : `Open ${f.name}`}><FiExternalLink size={11} /></button>
+                 <button onClick={() => openSourceSecure(f, 'download')} className="p-0.5 rounded text-emerald-500 hover:bg-emerald-500/10" aria-label={isArabic ? `تحميل ${f.name}` : `Download ${f.name}`}><FiDownload size={11} /></button>
                 </div>
-                )
-               })}
+               ))}
                {files.length > 3 && <p className="text-[10px] text-slate-500 dark:text-white/40">+{files.length - 3} {t('inline.lecture-detail.files')}</p>}
               </div>
              ) : src.url ? (

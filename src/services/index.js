@@ -15,4 +15,4 @@ export { addStudentLog, getStudentLogs, getAllStudentLogs, updateLastVisit } fro
 export { getSubjects } from './subjects'
 export { getRoadmap, saveRoadmap } from './roadmap'
 export { getAllUserStats, getAllRatings } from './adminStats'
-export { uploadSourceFile, validateFiles, validateMagicBytes, getSignedSourceUrls } from './sourceStorage'
+export { uploadSourceFile, validateFiles, validateMagicBytes, getSignedSourceUrls, signSourceForFetch } from './sourceStorage'

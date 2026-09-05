@@ -2,9 +2,10 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { FiPlus, FiEdit2, FiTrash2, FiLink, FiFile, FiUpload } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
-import { deleteSource } from '../../services'
+import { deleteSource, signSourceForFetch } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'
 import usePagination from '../../hooks/usePagination'
+import useSecureSourceFile from '../../hooks/useSecureSourceFile'
 import { pageContainer, pageContainerReduced } from '../../utils/motionTokens'
 import ConfirmDialog from '../shared/ConfirmDialog'
 import SkeletonRow from './SkeletonRow'
@@ -13,6 +14,14 @@ import Pagination from './Pagination'
 function SourcesTable({ sources, loading, isArabic, onEdit, onAdd, onRefresh }) {
  const { t } = useLanguage()
  const prefersReduced = useReducedMotion()
+ const secureFile = useSecureSourceFile()
+ const signer = (path, opts) => signSourceForFetch(path, { download: opts?.download === true, name: opts?.name })
+ const openSourceSecure = async (f) => {
+  const path = f.path
+  if (!path) { if (f.url) window.open(f.url, '_blank', 'noopener,noreferrer'); return }
+  try { await secureFile.open(path, { name: f.name || 'file', mode: 'view', signIn: signer }) }
+  catch { toast.error(isArabic ? 'تعذّر الوصول للملف. أعد المحاولة.' : 'Could not open the file. Try again.') }
+ }
  const [search, setSearch] = useState('')
  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
  const [sortBy, setSortBy] = useState('default')
@@ -118,10 +127,10 @@ function SourcesTable({ sources, loading, isArabic, onEdit, onAdd, onRefresh }) 
           {Array.isArray(source.files) && source.files.length > 1 && (
            <div className="flex flex-wrap gap-1 mt-2">
             {source.files.slice(0, 3).map((f, i) => (
-             <a key={i} href={f.url} target="_blank" rel="noopener noreferrer"
+             <button key={i} onClick={() => openSourceSecure(f)}
                className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full hover:bg-emerald-500/20 truncate max-w-[120px]">
               <FiFile size={9} /> {f.name}
-             </a>
+             </button>
             ))}
             {source.files.length > 3 && (
              <span className="text-[10px] px-2 py-0.5 bg-slate-500/10 text-slate-500 rounded-full">

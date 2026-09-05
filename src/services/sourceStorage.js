@@ -118,6 +118,19 @@ export async function getSignedSourceUrls(paths) {
   return result
 }
 
+/**
+ * Signs a SINGLE path for in-memory fetch (never shown to the user).
+ * Short 5-minute TTL — the bytes are consumed immediately by the app.
+ * Optionally forces the download disposition.
+ */
+export async function signSourceForFetch(path, { download = false, name } = {}) {
+  const supabase = getSupabase()
+  const options = download ? { download: name || true } : {}
+  return supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrl(path, 300, options)
+}
+
 export function validateFiles(fileList) {
   const files = Array.from(fileList)
   const valid = []

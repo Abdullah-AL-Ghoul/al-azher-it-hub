@@ -7,10 +7,10 @@ import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useFileUpload } from '../hooks/useFileUpload'
 import { useScrollLock } from '../hooks/useScrollLock'
 import { formatBytes } from '../services/sourceStorage'
+import { signSourceForFetch } from '../services/sourceStorage'
+import useSecureSourceFile from '../hooks/useSecureSourceFile'
 import { pageContainer, pageItem } from '../utils/motionTokens'
-import { SORT_OPTIONS, downloadFile, getSourceFiles, storagePathFromUrl } from '../utils/helpers'
-import { getSignedSourceUrls } from '../services/sourceStorage'
-import { resolveFileUrl } from '../hooks/useSignedSources'
+import { SORT_OPTIONS, getSourceFiles, storagePathFromUrl } from '../utils/helpers'
 import toast from 'react-hot-toast'
 import PageHero from '../components/shared/PageHero'
 import FilterBar from '../components/FilterBar'
@@ -46,20 +46,6 @@ function isRecentlyAdded(dateStr) {
  return diff < 7 * 24 * 60 * 60 * 1000
 }
 
-async function downloadAllFiles(files, isArabic) {
- for (let i = 0; i < files.length; i++) {
-  const f = files[i]
-  try {
-   await downloadFile(f.url, f.name)
-  } catch (e) { /* keep going */ }
-  if (i < files.length - 1) {
-   await new Promise(r => setTimeout(r, 500))
-  }
- }
- if (files.length > 1) {
-  toast.success(isArabic ? `بدأ تحميل ${files.length} ملفات` : `Started downloading ${files.length} files`)
- }
-}
 
 function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
  const [titleAr, setTitleAr] = useState('')
@@ -363,11 +349,15 @@ export default function Sources() {
  const [search, setSearch] = useState('')
  const [sortBy, setSortBy] = useState('date-desc')
  const [sources, setSources] = useState([])
- const [signed, setSigned] = useState({})
  const [loading, setLoading] = useState(true)
  const [error, setError] = useState(null)
  const [showUpload, setShowUpload] = useState(false)
  const prefersReduced = useReducedMotion()
+ const secureFile = useSecureSourceFile()
+
+ // Authenticated signer handed to the secure-file hook: mints a 5-minute
+ // server-side fetch URL per access (never shown to the user).
+ const signer = (path, opts) => signSourceForFetch(path, { download: opts?.download === true, name: opts?.name })
 
  
  const mountedRef = useRef(true)
@@ -396,15 +386,6 @@ export default function Sources() {
   setError(null)
   loadSources()
  }
-
- // Storage files are private: resolve short-lived signed URLs after load.
- useEffect(() => {
-  let active = true
-  const paths = [...new Set(sources.flatMap(s => getSourceFiles(s).map(f => f.path).filter(Boolean)))]
-  if (paths.length === 0) { setSigned({}); return }
-  getSignedSourceUrls(paths).then(map => { if (active) setSigned(map) }).catch(() => {})
-  return () => { active = false }
- }, [sources])
 
  const subjects = useMemo(() => {
   const set = new Set(sources.map(s => isArabic ? s.subjectAr : s.subjectEn).filter(Boolean))
@@ -541,42 +522,52 @@ export default function Sources() {
            {(() => {
             const allFiles = getSourceFiles(source)
             if (allFiles.length === 0) return null
+            const openSecure = async (f, mode) => {
+             if (!f.path) { if (f.url) window.open(f.url, '_blank', 'noopener,noreferrer'); return }
+             try {
+              await secureFile.open(f.path, { name: f.name || 'file', mode, signIn: signer })
+             } catch {
+              toast.error(isArabic ? 'تعذّر الوصول للملف. أعد المحاولة.' : 'Could not open the file. Try again.')
+             }
+            }
             return (
              <div className="space-y-2 mb-4">
-              {allFiles.slice(0, 6).map((f, fi) => {
-               const fileUrl = resolveFileUrl(f, signed)
-               return (
+              {allFiles.slice(0, 6).map((f, fi) => (
                <div key={fi} className="flex items-center gap-2 p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
                 <FiFile size={14} className="text-emerald-500 flex-shrink-0" />
                 <span className="flex-1 min-w-0 text-xs text-navy-900 dark:text-white/80 truncate">{f.name || 'file'}</span>
-                <a
-                 href={fileUrl}
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — ${f.name}`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}
-                 className="p-1.5 rounded-lg text-cyan-500 hover:bg-cyan-500/10 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                <button
+                 onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — ${f.name}`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } openSecure(f, 'view') }}
+                 disabled={secureFile.busyPath === f.path}
+                 className="p-1.5 rounded-lg text-cyan-500 hover:bg-cyan-500/10 transition min-w-[44px] min-h-[44px] flex items-center justify-center disabled:opacity-50"
                  title={t('inline.sources.open')}
                  aria-label={isArabic ? `فتح ${f.name}` : `Open ${f.name}`}
                 >
-                 <FiExternalLink size={14} />
-                </a>
+                 {secureFile.busyPath === f.path ? <FiLoader size={14} className="animate-spin" /> : <FiExternalLink size={14} />}
+                </button>
                 <button
-                 onClick={() => downloadFile(fileUrl, f.name)}
-                 className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-500/10 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                 onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — ${f.name}`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } openSecure(f, 'download') }}
+                 disabled={secureFile.busyPath === f.path}
+                 className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-500/10 transition min-w-[44px] min-h-[44px] flex items-center justify-center disabled:opacity-50"
                  title={t('inline.sources.download')}
                  aria-label={isArabic ? `تحميل ${f.name}` : `Download ${f.name}`}
                 >
                  <FiDownload size={14} />
                </button>
                </div>
-               )
-              })}
+              ))}
               {allFiles.length > 6 && (
                <p className="text-xs text-slate-500 dark:text-white/50">+{allFiles.length - 6} {t('inline.sources.more-files')}</p>
               )}
               {allFiles.length > 1 && (
                <button
-                onClick={() => { downloadAllFiles(allFiles.map(f => ({ ...f, url: resolveFileUrl(f, signed) })), isArabic); if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — download all`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}
+                onClick={async () => {
+                 if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — download all`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); }
+                 for (const f of allFiles.filter(x => x.path)) {
+                  try { await secureFile.open(f.path, { name: f.name || 'file', mode: 'download', signIn: signer }) } catch { /* keep going */ }
+                  await new Promise(r => setTimeout(r, 400))
+                 }
+                }}
                 className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-xs font-medium transition min-h-[44px]"
                >
                 <FiDownload size={13} /> {isArabic ? `تحميل الكل (${allFiles.length})` : `Download all (${allFiles.length})`}
@@ -594,7 +585,24 @@ export default function Sources() {
            </div>
           </div>
          ) : (
-          <a href={source.fileData ? (resolveFileUrl({ path: source.filePath || storagePathFromUrl(source.fileData), url: source.fileData }, signed)) : source.url} target="_blank" rel="noopener noreferrer" className="group glass glass-hover rounded-xl p-6 block relative overflow-hidden" onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: source.titleAr || source.titleEn || source.id, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}>
+          <a
+           href={source.fileData && !source.url.startsWith('http') ? '#' : source.url}
+           target="_blank"
+           rel="noopener noreferrer"
+           onClick={async (e) => {
+            if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: source.titleAr || source.titleEn || source.id, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); }
+            // Legacy single-file rows with a storage blob: fetch securely as
+            // a session-scoped blob instead of exposing the storage URL.
+            if (source.fileData) {
+             e.preventDefault()
+             const path = source.filePath || storagePathFromUrl(source.fileData)
+             if (path) {
+              try { await secureFile.open(path, { name: source.fileName || 'file', mode: 'view', signIn: signer }) }
+              catch { toast.error(isArabic ? 'تعذّر الوصول للملف. أعد المحاولة.' : 'Could not open the file. Try again.') }
+             }
+            }
+           }}
+           className="group glass glass-hover rounded-xl p-6 block relative overflow-hidden">
            {isRecentlyAdded(source.date) && (
             <div className={`absolute top-3 end-3 px-2 py-0.5 bg-emerald-500/80 backdrop-blur-sm text-white text-xs font-medium rounded-full animate-pulse`}>
              {t('sources.newBadge')}
