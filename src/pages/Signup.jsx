@@ -111,6 +111,7 @@ export default function Signup() {
   }
   if (form.password !== form.confirmPassword) {
    setError(t('forgotPassword.passwordsDoNotMatch'))
+   requestAnimationFrame(() => document.getElementById('signup-confirm-password')?.focus())
    return
   }
   if (form.password.length < 8) {

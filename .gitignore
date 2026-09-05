@@ -29,3 +29,4 @@ skills-lock.json
 
 # Lighthouse CI local temp
 .lhtmp/
+audit-shots/
