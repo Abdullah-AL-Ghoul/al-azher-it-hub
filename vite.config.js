@@ -26,6 +26,12 @@ function swVersionPlugin() {
 
 export default defineConfig({
   plugins: [react(), swVersionPlugin()],
+  esbuild: {
+    // Strip debug-only console noise from the production bundle; console.warn
+    // and console.error (ErrorBoundary, SW diagnostics) are kept.
+    drop: ['debugger'],
+    pure: ['console.log', 'console.debug', 'console.info'],
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
