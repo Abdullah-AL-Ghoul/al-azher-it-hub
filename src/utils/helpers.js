@@ -46,11 +46,27 @@ export async function downloadFile(url, name) {
 }
 
 // Normalizes a source row into a flat file list (files array + legacy fileData).
+// Every entry gets a stable storage `path` (for signed-URL generation): from
+// the stored path field, or extracted from a legacy public URL.
 export function getSourceFiles(source) {
   const files = []
-  if (Array.isArray(source?.files) && source.files.length > 0) files.push(...source.files.filter(f => f?.url))
+  if (Array.isArray(source?.files) && source.files.length > 0) files.push(...source.files.filter(f => f?.url || f?.path))
   if (source?.fileData && !files.some(f => f.url === source.fileData)) files.unshift({ url: source.fileData, name: source.fileName || 'file', size: 0 })
   return files
+    .map(f => ({ ...f, path: f.path || storagePathFromUrl(f.url) }))
+    .filter(f => f.url || f.path)
+}
+
+// Extracts the object path from a storage public/signed URL (query string
+// stripped), or passes through a bare storage path ("dir/file" or "/dir/file").
+// External links return null — they are not signable.
+export function storagePathFromUrl(url) {
+  if (!url) return null
+  const s = String(url)
+  const m = s.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/sources\/([^?]*)/)
+  if (m) return decodeURIComponent(m[1])
+  if (!/^https?:\/\//i.test(s)) return s.replace(/^\/+/, '')
+  return null
 }
 
 export function extractYouTubeId(url) {

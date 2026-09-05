@@ -75,6 +75,49 @@ export async function uploadSourceFile(file, onProgress) {
   }
 }
 
+// Signed-URL cache: path → { url, expiresAt }. Signed URLs live for one
+// hour; anything cached within a 10-minute safety margin of expiry is
+// refreshed, so a long-lived page never hands out a dead link.
+const SIGNED_TTL_SECONDS = 3600
+const signedCache = new Map()
+
+export async function getSignedSourceUrls(paths) {
+  const supabase = getSupabase()
+  const now = Date.now()
+  const freshEnough = (expiresAt) => expiresAt - now > 10 * 60 * 1000
+
+  const result = {}
+  const missing = []
+  for (const raw of paths) {
+    const p = String(raw || '')
+    if (!p) continue
+    const hit = signedCache.get(p)
+    if (hit && freshEnough(hit.expiresAt)) result[p] = hit.url
+    else missing.push(p)
+  }
+  if (missing.length === 0) return result
+
+  const { data, error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrls(missing, SIGNED_TTL_SECONDS)
+  if (error) throw new Error(error.message || 'Could not sign source URLs')
+
+  const issuedAt = Date.now()
+  for (const p of missing) {
+    const entry = data?.find((d) => d.path === p)
+    // supabase-js returns `signedUrl` already prefixed with the storage base URL
+    if (entry?.signedUrl) {
+      const expiresAt = issuedAt + SIGNED_TTL_SECONDS * 1000
+      signedCache.set(p, { url: entry.signedUrl, expiresAt })
+      result[p] = entry.signedUrl
+    } else {
+      // Unsignable path (external link or legacy data) — caller falls back.
+      result[p] = null
+    }
+  }
+  return result
+}
+
 export function validateFiles(fileList) {
   const files = Array.from(fileList)
   const valid = []

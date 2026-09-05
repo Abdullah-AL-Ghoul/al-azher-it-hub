@@ -8,7 +8,9 @@ import { useFileUpload } from '../hooks/useFileUpload'
 import { useScrollLock } from '../hooks/useScrollLock'
 import { formatBytes } from '../services/sourceStorage'
 import { pageContainer, pageItem } from '../utils/motionTokens'
-import { SORT_OPTIONS, downloadFile, getSourceFiles } from '../utils/helpers'
+import { SORT_OPTIONS, downloadFile, getSourceFiles, storagePathFromUrl } from '../utils/helpers'
+import { getSignedSourceUrls } from '../services/sourceStorage'
+import { resolveFileUrl } from '../hooks/useSignedSources'
 import toast from 'react-hot-toast'
 import PageHero from '../components/shared/PageHero'
 import FilterBar from '../components/FilterBar'
@@ -361,6 +363,7 @@ export default function Sources() {
  const [search, setSearch] = useState('')
  const [sortBy, setSortBy] = useState('date-desc')
  const [sources, setSources] = useState([])
+ const [signed, setSigned] = useState({})
  const [loading, setLoading] = useState(true)
  const [error, setError] = useState(null)
  const [showUpload, setShowUpload] = useState(false)
@@ -393,6 +396,15 @@ export default function Sources() {
   setError(null)
   loadSources()
  }
+
+ // Storage files are private: resolve short-lived signed URLs after load.
+ useEffect(() => {
+  let active = true
+  const paths = [...new Set(sources.flatMap(s => getSourceFiles(s).map(f => f.path).filter(Boolean)))]
+  if (paths.length === 0) { setSigned({}); return }
+  getSignedSourceUrls(paths).then(map => { if (active) setSigned(map) }).catch(() => {})
+  return () => { active = false }
+ }, [sources])
 
  const subjects = useMemo(() => {
   const set = new Set(sources.map(s => isArabic ? s.subjectAr : s.subjectEn).filter(Boolean))
@@ -531,12 +543,14 @@ export default function Sources() {
             if (allFiles.length === 0) return null
             return (
              <div className="space-y-2 mb-4">
-              {allFiles.slice(0, 6).map((f, fi) => (
+              {allFiles.slice(0, 6).map((f, fi) => {
+               const fileUrl = resolveFileUrl(f, signed)
+               return (
                <div key={fi} className="flex items-center gap-2 p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
                 <FiFile size={14} className="text-emerald-500 flex-shrink-0" />
                 <span className="flex-1 min-w-0 text-xs text-navy-900 dark:text-white/80 truncate">{f.name || 'file'}</span>
                 <a
-                 href={f.url}
+                 href={fileUrl}
                  target="_blank"
                  rel="noopener noreferrer"
                  onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — ${f.name}`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}
@@ -547,7 +561,7 @@ export default function Sources() {
                  <FiExternalLink size={14} />
                 </a>
                 <button
-                 onClick={() => downloadFile(f.url, f.name)}
+                 onClick={() => downloadFile(fileUrl, f.name)}
                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-500/10 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
                  title={t('inline.sources.download')}
                  aria-label={isArabic ? `تحميل ${f.name}` : `Download ${f.name}`}
@@ -555,13 +569,14 @@ export default function Sources() {
                  <FiDownload size={14} />
                </button>
                </div>
-              ))}
+               )
+              })}
               {allFiles.length > 6 && (
                <p className="text-xs text-slate-500 dark:text-white/50">+{allFiles.length - 6} {t('inline.sources.more-files')}</p>
               )}
               {allFiles.length > 1 && (
                <button
-                onClick={() => { downloadAllFiles(allFiles, isArabic); if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — download all`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}
+                onClick={() => { downloadAllFiles(allFiles.map(f => ({ ...f, url: resolveFileUrl(f, signed) })), isArabic); if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — download all`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}
                 className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-xs font-medium transition min-h-[44px]"
                >
                 <FiDownload size={13} /> {isArabic ? `تحميل الكل (${allFiles.length})` : `Download all (${allFiles.length})`}
@@ -579,7 +594,7 @@ export default function Sources() {
            </div>
           </div>
          ) : (
-          <a href={source.url} target="_blank" rel="noopener noreferrer" className="group glass glass-hover rounded-xl p-6 block relative overflow-hidden" onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: source.titleAr || source.titleEn || source.id, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}>
+          <a href={source.fileData ? (resolveFileUrl({ path: source.filePath || storagePathFromUrl(source.fileData), url: source.fileData }, signed)) : source.url} target="_blank" rel="noopener noreferrer" className="group glass glass-hover rounded-xl p-6 block relative overflow-hidden" onClick={() => { if (user) { addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: source.titleAr || source.titleEn || source.id, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {}); } }}>
            {isRecentlyAdded(source.date) && (
             <div className={`absolute top-3 end-3 px-2 py-0.5 bg-emerald-500/80 backdrop-blur-sm text-white text-xs font-medium rounded-full animate-pulse`}>
              {t('sources.newBadge')}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { nowISO, extractYouTubeId, lectureVideoId, lectureThumb } from '../helpers'
+import { nowISO, extractYouTubeId, lectureVideoId, lectureThumb, storagePathFromUrl, getSourceFiles } from '../helpers'
 
 describe('nowISO', () => {
   it('returns a string in ISO format', () => {
@@ -69,5 +69,23 @@ describe('lectureThumb', () => {
   it('returns null for empty id', () => {
     expect(lectureThumb('')).toBe(null)
     expect(lectureThumb(null)).toBe(null)
+  })
+})
+
+describe('storagePathFromUrl + getSourceFiles path enrichment', () => {
+  it('extracts the object path from a public storage URL', () => {
+    expect(storagePathFromUrl('https://x.supabase.co/storage/v1/object/public/sources/171_a.pdf')).toBe('171_a.pdf')
+  })
+  it('extracts from signed/authenticated URL shapes too', () => {
+    expect(storagePathFromUrl('https://x.supabase.co/storage/v1/object/sign/sources/a%20b.pdf?token=x')).toBe('a b.pdf')
+  })
+  it('returns bare paths as-is and null for external links', () => {
+    expect(storagePathFromUrl('folder/file.pdf')).toBe('folder/file.pdf')
+    expect(storagePathFromUrl('https://example.com/file.pdf')).toBe(null)
+    expect(storagePathFromUrl('')).toBe(null)
+  })
+  it('getSourceFiles enriches entries with a path', () => {
+    const src = { files: [{ url: 'https://x.supabase.co/storage/v1/object/public/sources/171_a.pdf', name: 'a.pdf' }] }
+    expect(getSourceFiles(src)[0].path).toBe('171_a.pdf')
   })
 })
