@@ -16,9 +16,58 @@ Educational platform for Al-Azhar University IT students — video lectures, lea
 
 ## Tech Stack
 
-- **Frontend:** React 18, Vite 7, Tailwind CSS 3, Framer Motion, React Router 7
-- **Backend:** Supabase (PostgreSQL, Auth, Storage) with row-level security
-- **Testing:** Vitest (unit + coverage gates), Playwright (E2E), ESLint
+- **Frontend:** React 18, Vite 7, Tailwind CSS 3, Framer Motion, React Router 7, three.js (lazy 3D scenes)
+- **Backend:** Supabase (PostgreSQL, Auth, Storage) with row-level security and SECURITY DEFINER RPCs
+- **Testing:** Vitest (214 unit tests + coverage gates), Playwright (28 E2E + axe accessibility scans), Lighthouse CI budgets
 - **Deployment:** Vercel
 
+## Documentation
 
+| Document | Contents |
+|---|---|
+| [`docs/PROJECT_DOCUMENTATION.md`](docs/PROJECT_DOCUMENTATION.md) | Full technical reference: architecture, stack, routes, components, database schema, security analysis, developer guide |
+| [`docs/SECURITY_MIGRATION_CHECKLIST.md`](docs/SECURITY_MIGRATION_CHECKLIST.md) | How to apply the Supabase SQL migrations, in order, with verification queries |
+| [`supabase/`](supabase/) | The SQL migrations themselves (idempotent, applied in order via the Supabase SQL Editor) |
+
+## Getting Started
+
+```bash
+npm install
+cp .env.example .env        # fill VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
+npm run dev                 # http://localhost:3000
+```
+
+```bash
+npm run lint:check          # ESLint (js + jsx)
+npm test                    # Vitest watch mode
+npm run test:coverage       # coverage gate
+npm run build               # production build to dist/
+npm run test:e2e            # Playwright (builds first)
+```
+
+## Project Layout
+
+```
+src/
+├── components/    # Navbar, cards, admin dashboard, shared primitives, 3D scenes
+├── pages/         # 15 route pages (React.lazy)
+├── context/       # Auth, Language, Theme, UserData providers
+├── hooks/         # useLectures, useSeo, useScrollManager, useFocusTrap, ...
+├── services/      # the only layer that talks to Supabase
+├── utils/         # helpers, crypto (PBKDF2), sanitize, motion tokens
+└── i18n/          # ar.json / en.json dictionaries (parity-kept)
+public/            # SW, fonts, manifest, robots, sitemap
+supabase/          # SQL migrations (applied manually in Supabase SQL Editor)
+e2e/               # Playwright specs
+.github/workflows/ # CI: lint → tests → build → E2E → Lighthouse → audit
+```
+
+## Security Notes
+
+- Content security: strict CSP, HSTS, and hardened headers via `vercel.json`
+- Identity is derived server-side (JWT) inside SECURITY DEFINER functions — the client never supplies privileged fields
+- `.env` files are never committed; the Supabase anon key is public by design and all access is RLS-scoped
+
+## License
+
+MIT — see the repository metadata.

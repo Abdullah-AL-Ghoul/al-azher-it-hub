@@ -26,3 +26,6 @@ playwright-report/
 .claude/
 .zcode/
 skills-lock.json
+
+# Lighthouse CI local temp
+.lhtmp/
