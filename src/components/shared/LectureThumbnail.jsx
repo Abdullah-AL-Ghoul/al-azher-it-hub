@@ -55,6 +55,10 @@ export default function LectureThumbnail({ videoId, alt = '', sizes, width = 320
       decoding="async"
       fetchPriority={priority ? 'high' : 'low'}
       onError={() => setStep((s) => s + 1)}
+      // YouTube answers 200 with a 120x90 gray placeholder for qualities a
+      // video lacks — every real rung is ≥320px wide, so treat tiny decodes
+      // as failures and keep descending the ladder.
+      onLoad={(e) => { if (e.target.naturalWidth && e.target.naturalWidth < 200) setStep((s) => s + 1) }}
       className={`w-full h-full object-cover ${className}`}
     />
   )

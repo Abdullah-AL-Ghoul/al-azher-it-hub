@@ -50,18 +50,27 @@ function cacheResponse(cacheName, request, response) {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event
-  // YouTube thumbnails are immutable per video id — cache-first so repeat
-  // visits (and offline) load them instantly.
+  // YouTube thumbnails — cache-first, but NEVER cache YouTube's 120x90 gray
+  // placeholder (it answers 200 for qualities a video lacks). Size-check the
+  // body before storing, and revalidate broken cached entries once an hour
+  // so previously-poisoned entries self-heal.
   if (request.method === 'GET' && request.url.startsWith('https://img.youtube.com/')) {
     event.respondWith(
-      caches.match(request).then(
-        (cached) =>
-          cached ||
-          fetch(request).then((res) => {
-            if (res.ok) event.waitUntil(cacheResponse(CACHE_NAME, request, res))
-            return res
-          })
-      )
+      (async () => {
+        const cached = await caches.match(request)
+        if (cached) {
+          const blob = await cached.clone().blob()
+          if (blob.size > 2500) return cached // real images are ≥3KB; placeholder ≈1KB
+          caches.delete(request).catch(() => {})
+        }
+        const res = await fetch(request)
+        if (res.ok) {
+          const blob = await res.clone().blob()
+          if (blob.size > 2500) event.waitUntil(cacheResponse(CACHE_NAME, request, res))
+          else return new Response('', { status: 404, statusText: 'thumbnail placeholder' })
+        }
+        return res
+      })()
     )
     return
   }
