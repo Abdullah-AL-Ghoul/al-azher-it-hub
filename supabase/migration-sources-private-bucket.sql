@@ -22,6 +22,7 @@ update storage.buckets
 drop policy if exists "sources_public_read" on storage.objects;
 drop policy if exists "sources_public_download" on storage.objects;
 drop policy if exists "sources_read" on storage.objects;
+drop policy if exists "sources_auth_read" on storage.objects;
 
 create policy "sources_auth_read" on storage.objects
   for select using (
