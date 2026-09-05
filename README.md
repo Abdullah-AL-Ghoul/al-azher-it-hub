@@ -29,22 +29,6 @@ Educational platform for Al-Azhar University IT students — video lectures, lea
 | [`docs/SECURITY_MIGRATION_CHECKLIST.md`](docs/SECURITY_MIGRATION_CHECKLIST.md) | How to apply the Supabase SQL migrations, in order, with verification queries |
 | [`supabase/`](supabase/) | The SQL migrations themselves (idempotent, applied in order via the Supabase SQL Editor) |
 
-## Getting Started
-
-```bash
-npm install
-cp .env.example .env        # fill VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
-npm run dev                 # http://localhost:3000
-```
-
-```bash
-npm run lint:check          # ESLint (js + jsx)
-npm test                    # Vitest watch mode
-npm run test:coverage       # coverage gate
-npm run build               # production build to dist/
-npm run test:e2e            # Playwright (builds first)
-```
-
 ## Project Layout
 
 ```
@@ -61,12 +45,6 @@ supabase/          # SQL migrations (applied manually in Supabase SQL Editor)
 e2e/               # Playwright specs
 .github/workflows/ # CI: lint → tests → build → E2E → Lighthouse → audit
 ```
-
-## Security Notes
-
-- Content security: strict CSP, HSTS, and hardened headers via `vercel.json`
-- Identity is derived server-side (JWT) inside SECURITY DEFINER functions — the client never supplies privileged fields
-- `.env` files are never committed; the Supabase anon key is public by design and all access is RLS-scoped
 
 ## License
 
