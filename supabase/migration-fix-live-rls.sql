@@ -56,7 +56,7 @@ create policy "logs_admin_read" on public.student_logs
 create policy "logs_own_read" on public.student_logs
   for select using (
     auth.role() = 'authenticated'
-    and studentId = public.get_current_student_id()
+    and "studentId" = public.get_current_student_id()
   );
 
 create policy "logs_auth_insert" on public.student_logs

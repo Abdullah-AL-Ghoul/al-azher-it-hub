@@ -697,11 +697,13 @@ $$;
 
 drop policy if exists "sources_auth_upload" on storage.objects;
 drop policy if exists "sources_admin_upload" on storage.objects;
+-- storage.objects has no bare content_type column — the mimetype lives in
+-- metadata->>'mimetype' on modern Supabase storage schemas.
 create policy "sources_admin_upload" on storage.objects
   for insert with check (
     bucket_id = 'sources'
     and public.is_current_user_admin()
-    and public.is_safe_source_object(name, coalesce(content_type, ''))
+    and public.is_safe_source_object(name, coalesce(metadata->>'mimetype', ''))
   );
 
 -- ============================================================

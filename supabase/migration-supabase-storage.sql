@@ -14,10 +14,14 @@ drop policy if exists "sources_public_read" on storage.objects;
 create policy "sources_public_read" on storage.objects
   for select using (bucket_id = 'sources');
 
--- 3) Allow logged-in users to upload files
+-- 3) Uploads: admin-only — matches migration-security-hardening.sql's
+--    "sources_admin_upload" (with the extension/mimetype allowlist there).
+--    The previous "authenticated" variant let any student upload to the
+--    bucket; it is dropped here so the two files can never disagree.
 drop policy if exists "sources_auth_upload" on storage.objects;
-create policy "sources_auth_upload" on storage.objects
-  for insert with check (bucket_id = 'sources' and auth.role() = 'authenticated');
+drop policy if exists "sources_admin_upload" on storage.objects;
+create policy "sources_admin_upload" on storage.objects
+  for insert with check (bucket_id = 'sources' and public.is_current_user_admin());
 
 -- 4) Allow admins to update/delete files
 drop policy if exists "sources_admin_delete" on storage.objects;
