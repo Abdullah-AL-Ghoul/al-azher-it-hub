@@ -1,10 +1,11 @@
-import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import { useLanguage } from './context/LanguageContext'
 import { useAuth } from './context/AuthContext'
 import { pageTransition } from './utils/motionTokens'
+import { lazyWithRecovery } from './utils/lazyRecovery'
 import { useSeo } from './hooks/useSeo'
 import { APP_ROUTES, isBarePathname } from './router/routes'
 import ProtectedRoute from './router/ProtectedRoute'
@@ -17,8 +18,8 @@ import ErrorBoundary from './components/ErrorBoundary'
 import SpatialBackground from './components/spatial/SpatialBackground'
 import GlobalSearchTrigger from './components/GlobalSearchTrigger'
 
-const Chatbot = lazy(() => import('./components/Chatbot'))
-const GlobalSearch = lazy(() => import('./components/GlobalSearch'))
+const Chatbot = lazyWithRecovery(() => import('./components/Chatbot'))
+const GlobalSearch = lazyWithRecovery(() => import('./components/GlobalSearch'))
 
 function PageTransition({ children }) {
  const prefersReduced = useReducedMotion()
@@ -38,7 +39,9 @@ function PageTransition({ children }) {
 function AppRoutes() {
  const location = useLocation()
  return (
-  <AnimatePresence initial={false} mode="sync">
+  // mode="wait": with "sync" both pages briefly coexist in normal flow, so the
+  // document height doubles and the scrollbar jumps on every navigation.
+  <AnimatePresence initial={false} mode="wait">
    <Routes location={location} key={location.pathname}>
     {APP_ROUTES.map((route) => {
      if (route.redirect) {
@@ -64,10 +67,13 @@ function AppContent() {
  const { lang } = useLanguage()
  const { user } = useAuth()
  const location = useLocation()
+ const navigationType = useNavigationType()
  const [showSuccessRedirect, setShowSuccessRedirect] = useState(false)
  const [chatbotReady, setChatbotReady] = useState(false)
  const [searchActive, setSearchActive] = useState(false)
  const [searchAutoOpen, setSearchAutoOpen] = useState(false)
+ const scrollPositions = useRef(new Map())
+ const prevPathRef = useRef(location.pathname)
 
  // GlobalSearch mounts lazily on first activation; the Ctrl/Cmd+K shortcut
  // opens it pre-focused (autoOpen), the navbar chip opens it plain.
@@ -89,9 +95,24 @@ function AppContent() {
 
  useSeo(location.pathname, lang)
 
+ // Scroll handling: new navigations go to top; back/forward restores the
+ // position saved for that path. The restore runs twice (paint + after the
+ // exiting page's transition) because with mode="wait" the target content
+ // mounts ~150ms later, and lazy pages render even later.
  useEffect(() => {
-  window.scrollTo({ top: 0, behavior: 'instant' })
- }, [location.pathname])
+  scrollPositions.current.set(prevPathRef.current, window.scrollY)
+  prevPathRef.current = location.pathname
+
+  const saved = navigationType === 'POP' ? scrollPositions.current.get(location.pathname) : undefined
+  if (saved === undefined) {
+   window.scrollTo({ top: 0, behavior: 'instant' })
+   return
+  }
+  const restore = () => window.scrollTo({ top: saved || 0, behavior: 'instant' })
+  const raf = requestAnimationFrame(restore)
+  const t = setTimeout(restore, 350)
+  return () => { cancelAnimationFrame(raf); clearTimeout(t) }
+ }, [location.pathname, navigationType])
 
  const hideLayout = isBarePathname(location.pathname)
 
@@ -136,7 +157,11 @@ function AppContent() {
     {lang === 'ar' ? 'تخطي إلى المحتوى الرئيسي' : 'Skip to main content'}
    </a>
    <div className="spatial-content">
-   {!hideLayout && <Navbar />}
+   {!hideLayout && (
+    <ErrorBoundary lang={lang}>
+     <Navbar />
+    </ErrorBoundary>
+   )}
    <main id="main-content" className="flex-1" tabIndex={-1}>
      <ErrorBoundary lang={lang}>
       <Suspense fallback={<PageLoader />}>
@@ -146,17 +171,25 @@ function AppContent() {
     </main>
     {!hideLayout && <Footer />}
     {!hideLayout && <BackToTop />}
-     {!hideLayout && <WelcomeModal />}
+     {!hideLayout && (
+      <ErrorBoundary lang={lang} fallback={null}>
+       <WelcomeModal />
+      </ErrorBoundary>
+     )}
            {searchActive ? (
       <Suspense fallback={null}>
-       <GlobalSearch autoOpen={searchAutoOpen} />
+       <ErrorBoundary lang={lang} fallback={null}>
+        <GlobalSearch autoOpen={searchAutoOpen} />
+       </ErrorBoundary>
       </Suspense>
      ) : (
-      !hideLayout && <GlobalSearchTrigger onActivate={() => activateSearch(true)} />
+      user && !hideLayout && <GlobalSearchTrigger onActivate={() => activateSearch(true)} />
      )}
 {!hideLayout && chatbotReady && (
      <Suspense fallback={null}>
-      <Chatbot />
+      <ErrorBoundary lang={lang} fallback={null}>
+       <Chatbot />
+      </ErrorBoundary>
      </Suspense>
     )}
     <Toaster

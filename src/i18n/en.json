@@ -565,7 +565,8 @@
       "urgent-issue-resolution": "Urgent issue resolution"
     },
     "app": {
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "educational-platform": "Educational Platform"
     },
     "chatbot": {
       "copied": "Copied!",
@@ -606,7 +607,10 @@
       "navigate": "navigate",
       "select": "select",
       "close": "close",
-      "results": "results"
+      "results": "results",
+      "sign-in-to-search": "Sign in to search",
+      "sign-in-to-search-hint": "Searching lectures, sources and additions is available to signed-in students.",
+      "sign-in": "Sign in"
     },
     "welcome-modal": {},
     "hero-section": {
@@ -616,7 +620,6 @@
     "navbar": {
       "primary-navigation": "Primary navigation",
       "notifications": "Notifications",
-      "end-0": "end-0",
       "no-notifications-yet": "No notifications yet",
       "en-us": "en-US",
       "التبديل-إلى-العربية": "التبديل إلى العربية",
@@ -918,7 +921,9 @@
       "tap-the-stars-to": "Tap the stars to rate",
       "prev": "Prev",
       "next": "Next",
-      "now-playing": "Now playing"
+      "now-playing": "Now playing",
+      "file-open-failed": "Could not open the file. Try again.",
+      "view-all-subject-sources": "View all {n} sources"
     },
     "login": {
       "enter-your-id-and": "Enter your ID and password",
@@ -973,7 +978,9 @@
       "favorite": "Favorite",
       "favorite-2": "Favorite",
       "play-inside-the-site": "Play inside the site",
-      "lecture": "Lecture"
+      "lecture": "Lecture",
+      "from-date": "From date",
+      "to-date": "To date"
     },
     "reset-password": {},
     "signup": {
@@ -1071,7 +1078,9 @@
       "clear-search": "Clear search",
       "open": "Open",
       "download": "Download",
-      "more-files": "more files"
+      "more-files": "more files",
+      "file-open-failed": "Could not open the file. Try again.",
+      "view-all-subject-sources": "View all {n} sources"
     },
     "courses-table": {
       "course-deleted": "Course deleted",

@@ -1,4 +1,5 @@
-﻿import { motion, AnimatePresence } from 'framer-motion'
+﻿import { useEffect } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { FiX } from 'react-icons/fi'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { useScrollLock } from '../../hooks/useScrollLock'
@@ -23,16 +24,38 @@ export default function Modal({
   className = '',
 }) {
   const { t } = useLanguage()
+  const prefersReduced = useReducedMotion()
   const trapRef = useFocusTrap(isOpen)
   useScrollLock(isOpen)
 
   const widthClass = SIZE_CLASS[size] || SIZE_CLASS.md
 
+  // Escape closes — every other overlay in the app does this; the shared base
+  // modal was the only gap, which made ConfirmDialog/VideoPlayerModal/
+  // WelcomeModal behave differently from the rest.
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
+
+  // Reduced motion: opacity-only fade (the global CSS kill-switch cannot stop
+  // JS-driven framer springs, so the shared components must opt out here).
+  const overlayProps = prefersReduced
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
+    : modalOverlay
+  const contentProps = prefersReduced
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
+    : modalContent
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          {...modalOverlay}
+          {...overlayProps}
           className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6"
         >
           <div
@@ -42,7 +65,7 @@ export default function Modal({
           />
           <motion.div
             ref={trapRef}
-            {...modalContent}
+            {...contentProps}
             role="dialog"
             aria-modal="true"
             aria-label={title}

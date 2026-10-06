@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { FiLayout, FiBook, FiVideo, FiLink, FiUsers, FiActivity, FiSettings, FiHome, FiClipboard } from 'react-icons/fi'
+import { FiLayout, FiBook, FiVideo, FiLink, FiUsers, FiActivity, FiSettings, FiHome, FiClipboard, FiLogOut } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import SiteLogo from '../components/shared/SiteLogo'
 
@@ -151,10 +151,11 @@ export default function AdminDashboard() {
        />
        <button
         onClick={async () => { await logout(); navigate('/') }}
-        className="flex items-center gap-2 px-3 py-1.5 glass text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl text-sm font-medium transition"
+        className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] glass text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl text-sm font-medium transition"
+        aria-label={t('inline.admin-dashboard.logout')}
        >
         <span>{t('inline.admin-dashboard.logout')}</span>
-        <span aria-hidden="true">✕</span>
+        <FiLogOut size={16} aria-hidden="true" />
        </button>
       </div>
      </div>

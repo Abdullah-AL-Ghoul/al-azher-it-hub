@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
@@ -87,7 +87,7 @@ export default function GlobalSearch({ autoOpen = false }) {
 
   useEffect(() => {
    if (!open) return
-   setTimeout(() => inputRef.current?.focus(), 100)
+   const focusTimer = setTimeout(() => inputRef.current?.focus(), 100)
    const prev = document.body.style.overflow
    document.body.style.overflow = 'hidden'
    const onKey = (e) => {
@@ -95,6 +95,7 @@ export default function GlobalSearch({ autoOpen = false }) {
    }
    document.addEventListener('keydown', onKey)
    return () => {
+    clearTimeout(focusTimer)
     document.body.style.overflow = prev
     document.removeEventListener('keydown', onKey)
    }
@@ -197,7 +198,49 @@ export default function GlobalSearch({ autoOpen = false }) {
 
  useEffect(() => { scrollToItem(activeIndex) }, [activeIndex])
 
- if (!user) return null
+ // Guests previously got a silent null here — clicking the navbar search icon
+ // (or Ctrl+K) made the icon vanish with no feedback. Now they get a sign-in
+ // panel instead. The navbar trigger itself is hidden for guests in App.jsx.
+ if (!user) {
+  if (!open) return null
+  return (
+   <AnimatePresence>
+    {open && (
+     <motion.div
+      {...modalOverlay}
+      className="fixed inset-0 z-[200] bg-black/50 dark:bg-black/70 flex items-start justify-center pt-[10vh] p-4"
+      onClick={closeModal}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('inline.global-search.global-search')}
+     >
+      <motion.div
+       {...modalContent}
+       className="modal-spatial rounded-2xl w-full max-w-md overflow-hidden shadow-2xl text-center"
+       onClick={e => e.stopPropagation()}
+      >
+       <div className="p-8">
+        <FiSearch size={32} className="mx-auto mb-4 text-slate-300 dark:text-white/20" />
+        <p className="text-sm text-ink font-medium mb-1">
+         {t('inline.global-search.sign-in-to-search')}
+        </p>
+        <p className="text-xs text-slate-400 dark:text-white/40 mb-5">
+         {t('inline.global-search.sign-in-to-search-hint')}
+        </p>
+        <Link
+         to="/login"
+         onClick={closeModal}
+         className="inline-flex items-center gap-2 px-5 py-2.5 bg-royal-500 hover:bg-royal-600 text-white rounded-xl text-sm font-medium transition"
+        >
+         {t('inline.global-search.sign-in')}
+        </Link>
+       </div>
+      </motion.div>
+     </motion.div>
+    )}
+   </AnimatePresence>
+  )
+ }
 
  return (
   <>

@@ -1,21 +1,22 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi'
 import { useLanguage } from '../../context/LanguageContext'
 import { getErrorMessage } from '../../services/errors'
 
 export default function ErrorState({ error, onRetry, title, className = '', compact = false }) {
  const { t, lang } = useLanguage()
+ const prefersReduced = useReducedMotion()
  if (!error) return null
 
  // Never render raw Supabase error messages — they can leak internal details
  // and are English-only. Strings stay as-is (callers already localized them).
  const message = typeof error === 'string' ? error : getErrorMessage(error, lang)
+ const fade = { initial: { opacity: 0 }, animate: { opacity: 1 } }
 
  if (compact) {
   return (
    <motion.div
-    initial={{ opacity: 0, y: -5 }}
-    animate={{ opacity: 1, y: 0 }}
+    {...(prefersReduced ? fade : { initial: { opacity: 0, y: -5 }, animate: { opacity: 1, y: 0 } })}
     className={`flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400 ${className}`}
     role="alert"
    >
@@ -36,8 +37,7 @@ export default function ErrorState({ error, onRetry, title, className = '', comp
 
  return (
   <motion.div
-   initial={{ opacity: 0, y: 20 }}
-   animate={{ opacity: 1, y: 0 }}
+   {...(prefersReduced ? fade : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } })}
    className={`glass rounded-2xl p-8 text-center border border-red-500/20 ${className}`}
    role="alert"
   >

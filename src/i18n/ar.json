@@ -565,7 +565,8 @@
       "urgent-issue-resolution": "حل المشاكل العاجلة"
     },
     "app": {
-      "loading": "جارٍ التحميل..."
+      "loading": "جارٍ التحميل...",
+      "educational-platform": "منصة تعليمية"
     },
     "chatbot": {
       "copied": "تم النسخ!",
@@ -606,7 +607,10 @@
       "navigate": "تنقل",
       "select": "اختيار",
       "close": "إغلاق",
-      "results": "نتيجة"
+      "results": "نتيجة",
+      "sign-in-to-search": "سجّل الدخول للبحث",
+      "sign-in-to-search-hint": "البحث في المحاضرات والمصادر والإضافات متاح للطلبة المسجّلين.",
+      "sign-in": "تسجيل الدخول"
     },
     "welcome-modal": {},
     "hero-section": {
@@ -616,7 +620,6 @@
     "navbar": {
       "primary-navigation": "التنقل الرئيسي",
       "notifications": "الإشعارات",
-      "end-0": "start-0",
       "no-notifications-yet": "لا يوجد إشعارات بعد",
       "en-us": "ar-EG",
       "التبديل-إلى-العربية": "Switch to English",
@@ -918,7 +921,9 @@
       "tap-the-stars-to": "اضغط على النجوم للتقييم",
       "prev": "السابقة",
       "next": "التالية",
-      "now-playing": "أنت هنا"
+      "now-playing": "أنت هنا",
+      "file-open-failed": "تعذّر الوصول للملف. أعد المحاولة.",
+      "view-all-subject-sources": "عرض كل {n} مصادر"
     },
     "login": {
       "enter-your-id-and": "أدخل رقمك الجامعي وكلمة المرور",
@@ -973,7 +978,9 @@
       "favorite": "إضافة للمفضلة",
       "favorite-2": "مفضلة",
       "play-inside-the-site": "تشغيل داخل الموقع",
-      "lecture": "محاضرة"
+      "lecture": "محاضرة",
+      "from-date": "من تاريخ",
+      "to-date": "إلى تاريخ"
     },
     "reset-password": {},
     "signup": {
@@ -1071,7 +1078,9 @@
       "clear-search": "مسح البحث",
       "open": "فتح",
       "download": "تحميل",
-      "more-files": "ملفات أخرى"
+      "more-files": "ملفات أخرى",
+      "file-open-failed": "تعذّر الوصول للملف. أعد المحاولة.",
+      "view-all-subject-sources": "عرض كل {n} مصادر"
     },
     "courses-table": {
       "course-deleted": "تم حذف المادة",

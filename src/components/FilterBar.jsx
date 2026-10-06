@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, memo } from 'react'
+﻿import { useState, useEffect, useCallback, useRef, memo } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { FiSearch, FiX } from 'react-icons/fi'
 
@@ -6,21 +6,20 @@ export default memo(function FilterBar({ subjects, subjectCounts = {}, activeSub
  const { lang, t } = useLanguage()
  const isArabic = lang === 'ar'
  const [localSearch, setLocalSearch] = useState(searchQuery || '')
+ const debounceTimer = useRef(null)
 
  useEffect(() => {
   setLocalSearch(searchQuery || '')
  }, [searchQuery])
 
- const debouncedSearch = useCallback(
-  (() => {
-   let timer
-   return (val) => {
-    clearTimeout(timer)
-    timer = setTimeout(() => onSearchChange(val), 300)
-   }
-  })(),
-  [onSearchChange]
- )
+ // Clear the pending debounce on unmount — without this a stray timer fires
+ // into an unmounted parent after quick page switches.
+ useEffect(() => () => clearTimeout(debounceTimer.current), [])
+
+ const debouncedSearch = useCallback((val) => {
+  clearTimeout(debounceTimer.current)
+  debounceTimer.current = setTimeout(() => onSearchChange(val), 300)
+ }, [onSearchChange])
 
  const handleChange = (val) => {
   setLocalSearch(val)

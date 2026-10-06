@@ -3,7 +3,8 @@ import { useParams, Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { getLectures, getSources, getFavorites, getRatings, getViewed, toggleFavorite, setRating, markViewed, addStudentLog, signSourceForFetch } from '../services'
+import { useUserData } from '../context/UserDataContext'
+import { getLectures, getSources, addStudentLog, signSourceForFetch } from '../services'
 import useSecureSourceFile from '../hooks/useSecureSourceFile'
 import { useScrollFrame } from '../hooks/useScrollManager.jsx'
 import { pageContainer, pageItem, revealItem } from '../utils/motionTokens'
@@ -27,16 +28,17 @@ export default function LectureDetail() {
  const [sources, setSources] = useState([])
  const [loading, setLoading] = useState(true)
  const [error, setError] = useState(null)
- const [localFavorites, setLocalFavorites] = useState([])
- const [localRatings, setLocalRatings] = useState({})
- const [viewedIds, setViewedIds] = useState([])
  const [note, setNote] = useState('')
  const [noteSaved, setNoteSaved] = useState(false)
 
+ // Favorites/ratings/viewed come from the shared UserDataContext (SWR-cached),
+ // so toggling a favorite here is instantly in sync with Lectures and Profile.
+ const { favorites, ratings, viewed, toggleFavorite: ctxToggleFavorite, setRating: ctxSetRating, markViewed: ctxMarkViewed } = useUserData()
+
  const lecture = useMemo(() => lectures.find(l => l.id === id), [lectures, id])
  const videoId = lectureVideoId(lecture)
- const isViewed = viewedIds.includes(id)
- const isFavorite = localFavorites.includes(id)
+ const isViewed = viewed.includes(id)
+ const isFavorite = favorites.includes(id)
 
  useEffect(() => {
   if (!lecture) return
@@ -46,16 +48,25 @@ export default function LectureDetail() {
   } catch (e) { /* silent */ }
  }, [lecture])
 
+ const noteSavedTimer = useRef(null)
+
+ // Shared by manual save (Ctrl+S / button) and the debounced auto-save: flash
+ // the "saved" badge for 2.5s, cancelling any still-running flash first.
+ const flashSaved = useCallback(() => {
+  setNoteSaved(true)
+  clearTimeout(noteSavedTimer.current)
+  noteSavedTimer.current = setTimeout(() => setNoteSaved(false), 2500)
+ }, [])
+
+ useEffect(() => () => clearTimeout(noteSavedTimer.current), [])
+
  const saveNote = useCallback(() => {
   if (!lecture) return
   try {
-   const trimmed = note.trim()
-   localStorage.setItem(`lecture_note_${lecture.id}`, trimmed)
-   setNoteSaved(true)
-   const t = setTimeout(() => setNoteSaved(false), 2500)
-   return () => clearTimeout(t)
+   localStorage.setItem(`lecture_note_${lecture.id}`, note.trim())
+   flashSaved()
   } catch (e) { /* silent */ }
- }, [lecture, note])
+ }, [lecture, note, flashSaved])
 
  // Auto-save with debounce
  useEffect(() => {
@@ -63,12 +74,11 @@ export default function LectureDetail() {
   const timer = setTimeout(() => {
    try {
     localStorage.setItem(`lecture_note_${lecture.id}`, note.trim())
-    setNoteSaved(true)
-    setTimeout(() => setNoteSaved(false), 2500)
+    flashSaved()
    } catch (e) { /* silent */ }
   }, 2000)
   return () => clearTimeout(timer)
- }, [lecture, note])
+ }, [lecture, note, flashSaved])
 
  const shareLink = useCallback((channel) => {
   if (!lecture) return
@@ -96,24 +106,12 @@ export default function LectureDetail() {
     if (!mounted) return
     setLectures(l)
     setSources(s)
-    if (user) {
-     const [favs, rats, viewed] = await Promise.all([
-      getFavorites(user.studentId),
-      getRatings(user.studentId),
-      getViewed(user.studentId).catch(() => []),
-     ])
-     if (mounted) {
-      setLocalFavorites(favs)
-      setLocalRatings(rats)
-      setViewedIds(Array.isArray(viewed) ? viewed : [])
-     }
-    }
    } catch (err) { if (mounted) setError(err) }
    if (mounted) setLoading(false)
   }
    load()
    return () => { mounted = false }
-  }, [user])
+  }, [])
 
   useEffect(() => {
    if (!lecture) return
@@ -142,7 +140,7 @@ export default function LectureDetail() {
  const openSourceSecure = async (f, mode) => {
   if (!f.path) { if (f.url) window.open(f.url, '_blank', 'noopener,noreferrer'); return }
   try { await secureFile.open(f.path, { name: f.name || 'file', mode, signIn: signer }) }
-  catch { toast.error(isArabic ? 'تعذّر الوصول للملف. أعد المحاولة.' : 'Could not open the file. Try again.') }
+  catch { toast.error(t('inline.lecture-detail.file-open-failed')) }
  }
 
  const subjectLectures = useMemo(() => {
@@ -172,41 +170,38 @@ export default function LectureDetail() {
  const handleToggleFavorite = useCallback(async () => {
   if (!user || !lecture) return
   try {
-   const newFavs = await toggleFavorite(user.studentId, id)
-   setLocalFavorites(newFavs)
+   await ctxToggleFavorite(id)
    addStudentLog({
     type: 'ADD_FAVORITE',
     detail: lecture.titleAr || lecture.titleEn || id,
     device: typeof navigator !== 'undefined' ? navigator.userAgent : '',
    }).catch(() => {})
   } catch (e) { /* silent */ }
- }, [user, lecture, id])
+ }, [user, lecture, id, ctxToggleFavorite])
 
  const handleRate = useCallback(async (rating) => {
   if (!user || !lecture) return
   try {
-   const newRatings = await setRating(user.studentId, id, rating)
-   setLocalRatings(newRatings)
+   await ctxSetRating(id, rating)
    addStudentLog({
     studentId: user.studentId, name: user.name, type: 'RATE_LECTURE',
     detail: `${rating}/5 · ${lecture.titleAr || lecture.titleEn || id}`,
     ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '',
    }).catch(() => {})
   } catch (e) { /* silent */ }
- }, [user, lecture, id])
+ }, [user, lecture, id, ctxSetRating])
 
  const handleWatch = useCallback(() => {
   if (!user || !lecture) return
-  if (!viewedIds.includes(id)) {
-   setViewedIds(prev => [...prev, id])
-   markViewed(user.studentId, id)
+  if (!viewed.includes(id)) {
+   ctxMarkViewed(id)
    addStudentLog({
     studentId: user.studentId, name: user.name, type: 'VIEW_LECTURE',
     detail: lecture.titleAr || lecture.titleEn || id,
     ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '',
    }).catch(() => {})
   }
- }, [user, lecture, id, viewedIds])
+ }, [user, lecture, id, viewed, ctxMarkViewed])
 
  if (loading) {
   return (
@@ -307,7 +302,7 @@ export default function LectureDetail() {
         </div>
         {relatedSources.length > 6 && (
          <Link to="/sources" className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-3">
-          {isArabic ? `عرض كل ${relatedSources.length} مصادر` : `View all ${relatedSources.length} sources`} <FiArrowRight className={isArabic ? 'rotate-180' : ''} size={12} />
+          {t('inline.lecture-detail.view-all-subject-sources').replace('{n}', relatedSources.length)} <FiArrowRight className={isArabic ? 'rotate-180' : ''} size={12} />
          </Link>
         )}
        </motion.div>
@@ -400,7 +395,7 @@ export default function LectureDetail() {
           <h2 className="text-sm font-bold text-ink">{t('inline.lecture-detail.my-notes')}</h2>
           <span className="ms-auto flex items-center gap-1.5">
            {noteSaved && <FiCheckCircle size={14} className="text-emerald-500" />}
-           <span className={`text-[10px] font-medium ${noteSaved ? 'text-emerald-500' : 'text-slate-400 dark:text-white/40'}`}>
+           <span aria-live="polite" className={`text-[10px] font-medium ${noteSaved ? 'text-emerald-500' : 'text-slate-400 dark:text-white/40'}`}>
             {noteSaved ? (t('inline.lecture-detail.auto-saved')) : (t('inline.lecture-detail.auto-saves'))}
            </span>
           </span>
@@ -410,6 +405,7 @@ export default function LectureDetail() {
           onChange={e => setNote(e.target.value)}
           rows="4"
           placeholder={t('inline.lecture-detail.write-your-notes-about')}
+          aria-label={t('inline.lecture-detail.my-notes')}
           className="input-spatial w-full rounded-xl px-3 py-2.5 text-sm text-ink placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none resize-none"
           dir={t('inline.lecture-detail.ltr')}
           onKeyDown={(e) => {
@@ -432,7 +428,7 @@ export default function LectureDetail() {
       {user && (
        <div className="glass rounded-2xl p-6 border border-white/10">
         <h2 className="text-sm font-bold text-ink mb-3">{t('inline.lecture-detail.rate-this-lecture')}</h2>
-        <StarRating value={localRatings[id] || 0} onRate={handleRate} size={22} />
+        <StarRating value={ratings[id] || 0} onRate={handleRate} size={22} />
         <p className="text-xs text-slate-500 dark:text-white/50 mt-2">{t('inline.lecture-detail.tap-the-stars-to')}</p>
        </div>
       )}

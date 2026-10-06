@@ -37,11 +37,14 @@ export default class ErrorBoundary extends Component {
  }
 
  render() {
-  const { lang = 'ar' } = this.props
+  const { lang = 'ar', fallback } = this.props
   const isArabic = lang === 'ar'
   const t = isArabic ? ar : en
 
   if (this.state.hasError) {
+   // Floating widgets (Chatbot, GlobalSearch, WelcomeModal) pass a minimal
+   // fallback: a crash there must not blank the whole page behind them.
+   if (fallback !== undefined) return fallback
    return (
     <div className="min-h-screen flex items-center justify-center bg-spatial-page px-4">
      <motion.div

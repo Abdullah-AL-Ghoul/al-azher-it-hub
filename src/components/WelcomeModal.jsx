@@ -1,10 +1,12 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import Modal from './ui/Modal'
 import { FiBookOpen, FiArrowLeft, FiStar } from 'react-icons/fi'
 import motivationalQuotes from '../data/quotes'
+
+const AUTO_DISMISS_MS = 5000
 
 export default function WelcomeModal() {
   const { lang, t } = useLanguage()
@@ -13,6 +15,11 @@ export default function WelcomeModal() {
   const [show, setShow] = useState(false)
   const prefersReduced = useReducedMotion()
   const [quote, setQuote] = useState('')
+  // Auto-dismiss: instead of an invisible 5s timer yanking the modal away,
+  // a visible progress bar ticks down and hovering pauses it.
+  const [paused, setPaused] = useState(false)
+  const remainingRef = useRef(1)
+  const progressRef = useRef(null)
 
   useEffect(() => {
     if (!user || isAdmin) return
@@ -20,12 +27,28 @@ export default function WelcomeModal() {
     if (typeof sessionStorage === 'undefined' || !sessionStorage.getItem(key)) {
       setShow(true)
       setQuote(getRandomQuote())
-      const timer = setTimeout(() => {
-        handleDismiss()
-      }, 5000)
-      return () => clearTimeout(timer)
     }
   }, [user, isAdmin])
+
+  useEffect(() => {
+    if (!show || paused || prefersReduced) return undefined
+    const start = performance.now()
+    const atPause = remainingRef.current
+    let raf
+    const tick = (now) => {
+      const left = Math.max(0, atPause - (now - start) / AUTO_DISMISS_MS)
+      remainingRef.current = left
+      if (progressRef.current) progressRef.current.style.transform = `scaleX(${left})`
+      if (left <= 0) {
+        sessionStorage.setItem(`welcome_shown_${user.studentId}`, '1')
+        setShow(false)
+      } else {
+        raf = requestAnimationFrame(tick)
+      }
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [show, paused, prefersReduced, user])
 
   const getRandomQuote = () => {
     const quotes = motivationalQuotes[lang] || motivationalQuotes.en
@@ -44,7 +67,21 @@ export default function WelcomeModal() {
   return (
     <Modal isOpen={show} onClose={handleDismiss} hideClose size="sm" className="text-center">
       <div className="absolute inset-0 bg-gradient-to-br from-royal-500/5 via-transparent to-cyan-400/5 pointer-events-none" />
-      <div className="relative p-8 md:p-10">
+      <div
+        className="relative p-8 md:p-10"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        {!prefersReduced && (
+          <div className="absolute top-0 inset-x-0 h-1 bg-black/5 dark:bg-white/10" aria-hidden="true">
+            <div
+              ref={progressRef}
+              className="h-full bg-gradient-to-r from-royal-500 to-cyan-400 origin-left rtl:origin-right"
+              style={{ transform: 'scaleX(1)' }}
+            />
+          </div>
+        )}
+
         <motion.div
           initial={prefersReduced ? {} : { scale: 0, rotate: -10 }}
           animate={prefersReduced ? {} : { scale: 1, rotate: 0 }}

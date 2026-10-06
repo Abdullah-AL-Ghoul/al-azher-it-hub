@@ -59,15 +59,20 @@ export default function Login() {
   if (result.ok) {
    setShowSuccess(true)
    sessionStorage.setItem('al_azher_just_auth', '1')
-   try {
-    const ipRes = await fetch('https://api.ipify.org?format=json')
-    const ipData = await ipRes.json()
-    try { updateLastVisit(ipData.ip, navigator.userAgent) } catch (e) { /* non-critical */ }
-    try { addStudentLog({ type: 'LOGIN', detail: '', device: navigator.userAgent }) } catch (e) { /* non-critical */ }
-   } catch (e) { /* ip fetch failed, non-critical */ }
+   // IP logging is telemetry, not part of the login flow — run it after the
+   // user has already navigated so it never delays the redirect.
+   const logVisit = async () => {
+    try {
+     const ipRes = await fetch('https://api.ipify.org?format=json')
+     const ipData = await ipRes.json()
+     try { updateLastVisit(ipData.ip, navigator.userAgent) } catch (e) { /* non-critical */ }
+     try { addStudentLog({ type: 'LOGIN', detail: '', device: navigator.userAgent }) } catch (e) { /* non-critical */ }
+    } catch (e) { /* ip fetch failed, non-critical */ }
+   }
+   setTimeout(logVisit, 0)
    navigateTimer.current = setTimeout(() => {
     navigate(result.user.role === 'admin' ? '/admin' : '/home')
-   }, 1400)
+   }, 900)
   } else {
    if (result.error === 'EMAIL_NOT_CONFIRMED') {
     setError(t('login.emailNotConfirmed'))

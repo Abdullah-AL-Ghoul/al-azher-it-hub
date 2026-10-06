@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useScrollManager, useScrollFrame } from '../hooks/useScrollManager.jsx'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { useScrollLock } from '../hooks/useScrollLock'
 import { useNotifications } from '../hooks/useNotifications'
 import { HiMenu, HiX } from 'react-icons/hi'
 import { FiSun, FiMoon, FiMonitor, FiUser, FiLogOut, FiShield, FiBell, FiX, FiBookOpen, FiFolder, FiFileText, FiLayers, FiSettings } from 'react-icons/fi'
@@ -47,20 +48,34 @@ export default memo(function Navbar() {
   const [showNotifications, setShowNotifications] = useState(false)
   const notifTrapRef = useFocusTrap(showNotifications)
   const mobileTrapRef = useFocusTrap(isOpen)
+  const notifAreaRef = useRef(null)
   const { notifications, unreadCount, markAsRead } = useNotifications(user)
+  useScrollLock(isOpen || showNotifications)
+
+  // Escape closes whichever layer is actually open — not both at once.
   useEffect(() => {
     if (!isOpen && !showNotifications) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const handleEsc = (e) => {
-      if (e.key === 'Escape') {
-        setIsOpen(false)
+      if (e.key !== 'Escape') return
+      if (showNotifications) setShowNotifications(false)
+      else if (isOpen) setIsOpen(false)
+    }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [isOpen, showNotifications])
+
+  // Outside click closes the notifications panel (it only closed via Escape
+  // or the tiny X before — clicking anywhere else left it stuck open).
+  useEffect(() => {
+    if (!showNotifications) return
+    const onPointerDown = (e) => {
+      if (notifAreaRef.current && !notifAreaRef.current.contains(e.target)) {
         setShowNotifications(false)
       }
     }
-    document.addEventListener('keydown', handleEsc)
-    return () => { document.body.style.overflow = prev; document.removeEventListener('keydown', handleEsc) }
-  }, [isOpen, showNotifications])
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [showNotifications])
 
   const links = useMemo(() => [
     { to: '/home', label: t('nav.home') },
@@ -147,7 +162,7 @@ export default memo(function Navbar() {
               </button>
 
               {user && (
-                <div className="relative">
+                <div className="relative" ref={notifAreaRef}>
                   <button
                     onClick={() => { setShowNotifications(!showNotifications); if (!showNotifications) markAsRead() }}
                     className={`relative ${iconBtn}`}
@@ -171,7 +186,7 @@ export default memo(function Navbar() {
                         animate={prefersReduced ? {} : { opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.96 }}
                         transition={{ duration: 0.2 }}
-                        className={`absolute mt-2 ${t('inline.navbar.end-0')} w-80 max-w-[calc(100vw-1rem)] modal-spatial rounded-2xl overflow-hidden z-[60]`}
+                        className="absolute mt-2 end-0 w-80 max-w-[calc(100vw-1rem)] modal-spatial rounded-2xl overflow-hidden z-[60]"
                         role="dialog"
                         aria-label={t('inline.navbar.notifications')}
                       >

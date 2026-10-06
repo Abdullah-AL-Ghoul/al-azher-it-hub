@@ -48,6 +48,7 @@ function isRecentlyAdded(dateStr) {
 
 
 function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
+ const prefersReduced = useReducedMotion()
  const [titleAr, setTitleAr] = useState('')
  const [titleEn, setTitleEn] = useState('')
  const [subjectAr, setSubjectAr] = useState('')
@@ -149,18 +150,18 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
 
  return (
   <AnimatePresence>
-   <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-    onClick={onClose}
-   >
+    <motion.div
+     initial={{ opacity: 0 }}
+     animate={{ opacity: 1 }}
+     exit={{ opacity: 0 }}
+     className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+     onClick={onClose}
+    >
     <motion.div
      ref={modalRef}
-     initial={{ opacity: 0, scale: 0.95, y: 20 }}
-     animate={{ opacity: 1, scale: 1, y: 0 }}
-     exit={{ opacity: 0, scale: 0.95, y: 20 }}
+     {...(prefersReduced
+      ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+      : { initial: { opacity: 0, scale: 0.95, y: 20 }, animate: { opacity: 1, scale: 1, y: 0 }, exit: { opacity: 0, scale: 0.95, y: 20 } })}
      role="dialog"
      aria-modal="true"
      aria-label={t('inline.sources.upload-file')}
@@ -527,7 +528,7 @@ export default function Sources() {
              try {
               await secureFile.open(f.path, { name: f.name || 'file', mode, signIn: signer })
              } catch {
-              toast.error(isArabic ? 'تعذّر الوصول للملف. أعد المحاولة.' : 'Could not open the file. Try again.')
+              toast.error(t('inline.sources.file-open-failed'))
              }
             }
             return (
@@ -598,7 +599,7 @@ export default function Sources() {
              const path = source.filePath || storagePathFromUrl(source.fileData)
              if (path) {
               try { await secureFile.open(path, { name: source.fileName || 'file', mode: 'view', signIn: signer }) }
-              catch { toast.error(isArabic ? 'تعذّر الوصول للملف. أعد المحاولة.' : 'Could not open the file. Try again.') }
+              catch { toast.error(t('inline.sources.file-open-failed')) }
              }
             }
            }}

@@ -1,22 +1,23 @@
-import { lazy } from 'react'
-import { matchPath } from 'react-router-dom'
 
-const WelcomeGate = lazy(() => import('../pages/WelcomeGate'))
-const Login = lazy(() => import('../pages/Login'))
-const Signup = lazy(() => import('../pages/Signup'))
-const ForgotPassword = lazy(() => import('../pages/ForgotPassword'))
-const ResetPassword = lazy(() => import('../pages/ResetPassword'))
-const Home = lazy(() => import('../pages/Home'))
-const Lectures = lazy(() => import('../pages/Lectures'))
-const LectureDetail = lazy(() => import('../pages/LectureDetail'))
-const Sources = lazy(() => import('../pages/Sources'))
-const StudyPlan = lazy(() => import('../pages/StudyPlan'))
-const Additions = lazy(() => import('../pages/Additions'))
-const Contact = lazy(() => import('../pages/Contact'))
-const AdminDashboard = lazy(() => import('../pages/AdminDashboard'))
-const Profile = lazy(() => import('../pages/Profile'))
-const CourseRoadmap = lazy(() => import('../pages/CourseRoadmap'))
-const NotFound = lazy(() => import('../pages/NotFound'))
+import { matchPath } from 'react-router-dom'
+import { lazyWithRecovery } from '../utils/lazyRecovery'
+
+const WelcomeGate = lazyWithRecovery(() => import('../pages/WelcomeGate'))
+const Login = lazyWithRecovery(() => import('../pages/Login'))
+const Signup = lazyWithRecovery(() => import('../pages/Signup'))
+const ForgotPassword = lazyWithRecovery(() => import('../pages/ForgotPassword'))
+const ResetPassword = lazyWithRecovery(() => import('../pages/ResetPassword'))
+const Home = lazyWithRecovery(() => import('../pages/Home'))
+const Lectures = lazyWithRecovery(() => import('../pages/Lectures'))
+const LectureDetail = lazyWithRecovery(() => import('../pages/LectureDetail'))
+const Sources = lazyWithRecovery(() => import('../pages/Sources'))
+const StudyPlan = lazyWithRecovery(() => import('../pages/StudyPlan'))
+const Additions = lazyWithRecovery(() => import('../pages/Additions'))
+const Contact = lazyWithRecovery(() => import('../pages/Contact'))
+const AdminDashboard = lazyWithRecovery(() => import('../pages/AdminDashboard'))
+const Profile = lazyWithRecovery(() => import('../pages/Profile'))
+const CourseRoadmap = lazyWithRecovery(() => import('../pages/CourseRoadmap'))
+const NotFound = lazyWithRecovery(() => import('../pages/NotFound'))
 
 /**
  * Single source of truth for the app's route table.

@@ -159,9 +159,9 @@ export default function Home() {
           <FiUser size={24} />
          </div>
          <div>
-          <h1 className="text-xl md:text-2xl font-bold text-ink">
+          <h2 className="text-xl md:text-2xl font-bold text-ink">
            {isArabic ? `مرحباً بك، ${user.name}!` : `Welcome, ${user.name}!`}
-          </h1>
+          </h2>
           {userStats.lastVisit && (
            <p className="text-sm text-slate-500 dark:text-white/50 mt-1">
             {t('inline.home.last-visit')}: {new Date(userStats.lastVisit).toLocaleDateString(t('inline.home.en-us'), { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -501,8 +501,8 @@ export default function Home() {
    <motion.section variants={itemVariants} whileInView="visible" viewport={{ once: true }} className="py-16 bg-spatial-page">
     <div className="container-page">
      <motion.div variants={itemVariants} className="relative overflow-hidden glass rounded-3xl border border-white/10 p-10 md:p-14 text-center">
-      <div className="absolute -top-20 -left-20 w-64 h-64 bg-royal-500/15 rounded-full blur-3xl" />
-      <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-cyan-500/15 rounded-full blur-3xl" />
+      <div className="absolute -top-20 -start-20 w-64 h-64 bg-royal-500/15 rounded-full blur-3xl" />
+      <div className="absolute -bottom-20 -end-20 w-64 h-64 bg-cyan-500/15 rounded-full blur-3xl" />
       <h2 className="relative text-2xl md:text-4xl font-bold gradient-text-spatial mb-4">{t('home.cta.title')}</h2>
       <p className="relative text-slate-500 dark:text-white/60 text-lg mb-8 max-w-2xl mx-auto">{t('home.cta.subtitle')}</p>
       <div className="relative flex flex-col sm:flex-row gap-3 justify-center">

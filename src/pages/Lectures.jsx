@@ -273,12 +273,12 @@ export default function Lectures() {
        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-3 flex gap-3 flex-wrap">
         <div className="flex items-center gap-2">
          <FiCalendar size={14} className="text-slate-500 dark:text-white/60" />
-         <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="px-3 py-2 glass rounded-xl text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-500/20" />
+         <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} aria-label={t('inline.lectures.from-date')} className="px-3 py-2 glass rounded-xl text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-500/20" />
         </div>
         <span className="text-slate-500 dark:text-white/50 self-center">—</span>
         <div className="flex items-center gap-2">
          <FiCalendar size={14} className="text-slate-500 dark:text-white/60" />
-         <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="px-3 py-2 glass rounded-xl text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-500/20" />
+         <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} aria-label={t('inline.lectures.to-date')} className="px-3 py-2 glass rounded-xl text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-500/20" />
         </div>
        </motion.div>
       )}
@@ -431,13 +431,13 @@ const LectureCard = memo(function LectureCard({ lecture, isArabic, user, localFa
       </button>
      </div>
      {isViewed && (
-      <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 bg-emerald-500/80 backdrop-blur-sm rounded-full text-white text-xs font-medium">
+      <div className="absolute top-3 start-3 flex items-center gap-1 px-2 py-1 bg-emerald-500/80 backdrop-blur-sm rounded-full text-white text-xs font-medium">
        <FiCheck size={12} />
        <span>{t('lectures.watched')}</span>
       </div>
      )}
      {user && (
-      <button onClick={(e) => { e.preventDefault(); onToggleFavorite(lecture.id, lecture) }} className="pointer-events-auto absolute top-3 right-3 z-10 p-2 bg-black/30 backdrop-blur-sm rounded-full transition hover:bg-black/50" aria-label={localFavorites.includes(lecture.id) ? t('lectures.unfavorite') : t('lectures.favorite')}>
+      <button onClick={(e) => { e.preventDefault(); onToggleFavorite(lecture.id, lecture) }} className="pointer-events-auto absolute top-3 end-3 z-10 p-2 bg-black/30 backdrop-blur-sm rounded-full transition hover:bg-black/50" aria-label={localFavorites.includes(lecture.id) ? t('lectures.unfavorite') : t('lectures.favorite')}>
        <FiHeart size={16} className={localFavorites.includes(lecture.id) ? 'fill-rose-500 text-rose-500' : 'text-white'} />
       </button>
      )}
@@ -478,7 +478,7 @@ const LectureListItem = memo(function LectureListItem({ lecture, isArabic, user,
       </button>
      </div>
      {isViewed && (
-      <div className="absolute top-1 left-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+      <div className="absolute top-1 start-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
        <FiCheck size={12} className="text-white" />
       </div>
      )}

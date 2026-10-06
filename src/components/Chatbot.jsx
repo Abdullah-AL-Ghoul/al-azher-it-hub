@@ -236,9 +236,18 @@ export default function Chatbot() {
  const [dataCache, setDataCache] = useState({ lectures: [], sources: [], subjects: [] })
  const dataLoaded = useRef(false)
   const typingTimer = useRef(null)
+  const greetTimer = useRef(null)
   const msgIdRef = useRef(0)
   const nextId = () => `msg_${Date.now()}_${++msgIdRef.current}`
   const getHistoryKey = useCallback((studentId) => `chat_history_${studentId || 'guest'}`, [])
+
+  // Identity change (login/logout): drop the in-memory transcript so one
+  // account's conversation is never re-saved under another account's key.
+  useEffect(() => {
+   setMessages([])
+   setShowQuickReplies(true)
+   setQuickReplyKey('initial')
+  }, [user?.studentId])
 
   useEffect(() => {
    if (!user) return
@@ -383,6 +392,7 @@ export default function Chatbot() {
 
   const clearChat = useCallback(() => {
    if (typingTimer.current) clearTimeout(typingTimer.current)
+   if (greetTimer.current) clearTimeout(greetTimer.current)
    setIsTyping(false)
    try { localStorage.removeItem(getHistoryKey(user?.studentId)) } catch { /* ignore */ }
   setMessages([])
@@ -391,7 +401,7 @@ export default function Chatbot() {
   const greeting = getGreeting(isArabic)
   const name = user?.name || ''
 
-  setTimeout(() => {
+  greetTimer.current = setTimeout(() => {
    setMessages([{
     id: nextId(),
     quick: true,
@@ -401,6 +411,8 @@ export default function Chatbot() {
    }])
    }, 100)
   }, [isArabic, user, getHistoryKey])
+
+  useEffect(() => () => { if (greetTimer.current) clearTimeout(greetTimer.current) }, [])
 
  const quickReplies = useMemo(() => {
   const keySet = QUICK_REPLIES[quickReplyKey] || QUICK_REPLIES.default
@@ -500,7 +512,7 @@ export default function Chatbot() {
           return (
            <button
             key={`${quickReplyKey}-${idx}`}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 text-royal-600 dark:text-cyan-400 hover:bg-royal-50 dark:hover:bg-royal-500/10 rounded-full text-xs font-medium transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3 min-h-[44px] bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 text-royal-600 dark:text-cyan-400 hover:bg-royal-50 dark:hover:bg-royal-500/10 rounded-full text-xs font-medium transition-colors shadow-sm"
             onClick={() => send(quickReply.text)}
            >
             <Icon size={12} />

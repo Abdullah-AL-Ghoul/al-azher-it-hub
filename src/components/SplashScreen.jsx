@@ -1,10 +1,12 @@
 ﻿import { useState, useEffect } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import SiteLogo from './shared/SiteLogo'
+import { useLanguage } from '../context/LanguageContext'
 
 export default function SplashScreen({ onComplete }) {
  const [show, setShow] = useState(true)
  const prefersReduced = useReducedMotion()
+ const { t } = useLanguage()
 
  useEffect(() => {
   const seen = sessionStorage.getItem('al_azher_splash')
@@ -33,7 +35,7 @@ export default function SplashScreen({ onComplete }) {
      transition={prefersReduced ? {} : { duration: 0.5 }}
      className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-navy-900 via-navy-800 to-slate-900"
      role="status"
-     aria-label="Loading"
+     aria-label={t('common.loading')}
     >
      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-royal-500/10 via-transparent to-transparent" />
 
@@ -65,7 +67,7 @@ export default function SplashScreen({ onComplete }) {
        transition={prefersReduced ? {} : { delay: 0.7, duration: 0.6 }}
        className="text-white/50 text-lg mb-12"
       >
-       Educational Platform
+       {t('inline.app.educational-platform')}
       </motion.p>
 
        <motion.div
