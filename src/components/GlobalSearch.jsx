@@ -41,7 +41,9 @@ export default function GlobalSearch({ autoOpen = false }) {
  const navigate = useNavigate()
  const isArabic = lang === 'ar'
 
-  const [open, setOpen] = useState(autoOpen && !!user)
+  // Opens for guests too — they get the sign-in panel (the component decides
+  // what to render based on `user`; openModal no longer gates on it).
+  const [open, setOpen] = useState(!!autoOpen)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [activeIndex, setActiveIndex] = useState(0)
@@ -54,14 +56,13 @@ export default function GlobalSearch({ autoOpen = false }) {
   const panelRef = useFocusTrap(open)
 
   const openModal = useCallback(() => {
-   if (!user) return
    setOpen(true)
    setQuery('')
    setResults([])
    setActiveIndex(0)
    setLoading(false)
    datasetRef.current = null
-  }, [user])
+  }, [])
 
   const closeModal = useCallback(() => {
    setOpen(false)
