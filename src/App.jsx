@@ -6,6 +6,7 @@ import { useLanguage } from './context/LanguageContext'
 import { useAuth } from './context/AuthContext'
 import { recordToday } from './utils/achievements'
 import { lazyWithRecovery } from './utils/lazyRecovery'
+import { useAppShortcuts } from './hooks/useAppShortcuts'
 import { useSeo } from './hooks/useSeo'
 import { APP_ROUTES, isBarePathname } from './router/routes'
 import ProtectedRoute from './router/ProtectedRoute'
@@ -15,6 +16,7 @@ import Footer from './components/Footer'
 import BackToTop from './components/BackToTop'
 import WelcomeModal from './components/WelcomeModal'
 import ErrorBoundary from './components/ErrorBoundary'
+import ShortcutsGuide from './components/ShortcutsGuide'
 import SpatialBackground from './components/spatial/SpatialBackground'
 import GlobalSearchTrigger from './components/GlobalSearchTrigger'
 
@@ -78,6 +80,7 @@ function AppContent() {
  const [chatbotReady, setChatbotReady] = useState(false)
  const [searchActive, setSearchActive] = useState(false)
  const [searchAutoOpen, setSearchAutoOpen] = useState(false)
+ const [guideOpen, setGuideOpen] = useState(false)
  const scrollPositions = useRef(new Map())
  const prevPathRef = useRef(location.pathname)
 
@@ -87,6 +90,12 @@ function AppContent() {
   setSearchAutoOpen(autoOpen)
   setSearchActive(true)
  }, [])
+
+ useAppShortcuts({
+  onOpenGuide: () => setGuideOpen(true),
+  onOpenSearch: () => activateSearch(true),
+  guideOpen,
+ })
 
  useEffect(() => {
   const onKey = (e) => {
@@ -203,6 +212,7 @@ function AppContent() {
       </ErrorBoundary>
      </Suspense>
     )}
+    <ShortcutsGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     <Toaster
     position="top-center"
     containerStyle={{ top: 72 }}

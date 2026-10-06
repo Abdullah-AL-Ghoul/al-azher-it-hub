@@ -1191,6 +1191,25 @@
       "empty-unread": "No unread notifications — you're all caught up",
       "view-all": "View all",
       "back-home": "Back to home"
+    },
+    "shortcuts": {
+      "title": "Keyboard shortcuts",
+      "subtitle": "Move faster — press ? anytime to open this guide",
+      "guide": "This guide",
+      "search": "Global search",
+      "nav": "Navigation (g then a key)",
+      "nav-home": "Home",
+      "nav-lectures": "Lectures",
+      "nav-sources": "Sources",
+      "nav-additions": "Additions",
+      "nav-roadmap": "Roadmap",
+      "nav-profile": "Profile",
+      "video": "Inside the video player (once focused)",
+      "video-seek": "Seek ±5s (Shift: ±10s)",
+      "video-play": "Play / pause",
+      "video-mute": "Mute",
+      "video-fs": "Fullscreen",
+      "hint-while-typing": "Shortcuts pause automatically while typing in fields"
     }
   }
 }
