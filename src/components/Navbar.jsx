@@ -39,7 +39,7 @@ export default memo(function Navbar() {
   // state here would re-render the whole navbar ~every 100px.
   useScrollFrame(({ progress }) => {
     if (progressRef.current) {
-      progressRef.current.style.width = `${progress}%`
+      progressRef.current.style.transform = `scaleX(${progress / 100})`
     }
   })
   const progressRef = useRef(null)
@@ -93,7 +93,7 @@ export default memo(function Navbar() {
 
   return (
     <>
-      <div ref={progressRef} className="scroll-progress" style={{ width: '0%' }} />
+      <div ref={progressRef} className="scroll-progress" aria-hidden="true" />
 
       <nav aria-label={t('inline.navbar.primary-navigation')} className={`fixed top-0 inset-x-0 z-50 transition duration-300 ${navBg}`}>
         <div className="container-page">
@@ -281,7 +281,8 @@ export default memo(function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu — transform+opacity only; animating height runs a
+            layout pass every frame while this is a pure compositor slide */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -289,11 +290,11 @@ export default memo(function Navbar() {
               role="dialog"
               aria-modal="true"
               aria-label={t('inline.navbar.navigation-menu')}
-              initial={prefersReduced ? {} : { opacity: 0, height: 0, y: -10 }}
-              animate={prefersReduced ? {} : { opacity: 1, height: 'auto', y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -10 }}
-              transition={prefersReduced ? {} : { duration: 0.3, ease: 'easeInOut' }}
-              className="lg:hidden modal-spatial border-t border-line overflow-hidden max-h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain"
+              initial={prefersReduced ? {} : { opacity: 0, y: -8 }}
+              animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+              exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={prefersReduced ? {} : { duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="lg:hidden modal-spatial border-t border-line max-h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain"
             >
               <div className="px-4 py-3 space-y-1">
                 {links.map(link => (

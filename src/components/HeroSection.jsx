@@ -70,14 +70,11 @@ export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount =
     </motion.div>
 
     <motion.h1 variants={pageItemSlow} className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6">
-     <motion.span
-      className="gradient-text-spatial animate-gradient-pan bg-[length:200%_auto] inline-block"
-      initial={prefersReduced ? {} : { backgroundPosition: '0% 50%' }}
-      animate={prefersReduced ? {} : { backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-      transition={prefersReduced ? {} : { duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-     >
+     {/* Static gradient — the old infinite JS backgroundPosition pan repainted
+         the full-size headline every frame for a barely-visible shimmer. */}
+     <span className="gradient-text-spatial inline-block">
       {t('home.hero.title')}
-     </motion.span>
+     </span>
     </motion.h1>
 
     <motion.p variants={pageItemSlow} className="text-lg md:text-xl text-slate-500 dark:text-white/60 mb-8 max-w-2xl mx-auto">

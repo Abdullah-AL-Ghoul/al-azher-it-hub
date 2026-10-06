@@ -509,13 +509,11 @@ function ReadingProgress({ reduced }) {
  useScrollFrame(({ progress }) => {
   if (barRef.current) barRef.current.style.transform = `scaleX(${Math.min(progress, 100) / 100})`
  })
- return (
+  return (
   <div className="fixed top-0 inset-x-0 z-[60] h-[3px] pointer-events-none" aria-hidden="true">
-   {/* dir=ltr keeps the fill anchored to the scroll direction in both locales */}
    <div
     ref={barRef}
-    dir="ltr"
-    className="h-full origin-left bg-gradient-to-r from-royal-500 to-cyan-400"
+    className="progress-fill h-full bg-gradient-to-r from-royal-500 to-cyan-400"
     style={{ transform: 'scaleX(0)', transition: reduced ? 'none' : 'transform 0.1s linear' }}
    />
   </div>

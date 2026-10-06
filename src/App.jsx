@@ -4,7 +4,6 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import { useLanguage } from './context/LanguageContext'
 import { useAuth } from './context/AuthContext'
-import { pageTransition } from './utils/motionTokens'
 import { lazyWithRecovery } from './utils/lazyRecovery'
 import { useSeo } from './hooks/useSeo'
 import { APP_ROUTES, isBarePathname } from './router/routes'
@@ -21,15 +20,21 @@ import GlobalSearchTrigger from './components/GlobalSearchTrigger'
 const Chatbot = lazyWithRecovery(() => import('./components/Chatbot'))
 const GlobalSearch = lazyWithRecovery(() => import('./components/GlobalSearch'))
 
+// Directional route slide: pages enter from the locale's reading start
+// (left edge in RTL, right edge in LTR) and exit toward the opposite side.
+// Eased with the standard snappy-out curve; exit is shorter so the incoming
+// page never feels queued behind the outgoing one.
 function PageTransition({ children }) {
  const prefersReduced = useReducedMotion()
+ const { lang } = useLanguage()
  if (prefersReduced) return <>{children}</>
+ const enterX = lang === 'ar' ? -24 : 24
  return (
   <motion.div
-   initial={pageTransition.initial}
-   animate={pageTransition.animate}
-   exit={pageTransition.exit}
-   transition={pageTransition.transition}
+   initial={{ opacity: 0, x: enterX }}
+   animate={{ opacity: 1, x: 0 }}
+   exit={{ opacity: 0, x: -enterX * 0.5, transition: { duration: 0.12, ease: [0.22, 1, 0.36, 1] } }}
+   transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
   >
    {children}
   </motion.div>
