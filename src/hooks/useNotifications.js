@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { getSupabase } from '../services/supabase'
+import { getNotificationsFeed } from '../services'
 
 const ACTIVITY_TYPES = {
  lectures: { icon: 'FiBookOpen', color: 'bg-violet-400', labelAr: 'محاضرة جديدة', labelEn: 'New Lecture' },
@@ -34,12 +34,11 @@ export function useNotifications(user) {
 
  const loadRecent = useCallback(async () => {
   try {
-   // Uses the SECURITY DEFINER get_notifications_feed RPC, which exposes only
-   // type/action/detail/timestamp — never studentId/name/ip/device. Directly
-   // reading the activity table is admin-only under RLS.
-   const { data, error } = await getSupabase()
-    .rpc('get_notifications_feed', { p_limit: 30 })
-   if (error) return
+   // getNotificationsFeed wraps the SECURITY DEFINER get_notifications_feed
+   // RPC, which exposes only type/action/detail/timestamp — never
+   // studentId/name/ip/device. Directly reading the activity table is
+   // admin-only under RLS.
+   const data = await getNotificationsFeed(30)
    const items = (data || [])
     .filter(n => isWorthNotifying(n.type, n.action))
     .map(n => ({ ...n, meta: getActivityMeta(n.type, n.action) }))

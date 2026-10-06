@@ -1,9 +1,8 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
-import { getSupabase } from '../services/supabase'
-import { resetPassword } from '../services'
+import { resetPassword, getAuthSession, updateAuthUserPassword, resolveStudentIdByEmail } from '../services'
 import SpatialInput from '../components/spatial/SpatialInput'
 import SiteLogo from '../components/shared/SiteLogo'
 import { FiLock, FiArrowLeft, FiCheckCircle, FiLoader, FiAlertTriangle } from 'react-icons/fi'
@@ -37,8 +36,7 @@ export default function ResetPassword() {
   let mounted = true
   async function check() {
    try {
-    const supabase = getSupabase()
-    const { data: { session } } = await supabase.auth.getSession()
+    const session = await getAuthSession()
     const isRecovery = session?.user && session.user.aud === 'authenticated'
     // A recovery link carries a session; if none exists the link is invalid/expired.
     if (!isRecovery) {
@@ -65,25 +63,20 @@ export default function ResetPassword() {
   }
   setLoading(true)
   try {
-   const supabase = getSupabase()
-   const { data: { session } } = await supabase.auth.getSession()
+   const session = await getAuthSession()
    if (!session?.user) {
     setLoading(false)
     setInvalidLink(true)
     return
    }
-   const { error: updateErr } = await supabase.auth.updateUser({ password: newPassword })
-   if (updateErr) throw updateErr
+   await updateAuthUserPassword(newPassword)
 
    // Sync the legacy PBKDF2 hash so the custom login fallback stays in sync.
    // Resolve the studentId even when the recovery session lacks metadata:
    // the verified auth email is the canonical link to the profile row.
    let studentId = session.user.user_metadata?.studentId
    if (!studentId && session.user.email) {
-    const { data: profile } = await supabase.rpc('get_profile_by_email', {
-      p_email: session.user.email,
-    }).catch(() => ({ data: null }))
-    studentId = profile?.studentId
+    studentId = await resolveStudentIdByEmail(session.user.email)
    }
    if (studentId) {
     await resetPassword(studentId, newPassword, { email: '' }).catch(() => {})

@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useMemo, useCallback, memo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -251,12 +251,12 @@ export default function Chatbot() {
       setShowQuickReplies(false)
      }
     }
-   } catch {}
+   } catch { /* ignore */ }
   }, [user, getHistoryKey])
 
   useEffect(() => {
    if (!messages.length) return
-   try { localStorage.setItem(getHistoryKey(user?.studentId), JSON.stringify(messages.slice(-30))) } catch {}
+   try { localStorage.setItem(getHistoryKey(user?.studentId), JSON.stringify(messages.slice(-30))) } catch { /* ignore */ }
   }, [messages, user, getHistoryKey])
 
  useEffect(() => {
@@ -384,7 +384,7 @@ export default function Chatbot() {
   const clearChat = useCallback(() => {
    if (typingTimer.current) clearTimeout(typingTimer.current)
    setIsTyping(false)
-   try { localStorage.removeItem(getHistoryKey(user?.studentId)) } catch {}
+   try { localStorage.removeItem(getHistoryKey(user?.studentId)) } catch { /* ignore */ }
   setMessages([])
   setShowQuickReplies(true)
   setQuickReplyKey('initial')

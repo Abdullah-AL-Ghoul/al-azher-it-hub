@@ -2,6 +2,18 @@ import { createClient } from '@supabase/supabase-js'
 
 let client = null
 
+export function isSupabaseConfigured() {
+  const url = import.meta.env.VITE_SUPABASE_URL
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+  return Boolean(
+    url &&
+    anonKey &&
+    url.startsWith('http') &&
+    !url.includes('placeholder') &&
+    !url.includes('your-project')
+  )
+}
+
 export function getSupabase() {
   if (client) return client
   const url = import.meta.env.VITE_SUPABASE_URL

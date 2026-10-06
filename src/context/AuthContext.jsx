@@ -1,6 +1,5 @@
-﻿import { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { authenticateUser, registerUser, addStudentLog, getSessionUser, findOrCreateOAuthUser, signOut as supabaseSignOut } from '../services'
-import { getSupabase } from '../services/supabase'
+import { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { authenticateUser, registerUser, addStudentLog, getSessionUser, findOrCreateOAuthUser, signOut as supabaseSignOut, getAuthSession, observeAuthState } from '../services'
 import { RateLimitService } from '../services/rateLimitService'
 
 const STORAGE_KEY = 'al_azher_session'
@@ -30,7 +29,7 @@ export function AuthProvider({ children }) {
 
   async function restoreSession() {
    try {
-    const { data: { session } } = await getSupabase().auth.getSession()
+    const session = await getAuthSession()
     if (session?.user) {
      const sid = session.user.user_metadata?.studentId
       || session.user.email?.split('@')[0]
@@ -110,14 +109,13 @@ export function AuthProvider({ children }) {
   useEffect(() => {
    let sub
    try {
-    const { data: { subscription } } = getSupabase().auth.onAuthStateChange((event, session) => {
+    sub = observeAuthState((event, session) => {
      if (event === 'SIGNED_OUT' && !session) {
       setUser(null)
       setLoading(false)
       try { sessionStorage.removeItem(STORAGE_KEY) } catch (_e) { /* ignore */ }
      }
     })
-    sub = subscription
    } catch (_e) { /* supabase may not be configured */ }
    return () => { if (sub) { try { sub.unsubscribe() } catch (_e) { /* ignore */ } } }
   }, [])

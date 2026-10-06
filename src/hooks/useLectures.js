@@ -1,10 +1,12 @@
-﻿import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { getLectures, addStudentLog } from '../services'
+import { getErrorMessage } from '../services/errors'
 import { sortLectures } from '../utils/sort'
 import { useUserData } from '../context/UserDataContext'
 import toast from 'react-hot-toast'
 
 export function useLectures(user, isArabic) {
+  const lang = isArabic ? 'ar' : 'en'
   const [activeSubject, setActiveSubject] = useState('all')
   const [search, setSearch] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -71,9 +73,9 @@ export function useLectures(user, isArabic) {
       }).catch(() => {})
       return newFavs
     } catch (e) {
-      toast.error(isArabic ? 'خطأ في المفضلة' : 'Failed to update favorite')
+      toast.error(getErrorMessage(e, lang))
     }
-  }, [user, isArabic, toggleFavorite])
+  }, [user, lang, toggleFavorite])
 
   const handleRate = useCallback(async (id, rating, lecture) => {
     if (!user) return
@@ -86,9 +88,9 @@ export function useLectures(user, isArabic) {
       }).catch(() => {})
       return newRatings
     } catch (e) {
-      toast.error(isArabic ? 'خطأ في التقييم' : 'Failed to rate')
+      toast.error(getErrorMessage(e, lang))
     }
-  }, [user, isArabic, setRating])
+  }, [user, lang, setRating])
 
   const handleWatch = useCallback(async (id, lecture) => {
     if (!user || viewedIdsRef.current.includes(id)) return

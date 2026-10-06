@@ -1,5 +1,6 @@
 import { createCrudService } from './createCrudService'
 
+/** @type {import('./createCrudService').CrudService<import('./types').Course>} */
 const courses = createCrudService('courses', 'nameAr', 100)
 
 export const getCourses = courses.getAll

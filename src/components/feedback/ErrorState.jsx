@@ -1,12 +1,15 @@
-﻿import { motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi'
 import { useLanguage } from '../../context/LanguageContext'
+import { getErrorMessage } from '../../services/errors'
 
 export default function ErrorState({ error, onRetry, title, className = '', compact = false }) {
- const { t } = useLanguage()
+ const { t, lang } = useLanguage()
  if (!error) return null
 
- const message = typeof error === 'string' ? error : error.message || t('common.error')
+ // Never render raw Supabase error messages — they can leak internal details
+ // and are English-only. Strings stay as-is (callers already localized them).
+ const message = typeof error === 'string' ? error : getErrorMessage(error, lang)
 
  if (compact) {
   return (

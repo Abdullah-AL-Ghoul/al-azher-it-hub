@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { SiGoogle, SiGithub, SiLinkedin, SiMicrosoft } from 'react-icons/si'
-import { getSupabase } from '../../services/supabase'
+import { isSupabaseConfigured, signInWithOAuthProvider } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'
 
 const PROVIDERS = [
@@ -15,19 +15,26 @@ export default function SocialAuth({ isArabic, delay = 1.2, disabled = false } )
  const { t } = useLanguage()
  const [loading, setLoading] = useState('')
  const [error, setError] = useState('')
+ const configured = isSupabaseConfigured()
 
 const handleClick = async (provider) => {
    if (loading || disabled) return
+
+   if (!isSupabaseConfigured()) {
+    setError(
+     isArabic
+      ? 'خدمة تسجيل الدخول بحساب Google غير مفعلة حالياً؛ يلزم ضبط مفاتيح VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في ملف .env. يمكنك تسجيل الدخول المباشر برقم الطالب وكلمة المرور.'
+      : 'Google sign-in requires Supabase configuration. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file, or sign in using your Student ID.'
+    )
+    return
+   }
+
    setLoading(provider)
    setError('')
    try {
     sessionStorage.removeItem('al_azher_session')
     const redirectTo = `${window.location.origin}/login`
-    const { data, error } = await getSupabase().auth.signInWithOAuth({
-     provider: provider.id,
-     options: { redirectTo },
-    })
-   if (error) throw error
+    const { data } = await signInWithOAuthProvider(provider.id, redirectTo)
    if (!data?.url) {
     setError(t('inline.social-auth.could-not-start-sign-in'))
     setLoading('')
@@ -70,7 +77,7 @@ const handleClick = async (provider) => {
        type="button"
        whileHover={!disabled && !loading ? { scale: 1.05, y: -2 } : {}}
        whileTap={!disabled && !loading ? { scale: 0.95 } : {}}
-       disabled={disabled || !!loading}
+       disabled={disabled || !!loading || !configured}
        onClick={() => handleClick(p)}
        title={p.label}
        aria-label={isArabic ? `متابعة عبر ${p.label}` : `Continue with ${p.label}`}

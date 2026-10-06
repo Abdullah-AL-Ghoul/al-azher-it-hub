@@ -9,6 +9,16 @@ const cache = new Map()
 const inflight = new Map()
 const epochs = new Map()
 
+/**
+ * @template {Object} Row
+ * @typedef {Object} CrudService
+ * @property {(force?: boolean, selectCols?: string) => Promise<Row[]>} getAll Cached 60s, in-flight deduped
+ * @property {(data: Row) => Promise<Row>} add
+ * @property {(id: string, data: Partial<Row>) => Promise<void>} update
+ * @property {(id: string) => Promise<void>} remove
+ * @property {() => void} invalidate Drops all cached data for the table
+ */
+
 function bumpEpoch(collectionName) {
   epochs.set(collectionName, (epochs.get(collectionName) || 0) + 1)
   // Drop every cache/in-flight entry for this table (any selectCols variant).
@@ -17,6 +27,16 @@ function bumpEpoch(collectionName) {
   for (const key of inflight.keys()) if (key.startsWith(prefix)) inflight.delete(key)
 }
 
+/**
+ * Generic CRUD service over an admin-managed Supabase table. Writes go through
+ * SECURITY DEFINER RPCs (admin_save_rows / admin_delete_row); reads are cached
+ * for 60 seconds with in-flight request dedup and epoch-based invalidation.
+ * @template {Object} Row
+ * @param {string} collectionName Supabase table name
+ * @param {string} [nameField] Column used in activity-log details
+ * @param {number} [maxItems] Read limit
+ * @returns {CrudService<Row>}
+ */
 export function createCrudService(collectionName, nameField = 'nameAr', maxItems = 100) {
   async function getAll(force = false, selectCols = '*') {
     const key = `${collectionName}::${selectCols}`

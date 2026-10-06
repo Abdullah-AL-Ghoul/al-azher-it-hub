@@ -1,7 +1,13 @@
+export { getNotificationsFeed } from './notifications'
+export { normalizeSupabaseError, getErrorMessage, classifyError } from './errors'
+export { isSupabaseConfigured } from './supabase'
 export { getCourses, addCourse, updateCourse, deleteCourse } from './courses'
 export { getLectures, addLecture, updateLecture, deleteLecture } from './lectures'
 export { getSources, addSource, updateSource, deleteSource } from './sources'
-export { getUsers, registerUser, authenticateUser, resetPassword, sendPasswordResetEmail, verifyStudent, verifyStudentEmail, verifyStudentName, getSessionUser, findOrCreateOAuthUser, signOut } from './users'
+export {
+  getUsers, registerUser, authenticateUser, resetPassword, sendPasswordResetEmail, verifyStudent, verifyStudentEmail, verifyStudentName, getSessionUser, findOrCreateOAuthUser, signOut,
+  getAuthSession, observeAuthState, updateAuthUserPassword, signInWithOAuthProvider, resolveStudentIdByEmail,
+} from './users'
 export { getFavorites, toggleFavorite } from './favorites'
 export { getRatings, setRating } from './ratings'
 export { getUserStats, markViewed, getViewed } from './userStats'

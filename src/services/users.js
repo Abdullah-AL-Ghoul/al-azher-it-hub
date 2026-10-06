@@ -411,6 +411,67 @@ export async function signOut() {
   await getSupabase().auth.signOut()
 }
 
+// --- Auth session facade -----------------------------------------------------
+// The only places allowed to touch supabase.auth directly are the service
+// functions below; AuthContext, ResetPassword, and SocialAuth go through them.
+
+/**
+ * Resolves the current Supabase auth session (recovery links, OAuth returns,
+ * persisted sessions). Returns null when unauthenticated or unconfigured.
+ * @returns {Promise<import('@supabase/supabase-js').Session|null>}
+ */
+export async function getAuthSession() {
+  const { data: { session } } = await getSupabase().auth.getSession()
+  return session || null
+}
+
+/**
+ * @param {(event: string, session: import('@supabase/supabase-js').Session | null) => void} callback
+ * @returns {{ unsubscribe: () => void } | null} subscription, or null when Supabase is not configured
+ */
+export function observeAuthState(callback) {
+  const { data } = getSupabase().auth.onAuthStateChange(callback)
+  return data?.subscription || null
+}
+
+/**
+ * Updates the password of the currently authenticated Supabase auth account
+ * (used by the recovery flow, which carries a temporary session).
+ * @param {string} newPassword
+ * @throws {Error} Supabase auth error, e.g. weak password or missing session
+ */
+export async function updateAuthUserPassword(newPassword) {
+  const { error } = await getSupabase().auth.updateUser({ password: newPassword })
+  if (error) throw error
+}
+
+/**
+ * Starts an OAuth sign-in flow. Resolves with `{ url }` on success; the caller
+ * redirects the browser to the URL. Throws when Supabase is not configured
+ * (Error('SUPABASE_NOT_CONFIGURED: ...')) or the provider is unavailable.
+ * @param {'google'|'github'|'microsoft'|'linkedin_oidc'} provider
+ * @param {string} redirectTo Absolute URL to return to after the OAuth round-trip
+ * @returns {Promise<{ url?: string }>}
+ */
+export async function signInWithOAuthProvider(provider, redirectTo) {
+  return getSupabase().auth.signInWithOAuth({ provider, options: { redirectTo } })
+}
+
+/**
+ * Resolves a profile's studentId from a verified auth email. Best-effort:
+ * returns null instead of throwing when the profile cannot be read.
+ * @param {string} email
+ * @returns {Promise<string|null>}
+ */
+export async function resolveStudentIdByEmail(email) {
+  try {
+    const profile = await getProfileByEmail(email)
+    return profile?.studentId || null
+  } catch (_e) {
+    return null
+  }
+}
+
 export async function sendPasswordResetEmail(email) {
   const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
     redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/reset-password`,
