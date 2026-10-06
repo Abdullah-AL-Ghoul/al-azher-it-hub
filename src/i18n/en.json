@@ -1178,6 +1178,17 @@
       "16px": "16px",
       "hide-password": "Hide password",
       "show-password": "Show password"
+    },
+    "notifications-center": {
+      "title": "Notifications Center",
+      "subtitle": "Everything new on the platform — lectures, sources, additions and courses",
+      "all": "All",
+      "unread": "Unread",
+      "mark-all-read": "Mark all as read",
+      "empty": "No notifications yet",
+      "empty-unread": "No unread notifications — you're all caught up",
+      "view-all": "View all",
+      "back-home": "Back to home"
     }
   }
 }

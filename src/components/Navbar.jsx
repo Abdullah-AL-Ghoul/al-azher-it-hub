@@ -192,10 +192,22 @@ export default memo(function Navbar() {
                       >
                         <div className="px-4 py-3 border-b border-line flex items-center justify-between">
                           <h3 className="text-sm font-bold text-ink">{t('inline.navbar.notifications')}</h3>
-                          <button onClick={() => setShowNotifications(false)} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors" aria-label={t('common.close')}>
-                            <FiX size={14} className="text-slate-400" />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <Link
+                              to="/notifications"
+                              onClick={() => setShowNotifications(false)}
+                              className="px-2.5 py-1.5 min-h-[32px] flex items-center rounded-lg text-xs font-medium text-accent hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                            >
+                              {t('inline.notifications-center.view-all')}
+                            </Link>
+                            <button onClick={() => setShowNotifications(false)} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors" aria-label={t('common.close')}>
+                              <FiX size={14} className="text-slate-400" />
+                            </button>
+                          </div>
                         </div>
+                        {/* Compact preview: the full, filterable feed lives in
+                            the /notifications center — the dropdown shows only
+                            the newest slice */}
                         <div className="max-h-80 overflow-y-auto overscroll-contain">
                           {notifications.length === 0 ? (
                             <div className="py-8 text-center">
@@ -203,7 +215,7 @@ export default memo(function Navbar() {
                               <p className="text-xs text-slate-400 dark:text-white/40">{t('inline.navbar.no-notifications-yet')}</p>
                             </div>
                           ) : (
-                            notifications.map((item, i) => {
+                            notifications.slice(0, 5).map((item, i) => {
                               const IconComp = iconMap[item.meta?.icon] || FiBell
                               return (
                                 <div key={item.id || i} className="px-4 py-3 border-b border-line last:border-0 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
@@ -336,6 +348,13 @@ export default memo(function Navbar() {
                       />
                     )}
                     <FiShield size={16} /> {t('nav.admin')}
+                  </Link>
+                )}
+                {user && (
+                  <Link to="/notifications" onClick={() => setIsOpen(false)}
+                    className="block px-4 py-3 min-h-[44px] rounded-xl text-sm text-slate-600 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/5 hover:text-ink flex items-center gap-2"
+                  >
+                    <FiBell size={16} /> {t('inline.notifications-center.title')}
                   </Link>
                 )}
                 {user && !isAdmin && (
