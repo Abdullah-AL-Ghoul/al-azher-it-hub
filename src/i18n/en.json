@@ -1161,7 +1161,16 @@
       "open-on-youtube-2": "Open on YouTube",
       "play-lecture-inline": "Play lecture inline",
       "watch-inline": "Watch inline",
-      "no-leaving": "No leaving"
+      "no-leaving": "No leaving",
+      "resume-from": "Resume from {time}",
+      "start-over": "Start over",
+      "speed": "Speed",
+      "speed-normal": "Normal",
+      "keyboard-hint": "Arrows: seek · Space: play/pause · M: mute · F: fullscreen",
+      "watch-progress": "Watched {pct}%",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "fullscreen": "Fullscreen"
     },
     "spatial-input": {
       "left": "left",

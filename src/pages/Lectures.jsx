@@ -371,6 +371,7 @@ function VideoPlayerModal({ lecture, onClose, isArabic, onWatch, localFavorites,
       url={lecture.url}
       title={isArabic ? lecture.titleAr : lecture.titleEn}
       isArabic={isArabic}
+      lectureId={lecture.id}
       onWatch={onWatch ? () => onWatch(lecture.id, lecture) : undefined}
       autoPlay
      />

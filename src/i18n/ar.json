@@ -1161,7 +1161,16 @@
       "open-on-youtube-2": "افتح على YouTube",
       "play-lecture-inline": "تشغيل المحاضرة داخل الموقع",
       "watch-inline": "شاهد الآن داخل الموقع",
-      "no-leaving": "بدون مغادرة"
+      "no-leaving": "بدون مغادرة",
+      "resume-from": "استكمال من {time}",
+      "start-over": "ابدأ من البداية",
+      "speed": "السرعة",
+      "speed-normal": "عادية",
+      "keyboard-hint": "أسهم: تقديم/تأخير · مسافة: تشغيل/إيقاف · M: كتم · F: ملء الشاشة",
+      "watch-progress": "شاهدت {pct}%",
+      "mute": "كتم",
+      "unmute": "إلغاء الكتم",
+      "fullscreen": "ملء الشاشة"
     },
     "spatial-input": {
       "left": "right",

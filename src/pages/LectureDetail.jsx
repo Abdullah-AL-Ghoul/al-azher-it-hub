@@ -258,6 +258,7 @@ export default function LectureDetail() {
         url={lecture.url}
         title={isArabic ? lecture.titleAr : lecture.titleEn}
         isArabic={isArabic}
+        lectureId={lecture.id}
         onWatch={handleWatch}
        />
       </div>
