@@ -889,7 +889,8 @@
       "materials": "Materials",
       "latest-additions": "Latest additions",
       "start-learning-now": "Start Learning Now",
-      "contact-us": "Contact Us"
+      "contact-us": "Contact Us",
+      "day-streak": "Day streak"
     },
     "lecture-detail": {
       "link-copied": "Link copied",
@@ -956,7 +957,8 @@
       "passwords-do-not-match-2": "Passwords do not match",
       "saving": "Saving...",
       "save": "Save",
-      "no-password-changes-yet": "No password changes yet"
+      "no-password-changes-yet": "No password changes yet",
+      "achievements": "Achievements"
     },
     "lectures": {
       "lectures": "Lectures",

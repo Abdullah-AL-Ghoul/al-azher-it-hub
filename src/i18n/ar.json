@@ -889,7 +889,8 @@
       "materials": "عدد المواد",
       "latest-additions": "آخر الإضافات",
       "start-learning-now": "ابدأ التعلم الآن",
-      "contact-us": "تواصل معنا"
+      "contact-us": "تواصل معنا",
+      "day-streak": "سلسلة أيام"
     },
     "lecture-detail": {
       "link-copied": "تم نسخ الرابط",
@@ -956,7 +957,8 @@
       "passwords-do-not-match-2": "غير متطابقة",
       "saving": "جاري الحفظ...",
       "save": "حفظ",
-      "no-password-changes-yet": "لم يتم تغيير كلمة المرور بعد"
+      "no-password-changes-yet": "لم يتم تغيير كلمة المرور بعد",
+      "achievements": "الإنجازات"
     },
     "lectures": {
       "lectures": "محاضرة",

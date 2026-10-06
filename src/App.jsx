@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import { useLanguage } from './context/LanguageContext'
 import { useAuth } from './context/AuthContext'
+import { recordToday } from './utils/achievements'
 import { lazyWithRecovery } from './utils/lazyRecovery'
 import { useSeo } from './hooks/useSeo'
 import { APP_ROUTES, isBarePathname } from './router/routes'
@@ -99,6 +100,11 @@ function AppContent() {
  }, [activateSearch])
 
  useSeo(location.pathname, lang)
+
+ // Daily streak: mark today active once per boot for signed-in students.
+ useEffect(() => {
+  if (user && user.role !== 'admin') recordToday(user.studentId)
+ }, [user])
 
  // Scroll handling: new navigations go to top; back/forward restores the
  // position saved for that path. The restore runs twice (paint + after the

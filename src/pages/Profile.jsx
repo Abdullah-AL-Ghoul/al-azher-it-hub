@@ -8,8 +8,9 @@ import {
  studentUpdateProfile, addActivity, addStudentLog, getStudentLogs,
  resetPassword, authenticateUser
 } from '../services'
+import { currentStreak, computeAchievements } from '../utils/achievements'
 import { pageContainer, pageItem } from '../utils/motionTokens'
-import { FiUser, FiEdit2, FiSave, FiX, FiLinkedin, FiPhone, FiGlobe, FiBookOpen, FiHeart, FiEye, FiArrowLeft, FiLink, FiLock, FiActivity } from 'react-icons/fi'
+import { FiUser, FiEdit2, FiSave, FiX, FiLinkedin, FiPhone, FiGlobe, FiBookOpen, FiHeart, FiEye, FiArrowLeft, FiLink, FiLock, FiActivity, FiPlay, FiAward, FiCalendar, FiCheckCircle } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import motivationalQuotes from '../data/quotes'
 import ErrorState from '../components/feedback/ErrorState'
@@ -17,6 +18,8 @@ import Skeleton from '../components/shared/Skeleton'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
+
+const BADGE_ICONS = { FiPlay, FiEye, FiAward, FiHeart, FiCalendar, FiCheckCircle }
 
 /* Heat-cell shades, light → dark with activity intensity. */
 const HEAT_LEVELS = [
@@ -53,6 +56,7 @@ export default function Profile() {
   whatsapp: '',
  })
  const [stats, setStats] = useState({ lectures: 0, favorites: 0, viewed: 0, sources: 0 })
+ const [achievements, setAchievements] = useState([])
  const [quote, setQuote] = useState('')
  const [loading, setLoading] = useState(true)
  const [error, setError] = useState(null)
@@ -122,6 +126,23 @@ export default function Profile() {
       viewed: userStats.viewed?.length || 0,
       sources: sources.length,
      })
+     // Achievements: pure client-side computation over the data just fetched
+     // (viewed ids + favorites + local streak + per-subject completion).
+     const viewedIds = Array.isArray(userStats.viewed) ? userStats.viewed : []
+     const groups = {}
+     for (const lec of lectures) {
+      const name = lec.subjectAr || lec.subjectEn || '—'
+      if (!groups[name]) groups[name] = { total: 0, watched: 0 }
+      groups[name].total++
+      if (viewedIds.includes(lec.id)) groups[name].watched++
+     }
+     const subjectProgress = Object.values(groups)
+     setAchievements(computeAchievements({
+      viewed: viewedIds,
+      favorites: favs,
+      streak: currentStreak(user.studentId),
+      subjectProgress,
+     }))
      const quotes = motivationalQuotes[lang] || motivationalQuotes.en
      setQuote(quotes[Math.floor(Math.random() * quotes.length)])
      setLogDates(Array.isArray(logs) ? logs.map((l) => String(l.timestamp || '').slice(0, 10)) : [])
@@ -278,6 +299,71 @@ export default function Profile() {
        </motion.div>
       )
      })}
+    </motion.div>
+
+    {/* Achievements — client-side badges from viewed/favorites/local streak */}
+    <motion.div variants={itemVariants} className="glass rounded-xl p-6">
+     <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+      <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+       <FiAward size={18} className="text-amber-400" />
+       {t('inline.profile.achievements')}
+      </h2>
+      <span className="text-xs text-slate-500 dark:text-white/50 tabular-nums">
+       {achievements.filter((a) => a.achieved).length} / {achievements.length}
+      </span>
+     </div>
+     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      {achievements.map((badge, i) => {
+       const Icon = BADGE_ICONS[badge.icon] || FiAward
+       const pct = badge.target > 0 ? Math.min(100, Math.round((badge.progress / badge.target) * 100)) : 0
+       return (
+        <motion.div
+         key={badge.id}
+         initial={prefersReduced ? {} : { opacity: 0, y: 12 }}
+         whileInView={prefersReduced ? {} : { opacity: 1, y: 0 }}
+         viewport={{ once: true }}
+         transition={{ delay: i * 0.04 }}
+         className={`relative rounded-xl p-4 border transition-colors ${
+          badge.achieved
+            ? 'bg-gradient-to-br from-amber-500/10 to-cyan-400/5 border-amber-500/30'
+            : 'bg-black/[0.03] dark:bg-white/[0.03] border-black/5 dark:border-white/5'
+         }`}
+         title={isArabic ? badge.descAr : badge.descEn}
+        >
+         <div className="flex items-start justify-between mb-2">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+           badge.achieved
+            ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25'
+            : 'bg-black/5 dark:bg-white/5 text-slate-400 dark:text-white/30'
+          }`}>
+           <Icon size={18} />
+          </div>
+          {badge.achieved && <span className="text-emerald-500" aria-hidden="true"><FiCheckCircle size={16} /></span>}
+         </div>
+         <p className={`text-sm font-bold ${badge.achieved ? 'text-ink' : 'text-slate-500 dark:text-white/50'}`}>
+          {isArabic ? badge.titleAr : badge.titleEn}
+         </p>
+         <p className="text-[11px] text-slate-500 dark:text-white/40 mt-0.5 leading-snug">
+          {isArabic ? badge.descAr : badge.descEn}
+         </p>
+         {!badge.achieved && (
+          <div className="mt-2 flex items-center gap-2">
+           <div className="flex-1 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+            <motion.div
+             initial={prefersReduced ? {} : { width: 0 }}
+             whileInView={{ width: `${pct}%` }}
+             viewport={{ once: true }}
+             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+             className="h-full bg-gradient-to-r from-royal-500 to-cyan-400 rounded-full"
+            />
+           </div>
+           <span className="text-[10px] text-slate-400 dark:text-white/30 tabular-nums">{pct}%</span>
+          </div>
+         )}
+        </motion.div>
+       )
+      })}
+     </div>
     </motion.div>
 
     {/* Activity heatmap */}

@@ -7,10 +7,11 @@ import { getLectures, getSources, getAdditions } from '../services'
 import { pageContainer, pageItem, pageContainerReduced, revealItem } from '../utils/motionTokens'
 import { lectureVideoId, } from '../utils/helpers'
 import HeroSection from '../components/HeroSection'
-import { FiFileText, FiGrid, FiArrowLeft, FiEye, FiHeart, FiClock, FiMap, FiLink, FiUser, FiMessageCircle, FiVideo, FiChevronLeft, FiPlay, FiBookOpen, FiSend, FiUsers } from 'react-icons/fi'
+import { FiFileText, FiGrid, FiArrowLeft, FiEye, FiHeart, FiClock, FiMap, FiLink, FiUser, FiMessageCircle, FiVideo, FiChevronLeft, FiPlay, FiBookOpen, FiSend, FiUsers, FiZap } from 'react-icons/fi'
 import LectureThumbnail from '../components/shared/LectureThumbnail'
 import ErrorState from '../components/feedback/ErrorState'
 import { useUserData } from '../context/UserDataContext'
+import { currentStreak } from '../utils/achievements'
 import Skeleton from '../components/shared/Skeleton'
 
 const quickLinks = [
@@ -43,6 +44,7 @@ export default function Home() {
  const viewed = userData?.viewed ?? []
  const favorites = userData?.favorites ?? []
  const userStats = userData?.stats ?? { viewed: [], lastVisit: null }
+ const streak = useMemo(() => currentStreak(user?.studentId), [user, viewed])
 
  useEffect(() => {
   let mounted = true
@@ -296,13 +298,14 @@ export default function Home() {
    {!isAdmin && (
     <motion.section variants={prefersReduced ? {} : pageContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} className="py-12 bg-spatial-page">
      <div className="container-page">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
        {[
         { icon: FiFileText, value: lectures.length, label: t('home.stats.totalLectures'), gradient: 'from-violet-500 to-cyan-500' },
         { icon: FiLink, value: sources.length, label: t('home.stats.totalSources'), gradient: 'from-emerald-500 to-cyan-500' },
         { icon: FiEye, value: viewed?.length || 0, label: t('home.stats.watched'), gradient: 'from-cyan-500 to-royal-600' },
         { icon: FiHeart, value: favorites.length, label: t('home.stats.favorites'), gradient: 'from-rose-500 to-pink-500' },
-        { icon: FiGrid, value: materialsCount, label: t('inline.home.materials'), gradient: 'from-amber-500 to-orange-500' },
+        { icon: FiZap, value: streak, label: t('inline.home.day-streak'), gradient: 'from-amber-500 to-orange-500' },
+        { icon: FiGrid, value: materialsCount, label: t('inline.home.materials'), gradient: 'from-violet-500 to-fuchsia-500' },
        ].map((stat, i) => {
         const Icon = stat.icon
         return (
