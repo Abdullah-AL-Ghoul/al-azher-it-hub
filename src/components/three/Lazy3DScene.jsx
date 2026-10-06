@@ -34,8 +34,32 @@ export default function Lazy3DScene({
   const hostRef = useRef(null)
   const [near, setNear] = useState(false)
   const [visible, setVisible] = useState(false)
+  const [idle, setIdle] = useState(false)
   const [SceneComp, setSceneComp] = useState(null)
   const capable = useMemo(() => supportsWebGL(), [])
+
+  // After-paint + idle gate: wait for one double-paint (page visibly rendered)
+  // then for browser idle — the three.js chunk (~850KB) must never download
+  // or parse while the first contentful paint / hydration is still happening.
+  useEffect(() => {
+    if (!capable) return
+    let raf1, raf2, idleId
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        if ('requestIdleCallback' in window) {
+          idleId = window.requestIdleCallback(() => setIdle(true), { timeout: 1500 })
+        } else {
+          idleId = setTimeout(() => setIdle(true), 300)
+        }
+      })
+    })
+    return () => {
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
+      if (typeof idleId === 'number' && 'cancelIdleCallback' in window) window.cancelIdleCallback(idleId)
+      else clearTimeout(idleId)
+    }
+  }, [capable])
 
   useEffect(() => {
     const el = hostRef.current
@@ -60,7 +84,7 @@ export default function Lazy3DScene({
   }, [capable])
 
   useEffect(() => {
-    if (!near || !scene || SceneComp) return
+    if (!near || !idle || !scene || SceneComp) return
     let cancelled = false
     scene()
       .then((mod) => {
@@ -68,7 +92,7 @@ export default function Lazy3DScene({
       })
       .catch(() => {}) // keep the CSS fallback on load failure
     return () => { cancelled = true }
-  }, [near, scene, SceneComp])
+  }, [near, idle, scene, SceneComp])
 
   return (
     <div

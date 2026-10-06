@@ -39,10 +39,11 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <!-- Self-hosted fonts (Cairo + Inter, subset woff2): removes the
          render-blocking fonts.googleapis.com stylesheet from the critical path.
-         Regenerate with: node scripts/download-fonts.cjs -->
+         Regenerate with: node scripts/download-fonts.cjs.
+         The two variable-weight preloads are injected by boot.js per selected
+         language, so the Arabic-first user never downloads the ~48KB Inter
+         latin file (and vice versa). -->
     <link rel="stylesheet" href="/fonts/fonts.css">
-    <link rel="preload" href="/fonts/cairo-400-arabic.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/fonts/inter-400-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preconnect" href="https://wtetgxgtvqewveorfnwj.supabase.co" crossorigin>
     <!-- Upgraded from dns-prefetch for faster TLS+TCP handshake; keep crossorigin for img.youtube.com -->
     <link rel="preconnect" href="https://img.youtube.com" crossorigin>

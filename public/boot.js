@@ -12,12 +12,14 @@
     }
     document.documentElement.lang = l
     document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr'
-    // Preload the English font only when English is selected — the Arabic
-    // (default) load skips it entirely, saving ~48 KB on first paint.
-    if (l === 'en' && document.head) {
+    // Preload only the headline font for the selected language — the Arabic
+    // (default) visitor never downloads Inter latin (~48 KB) and the English
+    // visitor never downloads Cairo arabic. fonts.css unicode-ranges still
+    // fetch the rest lazily.
+    if (document.head) {
       var link = document.createElement('link')
       link.rel = 'preload'
-      link.href = '/fonts/inter-400-latin.woff2'
+      link.href = l === 'en' ? '/fonts/inter-400-latin.woff2' : '/fonts/cairo-400-arabic.woff2'
       link.as = 'font'
       link.type = 'font/woff2'
       link.crossOrigin = 'anonymous'

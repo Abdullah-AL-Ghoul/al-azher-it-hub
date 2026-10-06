@@ -15,11 +15,14 @@ export default function SplashScreen({ onComplete }) {
    return
   }
     let innerTimer = null
+    // ≤500ms budget: 300ms brand beat + 100ms morph-out, then a short 150ms
+    // crossfade into the app (was ~1.2s — the logo animated long after the
+    // visitor had decided to move on).
     const timer = setTimeout(() => {
      setShow(false)
      sessionStorage.setItem('al_azher_splash', '1')
-     innerTimer = setTimeout(onComplete, 300)
-    }, 400)
+     innerTimer = setTimeout(onComplete, 100)
+    }, 300)
   return () => {
    clearTimeout(timer)
    if (innerTimer) clearTimeout(innerTimer)
@@ -32,7 +35,7 @@ export default function SplashScreen({ onComplete }) {
     <motion.div
      initial={prefersReduced ? {} : { opacity: 1 }}
      exit={prefersReduced ? {} : { opacity: 0 }}
-     transition={prefersReduced ? {} : { duration: 0.5 }}
+     transition={prefersReduced ? {} : { duration: 0.15 }}
      className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-navy-900 via-navy-800 to-slate-900"
      role="status"
      aria-label={t('common.loading')}
@@ -43,7 +46,7 @@ export default function SplashScreen({ onComplete }) {
       <motion.div
        initial={prefersReduced ? {} : { scale: 0.4, rotate: -25, opacity: 0 }}
        animate={prefersReduced ? {} : { scale: 1, rotate: 0, opacity: 1 }}
-       transition={prefersReduced ? {} : { type: 'spring', stiffness: 180, damping: 16, delay: 0.15 }}
+       transition={prefersReduced ? {} : { type: 'spring', stiffness: 220, damping: 18, delay: 0.05 }}
        className="mx-auto mb-8"
       >
        {/* gradient-halo paints the spinning conic ring behind the mark */}
@@ -55,7 +58,7 @@ export default function SplashScreen({ onComplete }) {
       <motion.div
        initial={prefersReduced ? {} : { opacity: 0, y: 20 }}
        animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
-       transition={prefersReduced ? {} : { delay: 0.5, duration: 0.6 }}
+       transition={prefersReduced ? {} : { delay: 0.15, duration: 0.25 }}
        className="text-4xl md:text-5xl font-bold text-white mb-3"
       >
        AL-Azher IT Hub
@@ -64,7 +67,7 @@ export default function SplashScreen({ onComplete }) {
       <motion.p
        initial={prefersReduced ? {} : { opacity: 0, y: 20 }}
        animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
-       transition={prefersReduced ? {} : { delay: 0.7, duration: 0.6 }}
+       transition={prefersReduced ? {} : { delay: 0.2, duration: 0.25 }}
        className="text-white/50 text-lg mb-12"
       >
        {t('inline.app.educational-platform')}
@@ -73,15 +76,15 @@ export default function SplashScreen({ onComplete }) {
        <motion.div
         initial={prefersReduced ? {} : { opacity: 0 }}
         animate={prefersReduced ? {} : { opacity: 1 }}
-        transition={prefersReduced ? {} : { delay: 0.5 }}
+        transition={prefersReduced ? {} : { delay: 0.15 }}
         className="flex justify-center"
        >
         <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
          <motion.div
-          initial={prefersReduced ? {} : { width: '0%' }}
-          animate={prefersReduced ? {} : { width: '100%' }}
-          transition={prefersReduced ? {} : { delay: 0.5, duration: 0.8, ease: 'easeInOut' }}
-          className="h-full bg-gradient-to-r from-royal-500 to-cyan-400 rounded-full"
+          initial={prefersReduced ? {} : { scaleX: 0 }}
+          animate={prefersReduced ? {} : { scaleX: 1 }}
+          transition={prefersReduced ? {} : { delay: 0.05, duration: 0.3, ease: 'easeOut' }}
+          className="h-full bg-gradient-to-r from-royal-500 to-cyan-400 rounded-full origin-left"
          />
         </div>
        </motion.div>
