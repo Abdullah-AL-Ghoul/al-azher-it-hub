@@ -29,6 +29,9 @@ test.describe('keyboard shortcuts (anonymous)', () => {
 	test('`g` sequences navigate: anonymous g+p redirects through the guard', async ({ page }) => {
 		await page.goto('/login')
 		await page.locator('#main-content form').waitFor()
+		// The login form autofocuses its first field — take focus off it so the
+		// app-level shortcuts (skipped while typing) actually fire.
+		await page.mouse.click(5, 300)
 		await page.keyboard.press('g')
 		await page.keyboard.press('p', { delay: 60 })
 		// /profile is protected — the anonymous user bounces to the welcome gate
@@ -44,6 +47,11 @@ test.describe('notifications center (anonymous guard)', () => {
 })
 
 test.describe('axe-core (public pages, both languages)', () => {
+	// The welcome gate runs a live WebGL scene during analysis; under parallel
+	// workers 30s is not enough.
+	test.describe.configure({ mode: 'serial' })
+	test.setTimeout(90_000)
+
 	for (const lang of ['ar', 'en']) {
 		for (const path of ['/', '/login', '/signup', '/forgot-password', '/no-such-page']) {
 			test(`axe: ${lang} ${path}`, async ({ page }) => {

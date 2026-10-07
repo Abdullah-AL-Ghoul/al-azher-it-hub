@@ -9,3 +9,5 @@ test-results
 .DS_Store
 .baseline/
 .zcode/
+.qa/
+test-results/

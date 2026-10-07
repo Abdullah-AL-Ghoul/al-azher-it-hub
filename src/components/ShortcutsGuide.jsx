@@ -34,7 +34,7 @@ export default function ShortcutsGuide({ isOpen, onClose }) {
         <Row keys={['g', 'r']} desc={s('nav-roadmap')} />
         <Row keys={['g', 'p']} desc={s('nav-profile')} />
 
-        <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-white/40 mt-5 mb-1">General</h3>
+        <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-white/40 mt-5 mb-1">{s('general')}</h3>
         <Row keys={['/']} desc={s('search')} />
         <Row keys={['Ctrl', 'K']} desc={s('search')} />
         <Row keys={['?']} desc={s('guide')} />
