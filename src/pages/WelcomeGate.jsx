@@ -154,7 +154,7 @@ export default function WelcomeGate() {
       <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-medium text-slate-600 dark:text-white/70 mb-6">
        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-royal-500 text-white"><FiShield size={12} /></span>
        {t('inline.welcome-gate.trusted-platform-for-it')}
-       <span className="hidden sm:inline-flex items-center gap-1 text-amber-500 dark:text-amber-400"><FiStar size={12} className="fill-amber-400 text-amber-400" /> 4.9/5</span>
+       <span className="hidden sm:inline-flex items-center gap-1 text-amber-700 dark:text-amber-300 font-semibold"><FiStar size={12} className="fill-amber-400 text-amber-400" /> 4.9/5</span>
       </motion.div>
 
       <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl lg:text-[60px] font-extrabold tracking-tight leading-[0.95] text-ink">

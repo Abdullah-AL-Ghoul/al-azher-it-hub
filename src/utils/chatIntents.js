@@ -499,6 +499,30 @@ export function buildChatIntents(data, user, isArabic) {
   return null
  }
 
+ function academicAdvisingHandler(text) {
+  if (fuzzyMatch(text, ['تسجيل مواد', 'تسجيل المواد', 'كيف اسجل', 'تنزيل مواد', 'نصائح تسجيل', 'course registration', 'register courses'])) {
+    return {
+      quickKey: 'default',
+      text: isArabic
+        ? '📝 نصائح تسجيل وتنزيل المواد الجامعية:\n\n1. 🎯 راجع متطلبات الخطة الشجرية أولاً وتأكد من استيفاء المتطلب السابق (Prerequisites).\n2. ⚖️ وازن جدولك بين المواد البرمجية العملية والمواد النظرية (15-18 ساعة كحد أقصى).\n3. 🚫 تجنب وضع أكثر من مادة برمجة ثقيلة في نفس الفصل لتفادي ضغط المشاريع.\n\n→ راجع شجرة المواد والمتطلبات: /roadmap\n→ تصفح الخطة الدراسية الكاملة: /study-plan'
+        : '📝 Course Registration & Academic Advising Tips:\n\n1. 🎯 Check prerequisite chains first on the roadmap.\n2. ⚖️ Balance your semester workload between heavy lab/coding courses and theoretical subjects (15-18 credits ideal).\n3. 🚫 Avoid bunching multiple capstone programming courses in a single semester.\n\n→ Check prerequisite chains: /roadmap\n→ View complete degree plan: /study-plan'
+    }
+  }
+  return null
+}
+
+function downloadSummariesHandler(text) {
+  if (fuzzyMatch(text, ['تلخيص', 'ملخصات', 'تنزيل ملخص', 'تحميل ملخصات', 'اسئلة سنوات', 'امتحانات سابقة', 'download summaries', 'past exams', 'pdf'])) {
+    return {
+      quickKey: 'afterSources',
+      text: isArabic
+        ? '📑 تحميل الملخصات ونماذج الامتحانات:\n\n• جميع الملفات المرفوعة متوفرة بصيغ PDF و DOCX جاهزة للتحميل الفوري والمباشر.\n• يمكنك تصفية المصادر حسب المادة المطلوبة أو البحث بالاسم مباشرة.\n\n→ تصفح وحمّل الملخصات الآن: /sources'
+        : '📑 Downloading Summaries & Past Exams:\n\n• All resources and summary sheets are available in PDF and DOCX formats for direct download.\n• You can filter files by subject or search by topic.\n\n→ Browse and download summaries now: /sources'
+    }
+  }
+  return null
+}
+
  function helpHandler(text) {
   if (fuzzyMatch(text, ['مساعدة', 'help', 'ساعدني', 'محتاج مساعدة'])) {
    return {
@@ -666,6 +690,8 @@ export function buildChatIntents(data, user, isArabic) {
   favoritesHandler,
   profileHandler,
   thankYouHandler,
+  academicAdvisingHandler,
+  downloadSummariesHandler,
   addContentHandler,
   helpHandler,
   goodbyeHandler,
