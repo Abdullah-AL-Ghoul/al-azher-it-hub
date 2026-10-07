@@ -4,53 +4,59 @@
 
 @layer base {
   :root {
-    --bg-body: linear-gradient(135deg, #f0f4f8, #e2e8f0 50%, #dde4ee);
-    --bg-page: linear-gradient(135deg, rgba(240,244,248,0.82), rgba(226,232,240,0.7) 50%, rgba(221,228,238,0.66));
-    --bg-surface: rgba(255,255,255,0.85);
-    --bg-glass: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.78));
-    --bg-glass-fallback: rgba(255,255,255,0.94);
+    --bg-body: #f8fafc;
+    --bg-page: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-glass: rgba(255, 255, 255, 0.88);
+    --bg-glass-fallback: #ffffff;
     --text-primary: #0f172a;
-    --text-secondary: rgba(71,85,105,0.85);
-    --text-muted: rgba(71,85,105,0.62);
-    --border-default: rgba(0,0,0,0.08);
-    --border-card: rgba(0,0,0,0.1);
-    --color-accent: #2563eb;
-    --ring-color: rgba(37,99,235,0.14);
-    --shadow-card: 0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);
-    --shadow-floating: 0 20px 60px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.95);
-    --glass-blur: 12px;
-    --glass-saturate: 1.5;
-    --glass-border: rgba(0,0,0,0.08);
-    --navbar-glass: rgba(255,255,255,0.7);
-    --btn-bg: linear-gradient(135deg, rgba(37,99,235,0.15), rgba(6,182,212,0.1));
-    --btn-border: rgba(37,99,235,0.25);
-    --btn-text: #1e40af;
-    --input-bg: rgba(0,0,0,0.03);
-    --input-border: rgba(0,0,0,0.1);
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-default: #e2e8f0;
+    --border-card: #cbd5e1;
+    --color-accent: #1e3a5f;
+    --color-primary: #0f2744;
+    --color-emerald: #059669;
+    --color-amber: #d97706;
+    --ring-color: rgba(15, 39, 68, 0.16);
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    --shadow-floating: 0 10px 25px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+    --glass-blur: 16px;
+    --glass-saturate: 1.2;
+    --glass-border: #e2e8f0;
+    --navbar-glass: rgba(255, 255, 255, 0.85);
+    --btn-bg: #0f2744;
+    --btn-border: #0f2744;
+    --btn-text: #ffffff;
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
   }
 
   .dark {
-    --bg-body: linear-gradient(135deg, #05060a, #0f172a 50%, #1e293b);
-    --bg-page: linear-gradient(135deg, rgba(5,6,10,0.9), rgba(15,23,42,0.8) 50%, rgba(30,41,59,0.7));
-    --bg-surface: rgba(15,23,42,0.8);
-    --bg-glass: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
-    --bg-glass-fallback: rgba(15,23,42,0.95);
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255,255,255,0.75);
-    --text-muted: rgba(203,213,225,0.68);
-    --border-default: rgba(255,255,255,0.08);
-    --border-card: rgba(255,255,255,0.1);
-    --color-accent: #06b6d4;
-    --ring-color: rgba(6,182,212,0.18);
-    --shadow-card: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-    --shadow-floating: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(37,99,235,0.08), inset 0 1px 0 rgba(255,255,255,0.15);
-    --glass-border: rgba(255,255,255,0.08);
-    --navbar-glass: rgba(10,15,30,0.6);
-    --btn-bg: linear-gradient(135deg, rgba(37,99,235,0.2), rgba(6,182,212,0.1));
-    --btn-border: rgba(37,99,235,0.3);
+    --bg-body: #0b1120;
+    --bg-page: #0b1120;
+    --bg-surface: #111827;
+    --bg-glass: rgba(17, 24, 39, 0.85);
+    --bg-glass-fallback: #111827;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-default: rgba(255, 255, 255, 0.08);
+    --border-card: rgba(255, 255, 255, 0.12);
+    --color-accent: #38bdf8;
+    --color-primary: #1e3a5f;
+    --color-emerald: #10b981;
+    --color-amber: #f59e0b;
+    --ring-color: rgba(56, 189, 248, 0.2);
+    --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+    --shadow-floating: 0 20px 40px -4px rgba(0, 0, 0, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --navbar-glass: rgba(11, 17, 32, 0.85);
+    --btn-bg: #1e3a5f;
+    --btn-border: rgba(255, 255, 255, 0.15);
     --btn-text: #ffffff;
-    --input-bg: rgba(255,255,255,0.03);
-    --input-border: rgba(255,255,255,0.08);
+    --input-bg: rgba(255, 255, 255, 0.04);
+    --input-border: rgba(255, 255, 255, 0.12);
   }
 
   html[data-theme="amoled"] {
@@ -423,19 +429,19 @@ html[data-theme="amoled"] .spatial-bg {
 .bg-spatial-full { background: var(--bg-body); }
 
 .gradient-text-spatial {
-  background: linear-gradient(135deg, #0f172a, #1e40af, #0891b2);
+  background: linear-gradient(135deg, #0f172a 0%, #0f2744 50%, #1e3a5f 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .dark .gradient-text-spatial {
-  background: linear-gradient(135deg, #ffffff, #67e8f9, #c084fc);
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 40%, #94a3b8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 html[data-theme="amoled"] .gradient-text-spatial {
-  background: linear-gradient(135deg, #ffffff, #67e8f9, #a78bfa);
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #64748b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

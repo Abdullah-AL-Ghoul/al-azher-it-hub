@@ -1,4 +1,4 @@
-﻿import { useMemo } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -95,23 +95,23 @@ export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount =
      {/* Animated Counters */}
      <motion.div variants={pageItemSlow} className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-3xl mx-auto">
       {[
-       { value: stats.lectures, suffix: '+', labelAr: 'محاضرة', labelEn: 'Lectures', gradient: 'from-violet-500 to-cyan-500' },
-       { value: stats.materials, suffix: '+', labelAr: 'مادة', labelEn: 'Materials', gradient: 'from-emerald-500 to-cyan-500' },
-       { value: stats.sources, suffix: '+', labelAr: 'مصدر', labelEn: 'Sources', gradient: 'from-amber-500 to-orange-500' },
-       { value: stats.watched, suffix: '', labelAr: 'مشاهدة', labelEn: 'Watched', gradient: 'from-rose-500 to-pink-500' },
+       { value: stats.lectures, suffix: '+', labelAr: 'محاضرة علمية', labelEn: 'Lectures', color: 'text-academic-secondary dark:text-sky-400' },
+       { value: stats.materials, suffix: '+', labelAr: 'مادة دراسية', labelEn: 'Courses', color: 'text-academic-accent dark:text-emerald-400' },
+       { value: stats.sources, suffix: '+', labelAr: 'مرجع وملخص', labelEn: 'Sources', color: 'text-amber-600 dark:text-amber-400' },
+       { value: stats.watched, suffix: '', labelAr: 'مشاهدة مكتملة', labelEn: 'Completed', color: 'text-slate-800 dark:text-slate-200' },
       ].map((stat, i) => (
        <motion.div
         key={i}
         initial={prefersReduced ? {} : { opacity: 0, y: 16 }}
         animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
         transition={prefersReduced ? {} : { duration: 0.5, delay: 0.6 + i * 0.08, ease: [0.16,1,0.3,1] }}
-        whileHover={prefersReduced ? {} : { y: -4 }}
-        className="text-center glass rounded-2xl px-3 py-5 cursor-default border border-white/10 hover:border-royal-500/20"
+        whileHover={prefersReduced ? {} : { y: -3 }}
+        className="text-center glass rounded-2xl px-3 py-5 cursor-default border border-slate-200/70 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition-all duration-300 shadow-sm"
        >
-        <div className={`text-3xl md:text-4xl font-extrabold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent mb-1 tabular-nums`}>
+        <div className={`text-3xl md:text-4xl font-extrabold ${stat.color} mb-1 tabular-nums tracking-tight`}>
          <CountUp end={stat.value} suffix={stat.suffix} />
         </div>
-        <div className="text-xs text-slate-500 dark:text-white/50 font-medium tracking-wide">{lang === 'ar' ? stat.labelAr : stat.labelEn}</div>
+        <div className="text-xs text-slate-600 dark:text-white/60 font-semibold tracking-normal">{lang === 'ar' ? stat.labelAr : stat.labelEn}</div>
        </motion.div>
       ))}
     </motion.div>

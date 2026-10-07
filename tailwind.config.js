@@ -14,11 +14,34 @@ export default {
       colors: {
         /* Brand */
         navy: {
-          500: '#3B5283',
-          600: '#2C4066',
-          700: '#1E3A5F',
-          800: '#1E293B',
-          900: '#0F172A',
+          950: '#060d17',
+          900: '#0b1728',
+          800: '#0f2744',
+          700: '#1e3a5f',
+          600: '#2b5283',
+          500: '#3b6ea5',
+        },
+        academic: {
+          primary: '#0f2744',
+          secondary: '#1e3a5f',
+          accent: '#059669',
+          amber: '#d97706',
+          canvas: '#f8fafc',
+          darkCanvas: '#0b1120',
+        },
+        emerald: {
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+        },
+        amber: {
+          50: '#fffbeb',
+          100: '#fef3c7',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
         },
         amoled: {
           950: '#000000',
@@ -44,12 +67,13 @@ export default {
           600: '#0E7490',
         },
         spatial: {
-          bg: '#05060A',
+          bg: '#0B1120',
         },
         /* Semantic tokens — driven by CSS vars (light/dark/amoled) */
         surface: 'var(--bg-surface)',
         canvas: 'var(--bg-page)',
         accent: 'var(--color-accent)',
+        brand: 'var(--color-primary)',
         ink: {
           DEFAULT: 'var(--text-primary)',
           secondary: 'var(--text-secondary)',

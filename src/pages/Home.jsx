@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -15,11 +15,11 @@ import { currentStreak } from '../utils/achievements'
 import Skeleton from '../components/shared/Skeleton'
 
 const quickLinks = [
- { to: '/lectures', icon: FiFileText, color: 'from-blue-500 to-blue-600', bgLight: 'bg-blue-50 dark:bg-blue-900/30', key: 'lectures', solidColor: '#3b82f6' },
- { to: '/sources', icon: FiGrid, color: 'from-amber-500 to-amber-600', bgLight: 'bg-amber-50 dark:bg-amber-900/30', key: 'sources', solidColor: '#f59e0b' },
- { to: '/study-plan', icon: FiClock, color: 'from-violet-500 to-violet-600', bgLight: 'bg-violet-50 dark:bg-violet-900/30', key: 'studyPlan', solidColor: '#8b5cf6' },
- { to: '/roadmap', icon: FiMap, color: 'from-cyan-500 to-cyan-600', bgLight: 'bg-cyan-50 dark:bg-cyan-900/30', key: 'roadmap', solidColor: '#06b6d4' },
- { to: '/additions', icon: FiHeart, color: 'from-emerald-500 to-emerald-600', bgLight: 'bg-emerald-50 dark:bg-emerald-900/30', key: 'additions', solidColor: '#10b981' },
+ { to: '/lectures', icon: FiFileText, color: 'from-slate-800 to-navy-700', bgLight: 'bg-slate-100 dark:bg-slate-800/50', key: 'lectures', solidColor: '#0f2744' },
+ { to: '/sources', icon: FiGrid, color: 'from-amber-600 to-amber-700', bgLight: 'bg-amber-50 dark:bg-amber-950/30', key: 'sources', solidColor: '#d97706' },
+ { to: '/study-plan', icon: FiClock, color: 'from-navy-700 to-navy-600', bgLight: 'bg-slate-100 dark:bg-slate-800/40', key: 'studyPlan', solidColor: '#1e3a5f' },
+ { to: '/roadmap', icon: FiMap, color: 'from-sky-700 to-sky-600', bgLight: 'bg-sky-50 dark:bg-sky-950/30', key: 'roadmap', solidColor: '#0284c7' },
+ { to: '/additions', icon: FiHeart, color: 'from-emerald-600 to-emerald-700', bgLight: 'bg-emerald-50 dark:bg-emerald-950/30', key: 'additions', solidColor: '#059669' },
 ]
 
 const containerVariants = pageContainer
