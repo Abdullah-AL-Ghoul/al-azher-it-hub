@@ -9,31 +9,49 @@ export async function fetchYouTubeMeta(url) {
   const videoId = extractYouTubeId(url)
   if (!videoId) return null
 
+  // 1. First attempt: Noembed endpoint (CORS-friendly in browsers, returns exact YouTube title & author)
+  try {
+    const noembedUrl = `https://noembed.com/embed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}`
+    const res = await fetch(noembedUrl)
+    if (res.ok) {
+      const data = await res.json()
+      if (data && data.title) {
+        return {
+          videoId,
+          title: data.title.trim(),
+          author: data.author_name ? data.author_name.trim() : '',
+          thumbnail: data.thumbnail_url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        }
+      }
+    }
+  } catch (_e) {
+    // Continue to fallback
+  }
+
+  // 2. Fallback attempt: Official YouTube oEmbed
   try {
     const enc = encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)
     const res = await fetch(`https://www.youtube.com/oembed?url=${enc}&format=json`)
-    if (!res.ok) {
-      return {
-        videoId,
-        title: '',
-        author: '',
-        thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+    if (res.ok) {
+      const data = await res.json()
+      if (data && data.title) {
+        return {
+          videoId,
+          title: data.title.trim(),
+          author: data.author_name ? data.author_name.trim() : '',
+          thumbnail: data.thumbnail_url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        }
       }
     }
-    const data = await res.json()
-    return {
-      videoId,
-      title: data.title || '',
-      author: data.author_name || '',
-      thumbnail: data.thumbnail_url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-    }
-  } catch (err) {
-    return {
-      videoId,
-      title: '',
-      author: '',
-      thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
-    }
+  } catch (_err) {
+    // ignore
+  }
+
+  return {
+    videoId,
+    title: '',
+    author: '',
+    thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
   }
 }
 
@@ -62,12 +80,46 @@ export async function parseLecturesFromInput(text, defaultSubject = '') {
     const videoId = extractYouTubeId(url)
     if (!videoId) continue
 
-    // Extract raw title from before or after the URL
-    let customTitle = line.replace(url, '').replace(/[-–—:|#]/g, ' ').trim()
-    
+    // Check if the preceding line was a lecture label like "Lec 1:" or "محاضرة 1"
+    let precedingHint = ''
+    if (i > 0) {
+      const prevLine = lines[i - 1]
+      if (!prevLine.match(/https?:\/\//i) && !extractYouTubeId(prevLine)) {
+        if (/^(?:lec(?:ture)?|محاضرة|درس|part|ch(?:apter)?)\s*[\d.:\-]/i.test(prevLine)) {
+          precedingHint = prevLine.replace(/[:\-–]/g, ' ').trim()
+        }
+      }
+    }
+
+    // Extract inline custom title from the same line if exists
+    let inlineCustom = line.replace(url, '').replace(/[-–—:|#]/g, ' ').trim()
+    // Ignore generic "Lec 1" or "محاضرة 1" if we can get the actual real video title
+    const isGenericLabel = /^(?:lec(?:ture)?|محاضرة|درس|part)\s*\d+$/i.test(inlineCustom)
+    if (isGenericLabel) {
+      if (!precedingHint) precedingHint = inlineCustom
+      inlineCustom = ''
+    }
+
     // Fetch live metadata from YouTube
     const meta = await fetchYouTubeMeta(url)
-    const finalTitle = customTitle || meta?.title || `محاضرة ${results.length + 1}`
+    
+    // The exact YouTube video title is prioritized!
+    let finalTitle = ''
+    if (meta?.title) {
+      // If user had a prefix like "Lec 1:" and YouTube title is "Introduction to Computing",
+      // combine them nicely or use YouTube title directly
+      if (precedingHint && !meta.title.toLowerCase().startsWith(precedingHint.toLowerCase())) {
+        finalTitle = `${precedingHint}: ${meta.title}`
+      } else {
+        finalTitle = meta.title
+      }
+    } else if (inlineCustom) {
+      finalTitle = inlineCustom
+    } else if (precedingHint) {
+      finalTitle = precedingHint
+    } else {
+      finalTitle = `محاضرة ${results.length + 1}`
+    }
 
     results.push({
       id: uid(),
@@ -75,6 +127,7 @@ export async function parseLecturesFromInput(text, defaultSubject = '') {
       titleEn: finalTitle,
       url,
       videoId,
+      thumbnail: meta?.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
       doctorAr: meta?.author || '',
       doctorEn: meta?.author || '',
       subjectAr: defaultSubject || '',

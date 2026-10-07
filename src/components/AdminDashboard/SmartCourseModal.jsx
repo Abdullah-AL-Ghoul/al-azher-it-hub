@@ -265,7 +265,7 @@ export default function SmartCourseModal({ isOpen, onClose, courses = [], isArab
               {parsedLectures.map((lec, idx) => (
                 <div key={lec.id || idx} className="flex items-center gap-3 p-2.5 bg-black/5 dark:bg-white/5 rounded-xl border border-line">
                   <div className="relative w-20 h-12 rounded-lg overflow-hidden bg-black/40 flex-shrink-0">
-                    <LectureThumbnail videoId={lec.videoId} width={80} height={48} sizes="80px" />
+                    <LectureThumbnail videoId={lec.videoId} thumbnail={lec.thumbnail} width={80} height={48} sizes="80px" />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="w-5 h-5 bg-rose-500/80 rounded-full flex items-center justify-center text-white">
                         <FiPlay size={10} className="ms-0.5" />
