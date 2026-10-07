@@ -1,10 +1,11 @@
-﻿import { useState, useMemo, useRef, useCallback, memo } from 'react'
+import { useState, useMemo, useRef, useCallback, memo } from 'react'
 import { FiX, FiUpload, FiFile, FiTrash2, FiCheck, FiLoader, FiAlertCircle, FiYoutube } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { addCourse, updateCourse, addLecture, updateLecture, addSource, updateSource } from '../../services'
 import { useFileUpload } from '../../hooks/useFileUpload'
 import { formatBytes } from '../../services/sourceStorage'
 import { extractYouTubeId, lectureThumb } from '../../utils/helpers'
+import LectureThumbnail from '../shared/LectureThumbnail'
 import CoursesTable from './CoursesTable'
 import LecturesTable from './LecturesTable'
 import SourcesTable from './SourcesTable'
@@ -393,7 +394,9 @@ export default memo(function AdminDashboardContent({
          />
          {lectureForm.videoId && (
           <div className="flex items-center gap-3 p-2 bg-black/5 dark:bg-white/5 rounded-lg">
-           <img src={lectureThumb(lectureForm.videoId, 'mq')} alt="" width="120" height="68" className="rounded-lg object-cover flex-shrink-0" />
+           <div className="relative w-28 h-16 rounded-lg overflow-hidden bg-black/30 flex-shrink-0">
+            <LectureThumbnail videoId={lectureForm.videoId} width={120} height={68} sizes="112px" />
+           </div>
            <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
              <FiYoutube size={14} /> {t('inline.admin-dashboard-content.video-detected')}

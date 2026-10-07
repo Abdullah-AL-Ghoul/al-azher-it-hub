@@ -1,4 +1,4 @@
-﻿import { useState, memo } from 'react'
+import { useState, memo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { FiPlus, FiEdit2, FiTrash2, FiVideo, FiDownload, FiExternalLink, FiCopy, FiTool, FiPlay } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
@@ -11,6 +11,7 @@ import { exportToJson } from '../../utils/adminShared'
 import ConfirmDialog from '../shared/ConfirmDialog'
 import SkeletonRow from './SkeletonRow'
 import Pagination from './Pagination'
+import LectureThumbnail from '../shared/LectureThumbnail'
 
 function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, onRefresh }) {
  const { t } = useLanguage()
@@ -177,12 +178,8 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
        <div className="flex justify-between items-start gap-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
          <div className="relative w-24 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-black/30 flex items-center justify-center">
-          {thumb ? (
-           <img src={thumb} alt="" width="160" height="90" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-          ) : (
-           <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-cyan-500/20" />
-          )}
-          <div className="absolute inset-0 flex items-center justify-center">
+          <LectureThumbnail videoId={videoId} alt={isArabic ? lecture.titleAr : lecture.titleEn} width={120} height={68} sizes="96px" />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
            <div className="w-7 h-7 bg-rose-500/80 rounded-full flex items-center justify-center text-white">
             <FiPlay size={12} className="ms-0.5" />
            </div>

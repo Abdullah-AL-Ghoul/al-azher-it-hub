@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
 import { lectureThumb } from '../../utils/helpers'
 
-// Quality ladder: start at maxres (true 16:9); YouTube serves 404 + a gray
-// placeholder for qualities a video lacks, so on error we drop a rung and
-// finally paint the branded gradient tile instead of a black box.
-const LADDER = ['maxres', 'hq', 'mq']
+// Quality ladder: hq serves reliably on 99.9% of all videos (4:3 object-cover cropped to 16:9),
+// mq is 16:9 fallback, maxres is optional bonus.
+// Starting with 'hq' avoids initial 404 delays and missing maxres placeholder blanks.
+const LADDER = ['hq', 'mq', 'maxres']
 
 const SRC_SETS = [
   (id) => `${lectureThumb(id, 'mq')} 320w, ${lectureThumb(id, 'hq')} 480w, ${lectureThumb(id, 'maxres')} 1280w`,
   (id) => `${lectureThumb(id, 'mq')} 320w, ${lectureThumb(id, 'hq')} 480w`,
-  (id) => `${lectureThumb(id, 'mq')} 320w`,
+  (id) => `${lectureThumb(id, 'maxres')} 1280w`,
 ]
 
 /**
@@ -35,9 +35,17 @@ export default function LectureThumbnail({ videoId, alt = '', sizes, width = 320
   if (!videoId || step >= LADDER.length) {
     return (
       <div
-        className={`absolute inset-0 bg-gradient-to-br from-cyan-500/25 via-royal-500/15 to-violet-500/25 ${className}`}
+        className={`absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-3 text-center overflow-hidden ${className}`}
         aria-hidden="true"
-      />
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-academic-primary/70 to-slate-950 opacity-95" />
+        <div className="relative z-10 w-11 h-11 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-amber-400 mb-1.5 border border-white/10 shadow-md">
+          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+            <path d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+          </svg>
+        </div>
+        <span className="relative z-10 text-[11px] font-medium text-slate-300 tracking-wide line-clamp-1">{alt || 'محاضرة علمية'}</span>
+      </div>
     )
   }
 

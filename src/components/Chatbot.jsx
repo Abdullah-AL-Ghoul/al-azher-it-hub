@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast'
 import {
  FiMessageCircle, FiX, FiSend, FiUser, FiHelpCircle,
  FiBookOpen, FiVideo, FiLink, FiPhone, FiCalendar,
- FiStar, FiZap, FiCopy, FiCheck, FiTrash2
+ FiStar, FiZap, FiCopy, FiCheck, FiTrash2, FiCompass, FiAward
 } from 'react-icons/fi'
 
 const QUICK_REPLIES = {
@@ -61,13 +61,15 @@ const QUICK_REPLIES = {
   ar: [
    { icon: FiVideo, text: 'كم عدد المحاضرات؟' },
    { icon: FiBookOpen, text: 'المواد المتاحة' },
-   { icon: FiLink, text: 'المصادر المتاحة' },
+   { icon: FiCompass, text: 'تخصصات IT' },
+   { icon: FiAward, text: 'حساب المعدل' },
    { icon: FiHelpCircle, text: 'مساعدة' }
   ],
   en: [
    { icon: FiVideo, text: 'How many lectures?' },
    { icon: FiBookOpen, text: 'Available courses' },
-   { icon: FiLink, text: 'Available sources' },
+   { icon: FiCompass, text: 'IT tracks' },
+   { icon: FiAward, text: 'Calculate GPA' },
    { icon: FiHelpCircle, text: 'Help' }
   ]
  },
@@ -75,18 +77,20 @@ const QUICK_REPLIES = {
   ar: [
    { icon: FiVideo, text: 'كم عدد المحاضرات؟' },
    { icon: FiBookOpen, text: 'المواد المتاحة' },
-   { icon: FiLink, text: 'المصادر المتاحة' },
-   { icon: FiPhone, text: 'معلومات التواصل' },
+   { icon: FiCompass, text: 'تخصصات ومسارات IT' },
+   { icon: FiAward, text: 'كيف أحسب معدلي؟' },
    { icon: FiCalendar, text: 'الخطة الدراسية' },
-   { icon: FiStar, text: 'كيف أقيّم محاضرة؟' }
+   { icon: FiStar, text: 'نصائح للامتحانات' },
+   { icon: FiPhone, text: 'معلومات التواصل' }
   ],
   en: [
    { icon: FiVideo, text: 'How many lectures?' },
    { icon: FiBookOpen, text: 'Available courses' },
-   { icon: FiLink, text: 'Available sources' },
-   { icon: FiPhone, text: 'Contact info' },
+   { icon: FiCompass, text: 'IT tracks' },
+   { icon: FiAward, text: 'Calculate GPA' },
    { icon: FiCalendar, text: 'Study plan' },
-   { icon: FiStar, text: 'How to rate a lecture?' }
+   { icon: FiStar, text: 'Exam tips' },
+   { icon: FiPhone, text: 'Contact info' }
   ]
  }
 }
@@ -95,10 +99,10 @@ function TypingIndicator() {
  const prefersReduced = useReducedMotion()
  return (
   <div className="flex items-start gap-2.5">
-   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 to-royal-500 flex items-center justify-center shrink-0 shadow-md">
-    <FiZap size={12} className="text-white" />
+   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-academic-primary to-royal-600 flex items-center justify-center shrink-0 shadow-md">
+    <FiZap size={12} className="text-amber-300" />
    </div>
-   <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-white dark:bg-navy-700 shadow-sm border border-slate-100 dark:border-slate-600">
+   <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-white dark:bg-navy-800 shadow-sm border border-slate-200 dark:border-slate-700">
     <div className="flex items-center gap-1.5">
      {[0, 1, 2].map(val => (
       <motion.div
@@ -198,14 +202,14 @@ const ChatMessage = memo(function ChatMessage({ msg, isArabic, prefersReduced })
    transition={prefersReduced ? {} : { duration: 0.25 }}
   >
    <div className={`flex items-start gap-2 max-w-[88%] ${isUser ? 'flex-row-reverse' : ''} group`}>
-    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm ${isUser ? 'bg-gradient-to-br from-royal-500 to-royal-600' : 'bg-gradient-to-br from-cyan-400 to-royal-500'}`}>
-     {isUser ? <FiUser size={12} className="text-white" /> : <FiZap size={12} className="text-white" />}
+    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm ${isUser ? 'bg-gradient-to-br from-royal-600 to-royal-700' : 'bg-gradient-to-br from-academic-primary to-royal-600'}`}>
+     {isUser ? <FiUser size={12} className="text-white" /> : <FiZap size={12} className="text-amber-300" />}
     </div>
     <div className="flex flex-col gap-1">
      <div className={`px-4 py-2.5 text-sm whitespace-pre-line leading-relaxed ${
       isUser
-       ? 'bg-royal-500 text-white rounded-2xl rounded-tr-sm shadow-sm'
-       : 'bg-white dark:bg-navy-700 text-ink rounded-2xl rounded-tl-sm shadow-sm border border-slate-100 dark:border-slate-600'
+       ? 'bg-royal-600 text-white rounded-2xl rounded-tr-sm shadow-sm'
+       : 'bg-white dark:bg-navy-800 text-ink rounded-2xl rounded-tl-sm shadow-sm border border-slate-200 dark:border-slate-700'
      }`}>
       {renderWithLinks(msg.text, isUser, navigate)}
      </div>
@@ -421,14 +425,14 @@ export default function Chatbot() {
 
  return (
   <>
-   <motion.button
+    <motion.button
      aria-label={t('chatbot.assistantLabel')}
      aria-expanded={open}
-     className={`fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-50 w-14 h-14 bg-gradient-to-br from-royal-500 to-cyan-400 text-white rounded-full shadow-lg shadow-royal-500/30 flex items-center justify-center end-6`}
+     className={`fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-50 w-14 h-14 bg-gradient-to-br from-academic-primary to-royal-600 text-white rounded-full shadow-lg shadow-academic-primary/30 flex items-center justify-center end-6 border border-white/10`}
      onClick={() => setOpen(!open)}
-    whileHover={prefersReduced ? {} : { boxShadow: '0 10px 36px rgba(37, 99, 235, 0.45)', scale: 1.08 }}
-    whileTap={prefersReduced ? {} : { scale: 0.95 }}
-   >
+     whileHover={prefersReduced ? {} : { boxShadow: '0 10px 36px rgba(15, 39, 68, 0.5)', scale: 1.08 }}
+     whileTap={prefersReduced ? {} : { scale: 0.95 }}
+    >
     <motion.div
      animate={prefersReduced ? {} : { rotate: open ? 180 : 0 }}
      transition={prefersReduced ? {} : springFast}
@@ -444,12 +448,12 @@ export default function Chatbot() {
        {...modalContent}
        aria-label={t('chatbot.assistantLabel')}
        aria-modal="true"
-       className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] z-50 w-[calc(100vw-48px)] sm:w-96 h-[75vh] sm:h-[520px] modal-spatial rounded-2xl flex flex-col overflow-hidden end-6`}
+       className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] z-50 w-[calc(100vw-48px)] sm:w-96 h-[75vh] sm:h-[520px] modal-spatial rounded-2xl flex flex-col overflow-hidden end-6 border border-slate-200/50 dark:border-white/10 shadow-2xl`}
        role="dialog"
       >
-      <div className="bg-gradient-to-r from-royal-500 to-cyan-500 px-4 py-3.5 flex items-center gap-3">
-       <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-        <FiZap size={18} className="text-white" />
+      <div className="bg-gradient-to-r from-academic-primary via-royal-700 to-royal-800 px-4 py-3.5 flex items-center gap-3 border-b border-white/10">
+       <div className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
+        <FiZap size={18} className="text-amber-300" />
        </div>
        <div className="flex-1">
         <span className="text-white font-semibold text-sm block">{t('chatbot.assistantLabel')}</span>
@@ -512,7 +516,7 @@ export default function Chatbot() {
           return (
            <button
             key={`${quickReplyKey}-${idx}`}
-            className="flex items-center gap-1.5 px-3 min-h-[44px] bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 text-royal-600 dark:text-cyan-400 hover:bg-royal-50 dark:hover:bg-royal-500/10 rounded-full text-xs font-medium transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3 min-h-[44px] bg-white dark:bg-navy-800 border border-slate-200 dark:border-slate-700 text-academic-primary dark:text-cyan-300 hover:bg-slate-50 dark:hover:bg-navy-700 rounded-full text-xs font-medium transition-colors shadow-sm"
             onClick={() => send(quickReply.text)}
            >
             <Icon size={12} />
@@ -542,7 +546,7 @@ export default function Chatbot() {
         />
         <button
          aria-label={t('chatbot.sendLabel')}
-         className="p-2.5 bg-gradient-to-r from-royal-500 to-cyan-500 hover:from-royal-600 hover:to-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition shadow-sm"
+         className="p-2.5 bg-gradient-to-r from-academic-primary to-royal-600 hover:from-royal-700 hover:to-royal-800 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition shadow-sm"
          disabled={!input.trim()}
          type="submit"
         >

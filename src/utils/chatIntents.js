@@ -392,12 +392,48 @@ export function buildChatIntents(data, user, isArabic) {
  }
 
  function studyPlanHandler(text) {
-  if (fuzzyMatch(text, ['خطة', 'دراسة', 'plan', 'جدول', 'schedule', 'الخطة الدراسية'])) {
+  if (fuzzyMatch(text, ['خطة', 'plan', 'جدول', 'schedule', 'الخطة الدراسية', 'خطة المواد'])) {
    return {
     quickKey: 'default',
     text: isArabic
-     ? '📋 الخطة الدراسية:\n\nتقدر تشوف الخطة الدراسية من الصفحة الرئيسية أو من قائمة التنقل. في هناك جدول كامل بالمواعيد والمواد!'
-     : '📋 Study Plan:\n\nYou can view the study plan from the homepage or the navigation menu. There\'s a full schedule with dates and courses!'
+     ? '📋 الخطة الدراسية لمرحلة البكالوريوس:\n\n• تغطي الخطة 4 سنوات دراسية (8 فصول) تشمل:\n  1. متطلبات الجامعة والكلية التأسيسية\n  2. أساسيات البرمجة، هياكل البيانات، والخوارزميات\n  3. قواعد البيانات، الشبكات، وهندسة البرمجيات\n  4. مساقات التخصص المتقدمة ومشروع التخرج\n\n→ تصفح الخطة التفاعلية: /study-plan'
+     : '📋 Undergraduate Study Plan:\n\n• Covers 4 academic years (8 semesters):\n  1. College and university fundamentals\n  2. Programming, data structures, and algorithms\n  3. Databases, computer networks, and software engineering\n  4. Advanced specialization tracks and graduation capstone\n\n→ Explore interactive plan: /study-plan'
+   }
+  }
+  return null
+ }
+
+ function tracksHandler(text) {
+  if (fuzzyMatch(text, ['تخصص', 'مسار', 'مسارات', 'track', 'tracks', 'major', 'هندسة برمجيات', 'ذكاء اصطناعي', 'امن سيبراني', 'cyber', 'software', 'ai'])) {
+   return {
+    quickKey: 'default',
+    text: isArabic
+     ? '🎓 مسارات وتخصصات تكنولوجيا المعلومات (IT) في الأزهر:\n\n1. 💻 هندسة البرمجيات (Software Engineering):\n   تطوير الويب والموبايل، تصميم الأنظمة والأنماط المعمارية.\n2. 🤖 الذكاء الاصطناعي وعلم البيانات (AI & Data Science):\n   تعلم الآلة، معالجة اللغات الطبيعية، وتحليل البيانات الضخمة.\n3. 🛡️ الأمن السيبراني (Cyber Security):\n   أمن الشبكات، اختبار الاختراق، وحماية البنى التحتية الرقمية.\n4. 🌐 الشبكات والحوسبة السحابية (Networks & Cloud):\n   إدارة الشبكات، DevOps، والخدمات السحابية.\n\n→ استكشف خارطة الطريق الشاملة: /roadmap'
+     : '🎓 IT Specialization Tracks at Al-Azhar:\n\n1. 💻 Software Engineering:\n   Full-stack web & mobile development, software architecture.\n2. 🤖 Artificial Intelligence & Data Science:\n   Machine learning, natural language processing, data analysis.\n3. 🛡️ Cyber Security:\n   Network defense, ethical hacking, information assurance.\n4. 🌐 Cloud & Networking:\n   Infrastructure management, DevOps, distributed systems.\n\n→ Explore interactive career roadmaps: /roadmap'
+   }
+  }
+  return null
+ }
+
+ function gpaHandler(text) {
+  if (fuzzyMatch(text, ['معدل', 'حساب المعدل', 'gpa', 'تراكمي', 'علامات', 'درجات', 'احسب معدلي'])) {
+   return {
+    quickKey: 'default',
+    text: isArabic
+     ? '📊 دليل حساب المعدل التراكمي (GPA):\n\n• طريقة الحساب:\n  (مجموع [علامة كل مادة × عدد ساعاتها]) ÷ (إجمالي عدد الساعات المقطوعة).\n• نصائح لرفع المعدل:\n  1. ركّز على المواد ذات الساعات المعتمدة الأعلى (3 و 4 ساعات).\n  2. واظب على حضور المحاضرات العملية والتسليمات الأسبوعية.\n  3. استفد من بنك المصادر والمحاضرات المسجلة في الموقع لتثبيت الفهم!'
+     : '📊 Cumulative GPA Calculation Guide:\n\n• Formula:\n  (Sum of [Course Grade × Credit Hours]) ÷ (Total Completed Credit Hours).\n• Tips to boost your GPA:\n  1. Prioritize courses with higher credit weights (3-4 credits).\n  2. Consistently submit practical labs and assignments on time.\n  3. Leverage recorded lectures and sources here on IT Hub!'
+   }
+  }
+  return null
+ }
+
+ function examTipsHandler(text) {
+  if (fuzzyMatch(text, ['امتحان', 'امتحانات', 'نصائح', 'دراسة', 'فاينل', 'ميد', 'exam', 'exams', 'study tips', 'كيف ادرس'])) {
+   return {
+    quickKey: 'default',
+    text: isArabic
+     ? '💡 نصائح ذهبية للتفوق في امتحانات IT:\n\n1. 💻 التطبيق العملي: لا تقرأ الكود بالعين فقط، اكتبه وجرّبه بنفسك.\n2. 🧠 هياكل البيانات: افهم متى تختار كل بنية (Array vs Map vs Tree).\n3. 📑 امتحانات سابقة: راجع النماذج القديمة والتلخيصات من صفحة "المصادر".\n4. ⏱️ إدارة الوقت: ابدأ بدراسة المواضيع المعقدة أولاً ولا تؤجل ليلة الامتحان!'
+     : '💡 Golden Tips for IT Exams:\n\n1. 💻 Hands-on coding: Never just read code—write and debug it.\n2. 🧠 Data Structures: Understand trade-offs (Array vs Map vs Tree).\n3. 📑 Past papers: Review prior exams and summaries on the "Sources" page.\n4. ⏱️ Time management: Tackle heavy algorithmic concepts early!'
    }
   }
   return null
@@ -623,6 +659,9 @@ export function buildChatIntents(data, user, isArabic) {
   lectureInfoHandler,
   contactHandler,
   studyPlanHandler,
+  tracksHandler,
+  gpaHandler,
+  examTipsHandler,
   rateHandler,
   favoritesHandler,
   profileHandler,
