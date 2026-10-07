@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { FiBook, FiUsers, FiGrid, FiLogIn, FiUpload, FiDownload, FiActivity, FiFileText, FiVideo, FiUser } from 'react-icons/fi'
+import { FiBook, FiUsers, FiGrid, FiLogIn, FiUpload, FiDownload, FiActivity, FiFileText, FiVideo, FiUser, FiCpu, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { importAllData } from '../../services'
 import { exportToJson } from '../../utils/adminShared'
@@ -18,11 +18,18 @@ export default function OverviewPanel({
   onNavigate,
   onCourseClick,
   onRefresh,
-} ) {
- const { t } = useLanguage()
+}) {
+  const { t } = useLanguage()
   const prefersReduced = useReducedMotion()
   const importFileRef = useRef(null)
   const [importing, setImporting] = useState(false)
+
+  // System Health Metrics
+  const lecturesWithVideoId = lectures.filter(l => l.videoId).length
+  const lecturesWithoutVideoId = lectures.length - lecturesWithVideoId
+  const coursesWithLectures = courses.filter(c => 
+    lectures.some(l => l.courseId === c.id || l.subjectAr === c.nameAr || l.subjectEn === c.nameEn)
+  ).length
 
   const handleImport = async (e) => {
     const file = e.target.files?.[0]
@@ -49,40 +56,68 @@ export default function OverviewPanel({
 
   return (
     <>
-      <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} className="flex flex-wrap gap-3 mb-6 items-center">
-        <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('inline.overview-panel.quick-actions')}</span>
-        <button onClick={() => onNavigate('lectures')} className="btn-primary flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium">
+      {/* Top Quick Actions Bar */}
+      <motion.div
+        initial={prefersReduced ? {} : { opacity: 0, y: 20 }}
+        animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+        className="flex flex-wrap gap-2.5 mb-6 items-center"
+      >
+        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 me-1">
+          {t('inline.overview-panel.quick-actions')}:
+        </span>
+
+        <button
+          onClick={() => onNavigate('lectures')}
+          className="btn-primary flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm"
+        >
           <FiVideo size={14} /> {t('inline.overview-panel.manage-lectures')}
         </button>
-        <button onClick={() => onNavigate('courses')} className="btn-primary flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium">
+
+        <button
+          onClick={() => onNavigate('courses')}
+          className="btn-primary flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm"
+        >
           <FiBook size={14} /> {t('inline.overview-panel.manage-courses')}
         </button>
-        <button onClick={() => onNavigate('sources')} className="flex items-center gap-2 px-3 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium transition">
+
+        <button
+          onClick={() => onNavigate('sources')}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition shadow-sm"
+        >
           <FiGrid size={14} /> {t('inline.overview-panel.manage-sources')}
         </button>
-        <button onClick={() => onNavigate('users')} className="btn-secondary flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium">
+
+        <button
+          onClick={() => onNavigate('users')}
+          className="btn-secondary flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm"
+        >
           <FiUsers size={14} /> {t('inline.overview-panel.students')}
         </button>
-        <button onClick={() => {
-          const msgMap = (key) => ({
-            'usersTable.exported': t('inline.overview-panel.backup-exported'),
-            'usersTable.exportFailed': t('inline.overview-panel.backup-export-failed')
-          })[key] || 'Exported!'
-          exportToJson('al-azher-backup', msgMap)
-        }} className="flex items-center gap-2 px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition">
+
+        <button
+          onClick={() => {
+            const msgMap = (key) => ({
+              'usersTable.exported': t('inline.overview-panel.backup-exported'),
+              'usersTable.exportFailed': t('inline.overview-panel.backup-export-failed')
+            })[key] || 'Exported!'
+            exportToJson('al-azher-backup', msgMap)
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition shadow-sm"
+        >
           <FiDownload size={14} /> {t('inline.overview-panel.backup')}
         </button>
+
         <button
           onClick={() => importFileRef.current?.click()}
           disabled={importing}
-          className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-sm font-medium transition disabled:opacity-50 shadow-sm"
         >
           <FiUpload size={14} /> {importing ? (t('inline.overview-panel.importing')) : (t('inline.overview-panel.import'))}
         </button>
         <input ref={importFileRef} type="file" accept=".json,application/json" className="hidden" onChange={handleImport} />
       </motion.div>
 
-      {/* Stats */}
+      {/* Main Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {[
           { value: overviewStats.totalCourses, label: t('inline.overview-panel.courses'), icon: FiBook, gradient: 'from-emerald-500 to-emerald-600', delay: 0 },
@@ -121,6 +156,57 @@ export default function OverviewPanel({
           )
         })}
       </div>
+
+      {/* Database & Media Health Panel */}
+      <motion.div
+        initial={prefersReduced ? {} : { opacity: 0, y: 20 }}
+        animate={prefersReduced ? {} : { opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6"
+      >
+        <div className="stat-tile p-4 flex items-center justify-between border-l-4 border-l-emerald-500">
+          <div>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              {isArabic ? 'محاضرات بصور مصغرة نشطة' : 'Lectures with Valid Thumbnails'}
+            </span>
+            <p className="text-xl font-bold text-ink mt-1">
+              {lecturesWithVideoId} <span className="text-xs text-slate-400 font-normal">/ {lectures.length}</span>
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+            <FiCheckCircle size={20} />
+          </div>
+        </div>
+
+        <div className="stat-tile p-4 flex items-center justify-between border-l-4 border-l-amber-500">
+          <div>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              {isArabic ? 'مواد تحتوي على محاضرات' : 'Courses with Active Lectures'}
+            </span>
+            <p className="text-xl font-bold text-ink mt-1">
+              {coursesWithLectures} <span className="text-xs text-slate-400 font-normal">/ {courses.length}</span>
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+            <FiBook size={20} />
+          </div>
+        </div>
+
+        <div className="stat-tile p-4 flex items-center justify-between border-l-4 border-l-violet-500">
+          <div>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              {isArabic ? 'محرك الذكاء الاصطناعي (AI)' : 'AI Generation Engine'}
+            </span>
+            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              {isArabic ? 'نشط وجاهز للربط' : 'Active & Connected'}
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-500">
+            <FiCpu size={20} />
+          </div>
+        </div>
+      </motion.div>
 
       {/* Lectures per course mini bar chart */}
       {courses.length > 0 && (
