@@ -71,21 +71,47 @@ export function storagePathFromUrl(url) {
 
 export function extractYouTubeId(url) {
   if (!url) return null
+  const s = String(url).trim()
+  if (!s) return null
+  // Direct 11-char ID
+  if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s
   const patterns = [
-    /(?:youtube\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-    /^([a-zA-Z0-9_-]{11})$/
+    /(?:youtube\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i,
+    /(?:[?&]v=)([a-zA-Z0-9_-]{11})/i,
   ]
   for (const p of patterns) {
-    const m = url.match(p)
+    const m = s.match(p)
     if (m) return m[1]
+  }
+  try {
+    const parsed = new URL(s.startsWith('http') ? s : `https://${s}`)
+    if (parsed.hostname.includes('youtube.com')) {
+      const v = parsed.searchParams.get('v')
+      if (v && v.length === 11) return v
+    }
+  } catch (_e) {
+    // ignore parse error
   }
   return null
 }
 
 export function lectureVideoId(lecture) {
   if (!lecture) return null
-  if (lecture.videoId) return lecture.videoId
-  return extractYouTubeId(lecture.url) || null
+  if (typeof lecture === 'string') return extractYouTubeId(lecture)
+  if (lecture.videoId && typeof lecture.videoId === 'string' && lecture.videoId.trim().length === 11) {
+    return lecture.videoId.trim()
+  }
+  if (lecture.video_id && typeof lecture.video_id === 'string' && lecture.video_id.trim().length === 11) {
+    return lecture.video_id.trim()
+  }
+  return (
+    extractYouTubeId(lecture.videoId) ||
+    extractYouTubeId(lecture.video_id) ||
+    extractYouTubeId(lecture.url) ||
+    extractYouTubeId(lecture.videoUrl) ||
+    extractYouTubeId(lecture.youtubeUrl) ||
+    null
+  )
 }
 
 export function lectureThumb(id, quality = 'maxres') {

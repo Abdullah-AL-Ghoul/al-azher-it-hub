@@ -446,7 +446,8 @@ export default function Home() {
            <div className="relative h-32 bg-black/30 overflow-hidden">
             <LectureThumbnail
              videoId={videoId}
-             alt=""
+             thumbnail={lecture.thumbnail || lecture.thumbUrl}
+             alt={isArabic ? lecture.titleAr : lecture.titleEn}
              sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(50vw - 3rem), calc(25vw - 3.5rem)"
              className="group-hover:scale-105 transition-transform duration-500"
             />

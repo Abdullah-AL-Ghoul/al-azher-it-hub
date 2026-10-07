@@ -17,16 +17,45 @@ const LADDER = ['maxres', 'hq720', 'hq', 'mq']
  *  - priority: first-paint image → eager + high fetchpriority
  *  - className: forwarded to the img (hover scale etc.)
  */
-export default function LectureThumbnail({ videoId, alt = '', sizes, width = 320, height = 180, priority = false, className = '' }) {
+export default function LectureThumbnail({
+  videoId,
+  thumbnail,
+  alt = '',
+  sizes,
+  width = 320,
+  height = 180,
+  priority = false,
+  className = '',
+}) {
   const [step, setStep] = useState(0)
+  const [hasError, setHasError] = useState(false)
 
-  // A reused instance (modal, re-ordered list) must restart the ladder when
-  // the video changes, or one missing-maxres video degrades every later one.
+  // Reset step whenever videoId or thumbnail changes
   useEffect(() => {
     setStep(0)
-  }, [videoId])
+    setHasError(false)
+  }, [videoId, thumbnail])
 
-  if (!videoId || step >= LADDER.length) {
+  // Direct custom thumbnail provided
+  if (thumbnail && !hasError && step === 0) {
+    return (
+      <img
+        src={thumbnail}
+        alt={alt}
+        width={width}
+        height={height}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+        fetchPriority={priority ? 'high' : 'low'}
+        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
+        onError={() => setHasError(true)}
+        className={`w-full h-full object-cover ${className}`}
+      />
+    )
+  }
+
+  if (!videoId || step >= LADDER.length || hasError) {
     return (
       <div
         className={`absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-3 text-center overflow-hidden ${className}`}
@@ -44,21 +73,34 @@ export default function LectureThumbnail({ videoId, alt = '', sizes, width = 320
   }
 
   const id = videoId
+  const currentQuality = LADDER[step]
+
   return (
     <img
-      key={`${id}-${step}`}
-      src={lectureThumb(id, LADDER[step])}
+      key={`${id}-${currentQuality}`}
+      src={lectureThumb(id, currentQuality)}
       alt={alt}
       width={width}
       height={height}
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"
       fetchPriority={priority ? 'high' : 'low'}
-      onError={() => setStep((s) => s + 1)}
-      // YouTube answers 200 with a 120x90 gray placeholder for qualities a
-      // video lacks — every real rung is ≥320px wide, so treat tiny decodes
-      // as failures and keep descending the ladder.
-      onLoad={(e) => { if (e.target.naturalWidth && e.target.naturalWidth < 200) setStep((s) => s + 1) }}
+      referrerPolicy="no-referrer"
+      crossOrigin="anonymous"
+      onError={() => {
+        if (step + 1 < LADDER.length) {
+          setStep((s) => s + 1)
+        } else {
+          setHasError(true)
+        }
+      }}
+      onLoad={(e) => {
+        // YouTube returns a 120x90 placeholder when maxres/hq720 is missing.
+        // If width is tiny (< 150px) and we're on maxres/hq720, try hqdefault.
+        if (e.target.naturalWidth && e.target.naturalWidth < 150 && step < 2) {
+          setStep((s) => s + 1)
+        }
+      }}
       className={`w-full h-full object-cover ${className}`}
     />
   )

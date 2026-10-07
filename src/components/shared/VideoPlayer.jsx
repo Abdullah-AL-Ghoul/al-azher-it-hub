@@ -48,6 +48,7 @@ function fmt(seconds) {
 export default function VideoPlayer({
   videoId,
   url,
+  thumbnail,
   title,
   onWatch,
   autoPlay = false,
@@ -423,6 +424,7 @@ export default function VideoPlayer({
       >
         <LectureThumbnail
           videoId={videoId}
+          thumbnail={thumbnail}
           alt={title || ''}
           width={1280}
           height={720}

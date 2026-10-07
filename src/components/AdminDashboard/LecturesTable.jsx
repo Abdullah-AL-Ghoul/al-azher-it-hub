@@ -188,7 +188,7 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
        <div className="flex justify-between items-start gap-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
          <div className="relative w-24 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-black/30 flex items-center justify-center">
-          <LectureThumbnail videoId={videoId} alt={isArabic ? lecture.titleAr : lecture.titleEn} width={120} height={68} sizes="96px" />
+          <LectureThumbnail videoId={videoId} thumbnail={lecture.thumbnail || lecture.thumbUrl} alt={isArabic ? lecture.titleAr : lecture.titleEn} width={120} height={68} sizes="96px" />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
            <div className="w-7 h-7 bg-rose-500/80 rounded-full flex items-center justify-center text-white">
             <FiPlay size={12} className="ms-0.5" />

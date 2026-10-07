@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useRef, memo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useRef, memo, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -369,6 +369,7 @@ function VideoPlayerModal({ lecture, onClose, isArabic, onWatch, localFavorites,
      <VideoPlayer
       videoId={lectureVideoId(lecture)}
       url={lecture.url}
+      thumbnail={lecture.thumbnail || lecture.thumbUrl}
       title={isArabic ? lecture.titleAr : lecture.titleEn}
       isArabic={isArabic}
       lectureId={lecture.id}
@@ -421,7 +422,8 @@ const LectureCard = memo(function LectureCard({ lecture, isArabic, user, localFa
       <div className="relative aspect-video pointer-events-none bg-black/30 flex items-center justify-center overflow-hidden">
       <LectureThumbnail
        videoId={videoId}
-       alt=""
+       thumbnail={lecture.thumbnail || lecture.thumbUrl}
+       alt={title || ''}
        sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(50vw - 2.5rem), calc(33.333vw - 2.7rem)"
        className="group-hover:scale-[1.07] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
       />
@@ -472,7 +474,7 @@ const LectureListItem = memo(function LectureListItem({ lecture, isArabic, user,
     <div className="relative group glass glass-hover flex items-center gap-4 p-4 rounded-xl">
      <Link to={`/lecture/${lecture.id}`} onClick={() => onWatch(lecture.id, lecture)} className="absolute inset-0 z-0 rounded-xl" aria-label={title} />
       <div className="pointer-events-none relative w-32 h-20 flex-shrink-0 bg-black/30 rounded-xl overflow-hidden flex items-center justify-center">
-      <LectureThumbnail videoId={videoId} alt="" width={128} height={80} sizes="128px" />
+      <LectureThumbnail videoId={videoId} thumbnail={lecture.thumbnail || lecture.thumbUrl} alt={title || ''} width={128} height={80} sizes="128px" />
      <div className="absolute inset-0 flex items-center justify-center">
       <button type="button" onClick={(e) => { e.preventDefault(); onPlay(lecture) }} className="pointer-events-auto relative z-10 w-10 h-10 bg-rose-500/80 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-sm" aria-label={t('inline.lectures.play-inside-the-site')}>
         <FiPlay size={18} className="ms-0.5" />

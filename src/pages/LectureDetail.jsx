@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -256,6 +256,7 @@ export default function LectureDetail() {
        <VideoPlayer
         videoId={videoId}
         url={lecture.url}
+        thumbnail={lecture.thumbnail || lecture.thumbUrl}
         title={isArabic ? lecture.titleAr : lecture.titleEn}
         isArabic={isArabic}
         lectureId={lecture.id}
