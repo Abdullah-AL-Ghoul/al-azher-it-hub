@@ -88,15 +88,16 @@ export function lectureVideoId(lecture) {
   return extractYouTubeId(lecture.url) || null
 }
 
-export function lectureThumb(id, quality = 'mq') {
+export function lectureThumb(id, quality = 'maxres') {
   if (!id) return null
-  // maxresdefault = true 16:9 1280x720; hqdefault is 4:3 with baked black
-  // bars (cropped away by object-cover on a 16:9 box); mq is 16:9 320x180.
+  // maxresdefault = true 16:9 1280x720; hq720 = high res 720p;
+  // hqdefault is 4:3 (cropped by object-cover to 16:9); mq is 16:9 320x180.
   const files = {
     maxres: 'maxresdefault.jpg',
+    hq720: 'hq720.jpg',
     hq: 'hqdefault.jpg',
     mq: 'mqdefault.jpg',
   }
-  const file = files[quality] || files.mq
-  return `https://img.youtube.com/vi/${id}/${file}`
+  const file = files[quality] || files.maxres || files.mq
+  return `https://i.ytimg.com/vi/${id}/${file}`
 }

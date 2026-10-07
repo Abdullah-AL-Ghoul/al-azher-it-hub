@@ -17,6 +17,7 @@ import CrudForm from './CrudForm'
 import FormField from './FormField'
 import FormActions from './FormActions'
 import CourseProfileModal from './CourseProfileModal'
+import SmartCourseModal from './SmartCourseModal'
 import OverviewPanel from './OverviewPanel'
 import { INPUT_CLASS } from '../../utils/adminShared'
 import { computeActiveStudents, computeNewStudents } from '../../utils/adminStatsLogic'
@@ -45,6 +46,7 @@ export default memo(function AdminDashboardContent({
  const courseFormRef = useRef(null)
 
  const [showLectureForm, setShowLectureForm] = useState(false)
+ const [showSmartModal, setShowSmartModal] = useState(false)
  const [editingLectureId, setEditingLectureId] = useState(null)
  const [lectureForm, setLectureForm] = useState({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString().slice(0, 10), subjectAr: '', subjectEn: '', videoId: '', sortOrder: 0, doctorAr: '', doctorEn: '' })
   const [lectureCourseId, setLectureCourseId] = useState('')
@@ -451,6 +453,7 @@ export default memo(function AdminDashboardContent({
       loading={loading}
       isArabic={isArabic}
       onEdit={handleEditLecture}
+      onOpenSmart={() => setShowSmartModal(true)}
       onAdd={() => {
 setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString().slice(0, 10), subjectAr: '', subjectEn: '', videoId: '', sortOrder: 0, doctorAr: '', doctorEn: '' })
     setLectureCourseId('')
@@ -683,6 +686,14 @@ setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString
       sources={sources}
       isOpen={!!profileCourse}
       onClose={() => setProfileCourse(null)}
+     />
+
+     <SmartCourseModal
+      isOpen={showSmartModal}
+      onClose={() => setShowSmartModal(false)}
+      courses={courses}
+      isArabic={isArabic}
+      onRefresh={onRefresh}
      />
     </div>
    )

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { FiPlay, FiExternalLink, FiVideoOff, FiLoader, FiMaximize, FiMinimize, FiVolume2, FiVolumeX, FiX } from 'react-icons/fi'
 import { lectureThumb } from '../../utils/helpers'
+import LectureThumbnail from './LectureThumbnail'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 
@@ -420,13 +421,16 @@ export default function VideoPlayer({
         className="relative block w-full aspect-video bg-black group overflow-hidden rounded-t-2xl text-start cursor-pointer"
         aria-label={title || t('inline.video-player.play-lecture-inline')}
       >
-        {videoId ? (
-          <img src={lectureThumb(videoId, 'hq')} srcSet={`${lectureThumb(videoId, 'mq')} 320w, ${lectureThumb(videoId, 'hq')} 480w`} sizes="(max-width: 768px) 100vw, 66vw" alt="" width="480" height="360" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-violet-500/20" />
-        )}
+        <LectureThumbnail
+          videoId={videoId}
+          alt={title || ''}
+          width={1280}
+          height={720}
+          sizes="(max-width: 768px) 100vw, 66vw"
+          className="group-hover:scale-105 transition-transform duration-700"
+        />
 
-        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-300" />
+        <div className="absolute inset-0 bg-black/15 group-hover:bg-black/5 transition-colors duration-300" />
 
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-20 h-20 bg-rose-500/90 rounded-full flex items-center justify-center text-white shadow-xl shadow-rose-500/30 group-hover:scale-110 group-hover:shadow-rose-500/50 transition-all duration-300">

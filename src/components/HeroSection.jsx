@@ -64,15 +64,13 @@ export default function HeroSection({ ctaLink, ctaSecondaryLink, lecturesCount =
    <div className="spatial-grid" aria-hidden="true" />
 
    <motion.div variants={prefersReduced ? { hidden: {}, visible: {} } : pageContainerSlow} initial="hidden" animate="visible" className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-    <motion.div variants={pageItemSlow} className="inline-flex items-center gap-2 glass px-5 py-2 mb-8">
-     <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-     <span className="text-slate-600 dark:text-white/80 text-sm font-medium">{t('home.hero.subtitle')}</span>
+    <motion.div variants={pageItemSlow} className="inline-flex items-center gap-2.5 glass px-5 py-2.5 mb-8 rounded-full border border-academic-primary/20 dark:border-white/10 shadow-sm backdrop-blur-md">
+     <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></span>
+     <span className="text-slate-700 dark:text-white/90 text-xs sm:text-sm font-semibold tracking-wide">{t('home.hero.subtitle')}</span>
     </motion.div>
 
-    <motion.h1 variants={pageItemSlow} className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6">
-     {/* Static gradient — the old infinite JS backgroundPosition pan repainted
-         the full-size headline every frame for a barely-visible shimmer. */}
-     <span className="gradient-text-spatial inline-block">
+    <motion.h1 variants={pageItemSlow} className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 tracking-tight">
+     <span className="gradient-text-spatial inline-block leading-[1.1]">
       {t('home.hero.title')}
      </span>
     </motion.h1>

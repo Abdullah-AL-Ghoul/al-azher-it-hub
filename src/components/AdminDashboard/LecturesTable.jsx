@@ -1,6 +1,6 @@
 import { useState, memo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { FiPlus, FiEdit2, FiTrash2, FiVideo, FiDownload, FiExternalLink, FiCopy, FiTool, FiPlay } from 'react-icons/fi'
+import { FiPlus, FiEdit2, FiTrash2, FiVideo, FiDownload, FiExternalLink, FiCopy, FiTool, FiPlay, FiCpu } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { deleteLecture, updateLecture } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'
@@ -13,7 +13,7 @@ import SkeletonRow from './SkeletonRow'
 import Pagination from './Pagination'
 import LectureThumbnail from '../shared/LectureThumbnail'
 
-function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, onRefresh }) {
+function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, onOpenSmart, onRefresh }) {
  const { t } = useLanguage()
  const prefersReduced = useReducedMotion()
  const [search, setSearch] = useState('')
@@ -150,6 +150,16 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
        aria-label={t('inline.lectures-table.search-lectures')}
        className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-48"
       />
+     {onOpenSmart && (
+      <button
+       onClick={onOpenSmart}
+       className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-academic-primary to-royal-600 hover:from-royal-700 hover:to-royal-800 text-white rounded-lg text-sm font-semibold transition shadow-md shadow-royal-600/20"
+       title={isArabic ? 'توليد مادة ومحاضرات تلقائياً بالذكاء الاصطناعي' : 'Auto-Generate Course & Lectures with AI'}
+      >
+       <FiCpu size={14} className="text-amber-300" />
+       <span>{isArabic ? 'توليد ذكي (AI)' : 'AI Generator'}</span>
+      </button>
+     )}
      <button
       onClick={onAdd}
       className="flex items-center gap-2 px-3 py-1.5 bg-royal-500 hover:bg-royal-600 text-white rounded-lg text-sm font-medium transition"

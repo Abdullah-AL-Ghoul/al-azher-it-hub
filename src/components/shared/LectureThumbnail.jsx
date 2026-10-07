@@ -1,16 +1,10 @@
 import { useEffect, useState } from 'react'
 import { lectureThumb } from '../../utils/helpers'
 
-// Quality ladder: hq serves reliably on 99.9% of all videos (4:3 object-cover cropped to 16:9),
-// mq is 16:9 fallback, maxres is optional bonus.
-// Starting with 'hq' avoids initial 404 delays and missing maxres placeholder blanks.
-const LADDER = ['hq', 'mq', 'maxres']
-
-const SRC_SETS = [
-  (id) => `${lectureThumb(id, 'mq')} 320w, ${lectureThumb(id, 'hq')} 480w, ${lectureThumb(id, 'maxres')} 1280w`,
-  (id) => `${lectureThumb(id, 'mq')} 320w, ${lectureThumb(id, 'hq')} 480w`,
-  (id) => `${lectureThumb(id, 'maxres')} 1280w`,
-]
+// Quality ladder: Try highest resolution first (maxres/hq720), then fallback to hq/mq.
+// We use direct src fallback without restrictive low-res srcSet so high-DPI displays
+// always get the crystal clear full thumbnail image.
+const LADDER = ['maxres', 'hq720', 'hq', 'mq']
 
 /**
  * YouTube lecture thumbnail with automatic quality fallback.
@@ -52,10 +46,8 @@ export default function LectureThumbnail({ videoId, alt = '', sizes, width = 320
   const id = videoId
   return (
     <img
-      key={id}
+      key={`${id}-${step}`}
       src={lectureThumb(id, LADDER[step])}
-      srcSet={SRC_SETS[step](id)}
-      sizes={sizes}
       alt={alt}
       width={width}
       height={height}
