@@ -1,0 +1,10 @@
+# Local development/testing artifacts — never needed for a remote build
+.baseline/
+.qa/
+.zcode/
+test-results/
+playwright-report/
+coverage/
+dist/
+e2e/
+scripts/qa-round.mjs
