@@ -81,9 +81,6 @@ export default function WelcomeGate() {
   const itemVariants = prefersReduced ? { hidden: {}, visible: {} } : welcomeItem
   const isArabic = lang === 'ar'
 
-  // Active track interactive showcase tab
-  const [activeTrack, setActiveTrack] = useState(0)
-
   // Freeze the infinite hero animations once they leave the viewport
   const heroClusterRef = useRef(null)
   const heroClusterInView = useInView(heroClusterRef, { margin: '80px' })
@@ -95,42 +92,6 @@ export default function WelcomeGate() {
   }, [user, navigate])
 
   if (user) return null
-
-  const tracksShowcase = [
-    {
-      id: 'se',
-      titleAr: 'هندسة البرمجيات وتطوير الويب',
-      titleEn: 'Software Engineering & Web',
-      descAr: 'الواجهات، الخلفيات، قواعد البيانات، وبناء التطبيقات السحابية الكاملة.',
-      descEn: 'Frontend, backend, relational databases, and modern cloud deployment architectures.',
-      icon: FiCode,
-      color: 'from-blue-600 to-indigo-600',
-      badge: isArabic ? 'الأكثر طلباً' : 'High Demand',
-      metrics: isArabic ? '١٢ مساق متخصص' : '12 Specialized Courses'
-    },
-    {
-      id: 'ai',
-      titleAr: 'الذكاء الاصطناعي وعلم البيانات',
-      titleEn: 'AI & Data Science',
-      descAr: 'تعلم الآلة، بايثون، التحليل الإحصائي، وتدريب النماذج الذكية التوليدية.',
-      descEn: 'Machine learning, Python algorithms, data analysis, and generative AI models.',
-      icon: FiCpu,
-      color: 'from-violet-600 to-purple-600',
-      badge: isArabic ? 'مستقبل التقنية' : 'Next-Gen',
-      metrics: isArabic ? '٩ مساقات متقدمة' : '9 Advanced Courses'
-    },
-    {
-      id: 'sec',
-      titleAr: 'الأمن السيبراني والشبكات',
-      titleEn: 'Cybersecurity & Networks',
-      descAr: 'حماية الأنظمة، اختبار الاختراق، التشفير، وإدارة بروتوكولات الشبكات.',
-      descEn: 'System hardening, penetration testing, cryptography, and network protocols.',
-      icon: FiShield,
-      color: 'from-emerald-600 to-teal-600',
-      badge: isArabic ? 'حماية الأنظمة' : 'Essential',
-      metrics: isArabic ? '٨ مساقات أمنية' : '8 Security Courses'
-    }
-  ]
 
   const features = [
     {
@@ -435,77 +396,6 @@ export default function WelcomeGate() {
               </motion.div>
             </div>
           </motion.div>
-        </div>
-      </section>
-
-      {/* ===== INTERACTIVE TRACKS SHOWCASE ===== */}
-      <section className="relative z-10 py-12 container-page">
-        <div className="glass rounded-3xl p-6 sm:p-10 border border-white/10 shadow-xl overflow-hidden relative">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-            <div>
-              <span className="text-xs font-bold text-royal-600 dark:text-cyan-400 uppercase tracking-widest">
-                {isArabic ? 'المسارات الأكاديمية' : 'Specialized Tracks'}
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink mt-1">
-                {isArabic ? 'استكشف مسارك في تكنولوجيا المعلومات' : 'Explore Your IT Career Pathway'}
-              </h2>
-            </div>
-            
-            {/* Track selector tabs */}
-            <div className="flex items-center gap-2 p-1.5 glass rounded-2xl border border-white/10 self-start md:self-auto overflow-x-auto max-w-full">
-              {tracksShowcase.map((tr, idx) => (
-                <button
-                  key={tr.id}
-                  onClick={() => setActiveTrack(idx)}
-                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                    activeTrack === idx
-                      ? 'bg-royal-600 text-white shadow-md'
-                      : 'text-slate-600 dark:text-white/60 hover:text-ink'
-                  }`}
-                >
-                  {isArabic ? tr.titleAr.split(' ')[0] + ' ' + (tr.titleAr.split(' ')[1] || '') : tr.titleEn.split(' ')[0]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Active track presentation */}
-          <div className="grid md:grid-cols-3 gap-5">
-            {tracksShowcase.map((tr, idx) => {
-              const Icon = tr.icon
-              const isSelected = activeTrack === idx
-              return (
-                <div
-                  key={tr.id}
-                  onClick={() => setActiveTrack(idx)}
-                  className={`p-6 rounded-2xl transition-all cursor-pointer border ${
-                    isSelected
-                      ? 'bg-royal-500/10 dark:bg-royal-500/15 border-royal-500/50 shadow-lg scale-[1.02]'
-                      : 'glass border-white/10 hover:border-royal-500/30'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tr.color} text-white flex items-center justify-center shadow-md`}>
-                      <Icon size={22} />
-                    </div>
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/10 text-ink">
-                      {tr.badge}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-ink text-base mb-2">
-                    {isArabic ? tr.titleAr : tr.titleEn}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-700 dark:text-white/80 leading-relaxed mb-4">
-                    {isArabic ? tr.descAr : tr.descEn}
-                  </p>
-                  <div className="text-[11px] font-semibold text-royal-700 dark:text-cyan-300 flex items-center gap-1.5">
-                    <FiLayers size={13} />
-                    <span>{tr.metrics}</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
         </div>
       </section>
 
