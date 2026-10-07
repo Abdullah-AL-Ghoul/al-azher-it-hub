@@ -46,6 +46,11 @@ export default defineConfig({
         // Keep react-icons in its own chunk to avoid bloating vendor-react;
         // order matters — vendor-icons check must stay before vendor-react.
         manualChunks(id) {
+          // Vite's preload helper must not be swept into a lazy vendor chunk:
+          // Rollup otherwise parks it in vendor-three (first module that needs
+          // it), giving the entry a static import there — which emits an 847KB
+          // modulepreload into the HTML head and drags three.js into LCP.
+          if (id.includes('preload-helper') || id.includes('modulepreload-polyfill')) return 'preload-runtime'
           if (id.includes('node_modules')) {
             if (id.includes('react-icons')) return 'vendor-icons'
             if (id.includes('framer-motion')) return 'vendor-motion'

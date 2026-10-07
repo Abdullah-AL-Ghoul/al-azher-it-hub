@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
@@ -16,12 +16,13 @@ import Footer from './components/Footer'
 import BackToTop from './components/BackToTop'
 import WelcomeModal from './components/WelcomeModal'
 import ErrorBoundary from './components/ErrorBoundary'
-import ShortcutsGuide from './components/ShortcutsGuide'
 import SpatialBackground from './components/spatial/SpatialBackground'
 import GlobalSearchTrigger from './components/GlobalSearchTrigger'
 
 const Chatbot = lazyWithRecovery(() => import('./components/Chatbot'))
 const GlobalSearch = lazyWithRecovery(() => import('./components/GlobalSearch'))
+// Guide loads only when `?` is pressed — keeps the entry chunk lean.
+const ShortcutsGuide = lazyWithRecovery(() => import('./components/ShortcutsGuide'))
 
 // Directional route slide: pages enter from the locale's reading start
 // (left edge in RTL, right edge in LTR) and exit toward the opposite side.
@@ -212,7 +213,9 @@ function AppContent() {
       </ErrorBoundary>
      </Suspense>
     )}
-    <ShortcutsGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+    <Suspense fallback={null}>
+     <ShortcutsGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+    </Suspense>
     <Toaster
     position="top-center"
     containerStyle={{ top: 72 }}
