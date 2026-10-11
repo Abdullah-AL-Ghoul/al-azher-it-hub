@@ -337,9 +337,9 @@ export default function Home() {
         {isArabic ? 'أدوات الإنتاجية والدراسة الذكية' : 'Smart Study & Productivity Tools'}
        </h2>
       </div>
-      <span className="text-xs text-slate-500 dark:text-white/40 hidden sm:inline">
-       {isArabic ? 'صممت لرفع كفاءة طالب تكنولوجيا المعلومات' : 'Crafted for IT student productivity'}
-      </span>
+      <Link to="/tools" className="text-xs text-accent hover:underline font-semibold flex items-center gap-1">
+       <span>{isArabic ? 'مركز كافة الأدوات (8 أدوات) ←' : 'Tools Hub (8 Tools) →'}</span>
+      </Link>
      </div>
 
      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

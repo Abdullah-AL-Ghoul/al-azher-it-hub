@@ -42,6 +42,12 @@ describe('Study Innovation Suite Unit Tests', () => {
       expect(cheatsheetsRoute).toBeDefined()
       expect(cheatsheetsRoute.protected).toBe(true)
     })
+
+    it('registers /tools hub route as protected student area', () => {
+      const toolsRoute = APP_ROUTES.find(r => r.path === '/tools')
+      expect(toolsRoute).toBeDefined()
+      expect(toolsRoute.protected).toBe(true)
+    })
   })
 
   describe('Offline Study Pack Data Structure', () => {

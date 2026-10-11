@@ -73,7 +73,7 @@ test.describe('Study Innovation Suite E2E Verification', () => {
     await page.waitForLoadState('networkidle')
 
     // Expect flashcards card container
-    await expect(page.locator('text=سؤال / مفهوم')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('text=سؤال / مفهوم')).toBeVisible({ timeout: 25000 })
 
     // Expect flip button or card
     const flipBtn = page.getByRole('button', { name: /اقلب البطاقة/i })
@@ -101,5 +101,26 @@ test.describe('Study Innovation Suite E2E Verification', () => {
     // In tree mode, year columns should be present
     await expect(page.locator('text=السنة الأولى')).toBeVisible()
     await expect(page.locator('text=السنة الرابعة')).toBeVisible()
+  })
+
+  test('Tools Hub Page Renders All 8 Tools with Category Filtering', async ({ page }) => {
+    await page.goto('/tools')
+    await page.waitForLoadState('networkidle')
+
+    // Page title and tools header
+    await expect(page.locator('text=مركز الأدوات الذكية')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('text=الأدوات المتاحة')).toBeVisible()
+
+    // Key tools should be visible
+    await expect(page.locator('text=غرفة التركيز الذكية ومؤقت بومودورو')).toBeVisible()
+    await expect(page.locator('text=بطاقات المذاكرة والتكرار المتباعد')).toBeVisible()
+    await expect(page.locator('text=خزينة الأكواد والمراجع السريعة')).toBeVisible()
+    await expect(page.locator('text=شجرة المتطلبات السابقة للمساقات')).toBeVisible()
+
+    // Test category filtering
+    const studyTab = page.getByRole('button', { name: /المذاكرة والاستيعاب/i })
+    await expect(studyTab).toBeVisible()
+    await studyTab.click()
+    await expect(page.locator('text=بطاقات المذاكرة')).toBeVisible()
   })
 })

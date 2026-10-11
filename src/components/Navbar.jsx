@@ -85,9 +85,7 @@ export default memo(function Navbar() {
     { to: '/sources', label: t('nav.sources') },
     { to: '/study-plan', label: t('nav.studyPlan') },
     { to: '/roadmap', label: t('nav.roadmap') },
-    { to: '/focus', label: lang === 'ar' ? 'التركيز' : 'Focus' },
-    { to: '/flashcards', label: lang === 'ar' ? 'البطاقات' : 'Cards' },
-    { to: '/cheatsheets', label: lang === 'ar' ? 'الأكواد' : 'Cheats' },
+    { to: '/tools', label: lang === 'ar' ? 'الأدوات الذكية' : 'Tools Hub' },
     { to: '/additions', label: t('nav.additions') },
     { to: '/contact', label: t('nav.contact') },
   ], [t, lang])

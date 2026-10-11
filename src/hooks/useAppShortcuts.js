@@ -10,6 +10,7 @@ const GOTO = {
   r: '/roadmap',
   f: '/focus',
   c: '/cheatsheets',
+  t: '/tools',
   p: '/profile',
 }
 const SEQ_WINDOW_MS = 900

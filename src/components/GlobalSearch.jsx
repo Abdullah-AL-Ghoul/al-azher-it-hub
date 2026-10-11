@@ -65,6 +65,7 @@ const navPages = [
   { to: '/focus', keys: ['focus', 'pomodoro', 'بومودورو', 'تركيز', 'غرفة التركيز', 'مؤقت'] },
   { to: '/flashcards', keys: ['flashcards', 'بطاقات', 'مراجعة', 'فلاش كاردز', 'leitner'] },
   { to: '/cheatsheets', keys: ['cheatsheets', 'أكواد', 'أوامر', 'git', 'linux', 'sql', 'big-o'] },
+  { to: '/tools', keys: ['tools', 'أدوات', 'الأدوات الذكية', 'مركز الأدوات', 'innovation', 'study tools'] },
   { to: '/additions', keys: ['additions', 'إضافات'] },
   { to: '/contact', keys: ['contact', 'تواصل', 'الدعم'] },
   { to: '/profile', keys: ['profile', 'ملفي', 'الملف الشخصي', 'كشف الدرجات'] },
@@ -161,6 +162,13 @@ export default function GlobalSearch({ autoOpen = false }) {
 
   // Quick Action recommendations for zero-state
   const quickActions = useMemo(() => [
+    {
+      type: 'action',
+      title: isArabic ? 'مركز الأدوات الذكية والإنتاجية' : 'Student Tools & Innovation Hub',
+      subtitle: isArabic ? 'غرفة التركيز، بطاقات 3D، خزينة الأكواد، وشجرة المتطلبات' : 'Focus room, 3D flashcards, cheatsheets, and DAG tree',
+      to: '/tools',
+      icon: FiGrid,
+    },
     {
       type: 'action',
       title: isArabic ? 'حاسبة المعدل الأكاديمي التراكمي' : 'GPA Calculator',
