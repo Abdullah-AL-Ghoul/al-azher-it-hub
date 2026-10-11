@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FiCompass, 
@@ -9,7 +10,8 @@ import {
   FiChevronUp,
   FiBookOpen,
   FiCheck,
-  FiPlusCircle
+  FiPlusCircle,
+  FiCalendar
 } from 'react-icons/fi'
 import { COURSE_TYPES } from '../../data/academicCurriculum'
 
@@ -193,15 +195,24 @@ export default function EligibleCoursesAdvisor({
               </div>
 
               {plannedHours > 0 && (
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
                   <button
                     type="button"
                     onClick={markAllPlannedAsEnrolled}
                     className="px-3 py-2 rounded-xl text-xs font-bold bg-royal-600 text-white shadow-md shadow-royal-600/20 hover:bg-royal-500 transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <FiClock size={14} />
-                    <span>{isArabic ? `تسجيل ${plannedCourseIds.size} مساقات (قيد الدراسة)` : `Enroll Selected (${plannedCourseIds.size})`}</span>
+                    <span>{isArabic ? `تسجيل ${plannedCourseIds.size} مساقات` : `Enroll Selected (${plannedCourseIds.size})`}</span>
                   </button>
+
+                  <Link
+                    to="/study-plan?tab=schedule"
+                    className="px-3 py-2 rounded-xl text-xs font-bold bg-teal-600 text-white shadow-md shadow-teal-600/20 hover:bg-teal-500 transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <FiCalendar size={14} />
+                    <span>{isArabic ? 'ترتيب في الجدول الأسبوعي' : 'Build Timetable'}</span>
+                  </Link>
+
                   <button
                     type="button"
                     onClick={() => setPlannedCourseIds(new Set())}
