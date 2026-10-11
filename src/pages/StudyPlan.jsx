@@ -21,7 +21,8 @@ import {
   FiRotateCcw,
   FiAward,
   FiChevronDown,
-  FiCheck
+  FiCheck,
+  FiPrinter
 } from 'react-icons/fi'
 import { FaCalculator } from 'react-icons/fa'
 import ErrorState from '../components/feedback/ErrorState'
@@ -31,6 +32,8 @@ import toast from 'react-hot-toast'
 import PageHero from '../components/shared/PageHero'
 import Skeleton from '../components/shared/Skeleton'
 import GpaCalculator from '../components/studyPlan/GpaCalculator'
+import EligibleCoursesAdvisor from '../components/studyPlan/EligibleCoursesAdvisor'
+import PrintableCurriculumReport from '../components/studyPlan/PrintableCurriculumReport'
 import { ACADEMIC_PLANS, getAcademicPlan, COURSE_TYPES } from '../data/academicCurriculum'
 
 const containerVariants = pageContainer
@@ -38,10 +41,11 @@ const itemVariants = pageItem
 
 export default function StudyPlan() {
   const { lang, t } = useLanguage()
-  const { isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth()
   const isArabic = lang === 'ar'
   const canEdit = isAdmin
   const prefersReduced = useReducedMotion()
+  const [showPrintReport, setShowPrintReport] = useState(false)
 
   // Tabs: 'curriculum' (مسار الخطة التخصصية), 'calculator' (حاسبة المعدل), 'links' (الروابط الرسمية)
   const [activeTab, setActiveTab] = useState('curriculum')
@@ -516,11 +520,19 @@ export default function StudyPlan() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setShowPrintReport(true)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-royal-600 text-white shadow-md shadow-royal-600/20 hover:bg-royal-500 text-xs font-bold transition cursor-pointer"
+                  >
+                    <FiPrinter size={13} />
+                    <span>{isArabic ? 'تصدير / طباعة الخطة (PDF)' : 'Print / Export PDF'}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={resetAllProgress}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:text-rose-500 text-xs font-semibold text-slate-500 dark:text-white/60 transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:text-rose-500 text-xs font-semibold text-slate-500 dark:text-white/60 transition cursor-pointer"
                   >
                     <FiRotateCcw size={13} />
                     <span>{isArabic ? 'إعادة ضبط الخطة' : 'Reset Progress'}</span>
@@ -582,6 +594,14 @@ export default function StudyPlan() {
                 </div>
               </div>
             </div>
+
+            {/* Smart Registration Advisor for Eligible Unlocked Courses */}
+            <EligibleCoursesAdvisor
+              activePlan={activePlan}
+              courseProgress={courseProgress}
+              onStatusChange={toggleCourseStatus}
+              isArabic={isArabic}
+            />
 
             {/* Filters Bar */}
             <div className="glass rounded-2xl p-4 border border-white/10 space-y-3">
@@ -933,6 +953,17 @@ export default function StudyPlan() {
         title={t('common.delete')}
         message={t('inline.study-plan.are-you-sure-you')}
       />
+
+      {showPrintReport && (
+        <PrintableCurriculumReport
+          activePlan={activePlan}
+          courseProgress={courseProgress}
+          curriculumStats={curriculumStats}
+          user={user}
+          isArabic={isArabic}
+          onClose={() => setShowPrintReport(false)}
+        />
+      )}
     </motion.div>
   )
 }
