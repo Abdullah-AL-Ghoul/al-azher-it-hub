@@ -39,10 +39,12 @@ import {
   FiEye,
   FiShare2,
   FiHelpCircle,
-  FiLayers
+  FiLayers,
+  FiStar,
+  FiBookmark
 } from 'react-icons/fi'
 import Skeleton from '../components/shared/Skeleton'
-import { SOURCE_CATEGORIES, EXAM_SUB_TYPES, classifySource } from '../data/sourceCategories'
+import { SOURCE_CATEGORIES, EXAM_SUB_TYPES, ACADEMIC_YEAR_FILTERS, classifySource } from '../data/sourceCategories'
 
 const sortOptions = SORT_OPTIONS
 const containerVariants = pageContainer
@@ -391,10 +393,40 @@ export default function Sources() {
   const { user, isAdmin } = useAuth()
   const isArabic = lang === 'ar'
 
-  // Navigation mode: 'all' | 'exams' | 'summaries'
+  // Navigation mode: 'all' | 'exams' | 'summaries' | 'favorites'
   const [activeMainTab, setActiveMainTab] = useState('all')
   // Sub-filter for exams: 'all_exams' | 'midterm' | 'final' | 'quiz'
   const [selectedExamType, setSelectedExamType] = useState('all_exams')
+  // Sub-filter for academic year: 'all' | '1' | '2' | '3' | '4'
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState('all')
+  // Solved papers filter
+  const [onlySolvedExams, setOnlySolvedExams] = useState(false)
+
+  // Student Favorites / Bookmarks
+  const [bookmarkedIds, setBookmarkedIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('al_azher_bookmarked_sources')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+
+  const toggleBookmark = (sourceId) => {
+    setBookmarkedIds(prev => {
+      const isAlready = prev.includes(sourceId)
+      const next = isAlready ? prev.filter(id => id !== sourceId) : [...prev, sourceId]
+      try {
+        localStorage.setItem('al_azher_bookmarked_sources', JSON.stringify(next))
+      } catch {}
+      if (isAlready) {
+        toast.success(isArabic ? 'تمت إزالة المرجع من المفضلة' : 'Removed from bookmarks')
+      } else {
+        toast.success(isArabic ? 'تم حفظ المرجع في مفضلتك للرجوع السريع ⭐' : 'Saved to bookmarks ⭐')
+      }
+      return next
+    })
+  }
 
   const [activeSubject, setActiveSubject] = useState('all')
   const [search, setSearch] = useState('')
@@ -452,16 +484,19 @@ export default function Sources() {
   const tabCounts = useMemo(() => {
     let totalExams = 0
     let totalSummaries = 0
+    let totalFavorites = 0
     classifiedSources.forEach(s => {
       if (s._meta.category === 'exams') totalExams += 1
       if (s._meta.category === 'summaries') totalSummaries += 1
+      if (bookmarkedIds.includes(s.id)) totalFavorites += 1
     })
     return {
       all: classifiedSources.length,
       exams: totalExams,
       summaries: totalSummaries,
+      favorites: totalFavorites,
     }
-  }, [classifiedSources])
+  }, [classifiedSources, bookmarkedIds])
 
   const subjects = useMemo(() => {
     const set = new Set(sources.map(s => isArabic ? s.subjectAr : s.subjectEn).filter(Boolean))
@@ -482,11 +517,22 @@ export default function Sources() {
         if (matchTab && selectedExamType !== 'all_exams') {
           matchTab = s._meta.examType === selectedExamType
         }
+        if (matchTab && onlySolvedExams) {
+          matchTab = Boolean(s._meta.hasSolution)
+        }
       } else if (activeMainTab === 'summaries') {
         matchTab = s._meta.category === 'summaries'
+      } else if (activeMainTab === 'favorites') {
+        matchTab = bookmarkedIds.includes(s.id)
       }
 
-      return matchSubject && matchSearch && matchTab
+      // Academic Year Filter
+      let matchYear = true
+      if (selectedAcademicYear !== 'all') {
+        matchYear = String(s._meta.academicYear) === selectedAcademicYear
+      }
+
+      return matchSubject && matchSearch && matchTab && matchYear
     })
 
     const sortLocale = t('inline.sources.en')
@@ -628,6 +674,49 @@ export default function Sources() {
                 {tabCounts.summaries}
               </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveMainTab('favorites')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap min-h-[44px] ${
+                activeMainTab === 'favorites'
+                  ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/25'
+                  : 'text-slate-600 dark:text-white/70 hover:text-ink hover:bg-black/5 dark:hover:bg-white/5'
+              }`}
+            >
+              <FiStar size={16} />
+              <span>{isArabic ? 'المفضلة والمحفوظات' : 'Saved & Bookmarks'}</span>
+              <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${activeMainTab === 'favorites' ? 'bg-white/20 text-white' : 'bg-amber-500/15 text-amber-500'}`}>
+                {tabCounts.favorites}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Academic Year Level Pill Bar */}
+        <div className="glass rounded-2xl p-3 mb-6 border border-white/10 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-ink flex items-center gap-1.5">
+              <FiLayers size={14} className="text-royal-500" />
+              <span>{isArabic ? 'المستوى الدراسي:' : 'Academic Level:'}</span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {ACADEMIC_YEAR_FILTERS.map(y => (
+              <button
+                key={y.id}
+                type="button"
+                onClick={() => setSelectedAcademicYear(y.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap min-h-[34px] ${
+                  selectedAcademicYear === y.id
+                    ? 'bg-royal-600 text-white shadow-sm'
+                    : 'bg-black/5 dark:bg-white/5 text-slate-600 dark:text-white/70 hover:text-ink'
+                }`}
+              >
+                {isArabic ? y.labelAr : y.labelEn}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -652,7 +741,20 @@ export default function Sources() {
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setOnlySolvedExams(!onlySolvedExams)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${
+                  onlySolvedExams
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-black/5 dark:bg-white/5 border-line text-slate-600 dark:text-white/70 hover:text-ink'
+                }`}
+              >
+                <span>✓</span>
+                <span>{isArabic ? 'النماذج مع الحل فقط' : 'Solved Only'}</span>
+              </button>
+
               {EXAM_SUB_TYPES.map(sub => (
                 <button
                   key={sub.id}
@@ -701,15 +803,36 @@ export default function Sources() {
           <EmptyState
             icon={search ? FiSearch : FiFolder}
             color="amber"
-            title={search ? (t('inline.sources.no-search-results')) : (activeMainTab === 'exams' ? (isArabic ? 'لا توجد نماذج امتحانات بعد' : 'No exam papers yet') : t('inline.sources.no-sources-yet'))}
-            description={search ? (t('inline.sources.try-a-different-search')) : (isArabic ? 'سيتم إضافة ملفات ومصادر جديدة قريباً لهذا التخصص.' : t('inline.sources.sources-will-be-added'))}
+            title={
+              search
+                ? t('inline.sources.no-search-results')
+                : activeMainTab === 'favorites'
+                ? (isArabic ? 'قائمة المفضلة فارغة حالياً' : 'No bookmarked sources yet')
+                : activeMainTab === 'exams'
+                ? (isArabic ? 'لا توجد نماذج امتحانات مطابقة للفلتر' : 'No matching exam papers')
+                : t('inline.sources.no-sources-yet')
+            }
+            description={
+              search
+                ? t('inline.sources.try-a-different-search')
+                : activeMainTab === 'favorites'
+                ? (isArabic ? 'اضغط على رمز النجمة ⭐ في بطاقة أي ملف أو نموذج امتحان لحفظه هنا للمراجعة السريعة.' : 'Click the star icon ⭐ on any file to bookmark it for revision.')
+                : (isArabic ? 'سيتم إضافة ملفات ومصادر جديدة قريباً لهذا التخصص أو الفلتر المحدد.' : t('inline.sources.sources-will-be-added'))
+            }
             action={
-              search ? (
+              (search || selectedAcademicYear !== 'all' || onlySolvedExams || activeMainTab === 'favorites') ? (
                 <button
-                  onClick={() => { setSearch(''); setActiveSubject('all'); setSelectedExamType('all_exams') }}
+                  onClick={() => { 
+                    setSearch('')
+                    setActiveSubject('all')
+                    setSelectedExamType('all_exams')
+                    setSelectedAcademicYear('all')
+                    setOnlySolvedExams(false)
+                    if (activeMainTab === 'favorites') setActiveMainTab('all')
+                  }}
                   className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] btn-secondary rounded-xl text-sm font-medium"
                 >
-                  {t('inline.sources.clear-search')}
+                  {isArabic ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
                 </button>
               ) : isAdmin ? (
                 <button
@@ -746,7 +869,7 @@ export default function Sources() {
                     <div>
                       {/* Top Badges Row */}
                       <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="inline-block text-xs bg-royal-50 dark:bg-cyan-900/20 border border-royal-200/30 dark:border-cyan-400/20 text-royal-600 dark:text-cyan-300 px-2.5 py-1 rounded-full font-semibold">
                             {isArabic ? source.subjectAr : source.subjectEn}
                           </span>
@@ -754,13 +877,55 @@ export default function Sources() {
                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${meta.color}`}>
                             {isArabic ? meta.labelAr : meta.labelEn}
                           </span>
+
+                          {/* Academic Year Level Badge */}
+                          {meta.academicYear && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-royal-500/10 text-royal-600 dark:text-cyan-400 border border-royal-500/20">
+                              {isArabic ? `السنة ${meta.academicYear}` : `Year ${meta.academicYear}`}
+                            </span>
+                          )}
+
+                          {/* Exam Year Badge */}
+                          {meta.examYear && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white/80 border border-line">
+                              {meta.examYear}
+                            </span>
+                          )}
+
+                          {/* Solution Badge */}
+                          {meta.hasSolution && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-1">
+                              <FiCheck size={10} />
+                              <span>{isArabic ? 'متوفر الحل' : 'Solved'}</span>
+                            </span>
+                          )}
                         </div>
 
-                        {isRecentlyAdded(source.date) && (
-                          <div className="px-2 py-0.5 bg-emerald-500/80 backdrop-blur-sm text-white text-[10px] font-bold rounded-full animate-pulse">
-                            {t('sources.newBadge')}
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {isRecentlyAdded(source.date) && (
+                            <div className="px-2 py-0.5 bg-emerald-500/80 backdrop-blur-sm text-white text-[10px] font-bold rounded-full animate-pulse">
+                              {t('sources.newBadge')}
+                            </div>
+                          )}
+
+                          {/* Bookmark Star Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleBookmark(source.id)
+                            }}
+                            className={`p-1.5 rounded-xl transition ${
+                              bookmarkedIds.includes(source.id)
+                                ? 'text-amber-500 bg-amber-500/15 hover:bg-amber-500/20'
+                                : 'text-slate-400 hover:text-amber-500 hover:bg-amber-500/10'
+                            }`}
+                            title={bookmarkedIds.includes(source.id) ? (isArabic ? 'إزالة من المحفوظات' : 'Remove bookmark') : (isArabic ? 'حفظ في المفضلة' : 'Save bookmark')}
+                            aria-label={bookmarkedIds.includes(source.id) ? 'Remove bookmark' : 'Save bookmark'}
+                          >
+                            <FiStar size={15} fill={bookmarkedIds.includes(source.id) ? 'currentColor' : 'none'} />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Title */}
