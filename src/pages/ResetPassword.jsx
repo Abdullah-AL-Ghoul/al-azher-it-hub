@@ -4,237 +4,226 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { resetPassword, getAuthSession, updateAuthUserPassword, resolveStudentIdByEmail } from '../services'
 import SpatialInput from '../components/spatial/SpatialInput'
-import SiteLogo from '../components/shared/SiteLogo'
-import { FiLock, FiArrowLeft, FiCheckCircle, FiLoader, FiAlertTriangle } from 'react-icons/fi'
+import AuthLayout from '../components/auth/AuthLayout'
+import AuthLogo from '../components/auth/AuthLogo'
+import AuthAlert from '../components/auth/AuthAlert'
+import AuthSubmitButton from '../components/auth/AuthSubmitButton'
+import { FiLock, FiArrowLeft, FiArrowRight, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi'
 
 export default function ResetPassword() {
- const { lang, t } = useLanguage()
- const prefersReduced = useReducedMotion()
- const isArabic = lang === 'ar'
- const navigate = useNavigate()
+  const { lang, t } = useLanguage()
+  const prefersReduced = useReducedMotion()
+  const isArabic = lang === 'ar'
+  const navigate = useNavigate()
 
- const [newPassword, setNewPassword] = useState('')
- const [confirmPassword, setConfirmPassword] = useState('')
- const [showNew, setShowNew] = useState(false)
- const [showConfirm, setShowConfirm] = useState(false)
- const [error, setError] = useState('')
- const [loading, setLoading] = useState(false)
- const [success, setSuccess] = useState(false)
- const [invalidLink, setInvalidLink] = useState(false)
- const navigateTimer = useRef(null)
- const checkedRef = useRef(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showNew, setShowNew] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [invalidLink, setInvalidLink] = useState(false)
+  const navigateTimer = useRef(null)
+  const checkedRef = useRef(false)
 
- 
- useEffect(() => {
-  return () => { if (navigateTimer.current) clearTimeout(navigateTimer.current) }
- }, [])
-
- // Detect the recovery session from the URL hash (supabase-js handles type=recovery).
- useEffect(() => {
-  if (checkedRef.current) return
-  checkedRef.current = true
-  let mounted = true
-  async function check() {
-   try {
-    const session = await getAuthSession()
-    const isRecovery = session?.user && session.user.aud === 'authenticated'
-    // A recovery link carries a session; if none exists the link is invalid/expired.
-    if (!isRecovery) {
-     if (mounted) setInvalidLink(true)
+  useEffect(() => {
+    return () => {
+      if (navigateTimer.current) clearTimeout(navigateTimer.current)
     }
-   } catch (_e) {
-    if (mounted) setInvalidLink(true)
-   }
+  }, [])
+
+  // Detect the recovery session from the URL hash (supabase-js handles type=recovery).
+  useEffect(() => {
+    if (checkedRef.current) return
+    checkedRef.current = true
+    let mounted = true
+    async function check() {
+      try {
+        const session = await getAuthSession()
+        const isRecovery = session?.user && session.user.aud === 'authenticated'
+        // A recovery link carries a session; if none exists the link is invalid/expired.
+        if (!isRecovery) {
+          if (mounted) setInvalidLink(true)
+        }
+      } catch (_e) {
+        if (mounted) setInvalidLink(true)
+      }
+    }
+    check()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (newPassword.length < 8) {
+      setError(t('forgotPassword.passwordMin8'))
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setError(t('forgotPassword.passwordsDoNotMatch'))
+      return
+    }
+    setLoading(true)
+    try {
+      const session = await getAuthSession()
+      if (!session?.user) {
+        setLoading(false)
+        setInvalidLink(true)
+        return
+      }
+      await updateAuthUserPassword(newPassword)
+
+      // Sync the legacy PBKDF2 hash so the custom login fallback stays in sync.
+      let studentId = session.user.user_metadata?.studentId
+      if (!studentId && session.user.email) {
+        studentId = await resolveStudentIdByEmail(session.user.email)
+      }
+      if (studentId) {
+        await resetPassword(studentId, newPassword, { email: '' }).catch(() => {})
+      }
+
+      setLoading(false)
+      setSuccess(true)
+      navigateTimer.current = setTimeout(() => navigate('/login'), 2200)
+    } catch (_err) {
+      setLoading(false)
+      setError(t('forgotPassword.error'))
+    }
   }
-  check()
-  return () => { mounted = false }
- }, [])
 
- const handleSubmit = async (e) => {
-  e.preventDefault()
-  setError('')
-  if (newPassword.length < 8) {
-   setError(t('forgotPassword.passwordMin8'))
-   return
-  }
-  if (newPassword !== confirmPassword) {
-   setError(t('forgotPassword.passwordsDoNotMatch'))
-   return
-  }
-  setLoading(true)
-  try {
-   const session = await getAuthSession()
-   if (!session?.user) {
-    setLoading(false)
-    setInvalidLink(true)
-    return
-   }
-   await updateAuthUserPassword(newPassword)
+  return (
+    <AuthLayout isArabic={isArabic} onBack={() => navigate('/login')}>
+      <AuthLogo
+        title={t('resetPassword.title')}
+        subtitle={t('resetPassword.subtitle')}
+        isArabic={isArabic}
+      />
 
-   // Sync the legacy PBKDF2 hash so the custom login fallback stays in sync.
-   // Resolve the studentId even when the recovery session lacks metadata:
-   // the verified auth email is the canonical link to the profile row.
-   let studentId = session.user.user_metadata?.studentId
-   if (!studentId && session.user.email) {
-    studentId = await resolveStudentIdByEmail(session.user.email)
-   }
-   if (studentId) {
-    await resetPassword(studentId, newPassword, { email: '' }).catch(() => {})
-   }
+      <AuthAlert type="error" message={error} show={!success && !invalidLink && !!error} />
 
-   setLoading(false)
-   setSuccess(true)
-   navigateTimer.current = setTimeout(() => navigate('/login'), 2200)
-  } catch (err) {
-   setLoading(false)
-   setError(t('forgotPassword.error'))
-  }
- }
-
- return (
-  <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-spatial-full">
-   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-500/5 via-transparent to-transparent" />
-   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent" />
-
-   <motion.div
-    initial={prefersReduced ? {} : { opacity: 0, scale: 0.95 }}
-    animate={prefersReduced ? {} : { opacity: 1, scale: 1 }}
-    transition={prefersReduced ? {} : { duration: 0.5 }}
-    className="relative z-10 w-full max-w-md mx-4"
-   >
-    <div className="glass rounded-3xl p-8 md:p-10">
-     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="text-center mb-8"
-     >
-      <div className="mx-auto mb-4">
-       <SiteLogo size="md" />
-      </div>
-      <h1 className="text-2xl font-bold text-ink mb-1">
-       {t('resetPassword.title')}
-      </h1>
-      <p className="text-slate-500 dark:text-white/50 text-sm">
-       {t('resetPassword.subtitle')}
-      </p>
-     </motion.div>
-
-     <AnimatePresence mode="wait">
-      {invalidLink ? (
-       <motion.div key="invalid" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
-        <div className="w-16 h-16 bg-rose-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
-         <FiAlertTriangle aria-hidden="true" className="text-rose-400" size={32} />
-        </div>
-        <p className="text-rose-400 font-semibold mb-2">{t('resetPassword.invalidTitle')}</p>
-        <p className="text-slate-500 dark:text-white/50 text-sm">{t('resetPassword.invalidDesc')}</p>
-        <Link to="/forgot-password" className="mt-6 inline-flex items-center gap-2 text-sm text-royal-500 dark:text-cyan-400 hover:text-royal-600 dark:hover:text-cyan-300 transition-colors">
-         <FiArrowLeft size={16} className={isArabic ? 'rotate-180' : ''} />
-         {t('resetPassword.requestAgain')}
-        </Link>
-       </motion.div>
-      ) : success ? (
-       <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
-        <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-         <FiCheckCircle aria-hidden="true" className="text-emerald-400" size={32} />
-        </div>
-        <p className="text-emerald-400 font-semibold mb-2">{t('resetPassword.success')}</p>
-        <p className="text-slate-500 dark:text-white/50 text-sm">{t('resetPassword.successDesc')}</p>
-       </motion.div>
-      ) : (
-       <motion.form key="form" onSubmit={handleSubmit} className="space-y-5">
-        <AnimatePresence>
-         {error && (
+      <AnimatePresence mode="wait">
+        {invalidLink ? (
           <motion.div
-           key="error"
-           id="rp-form-error"
-           initial={{ opacity: 0, y: -10 }}
-           animate={{ opacity: 1, y: 0 }}
-           exit={{ opacity: 0, y: -10 }}
-           className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 text-center backdrop-blur-sm"
-           role="alert"
+            key="invalid"
+            initial={prefersReduced ? {} : { opacity: 0, scale: 0.95 }}
+            animate={prefersReduced ? {} : { opacity: 1, scale: 1 }}
+            className="text-center py-6"
           >
-           {error}
+            <div className="w-16 h-16 bg-rose-500/15 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500">
+              <FiAlertTriangle aria-hidden="true" size={34} />
+            </div>
+            <h3 className="text-lg font-bold text-ink mb-1">{t('resetPassword.invalidTitle')}</h3>
+            <p className="text-slate-500 dark:text-white/60 text-xs sm:text-sm max-w-xs mx-auto mb-5">
+              {t('resetPassword.invalidDesc')}
+            </p>
+            <Link
+              to="/forgot-password"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm bg-royal-600 dark:bg-cyan-500 hover:bg-royal-700 dark:hover:bg-cyan-400 text-white transition-all shadow-md"
+            >
+              <span>{t('resetPassword.requestAgain')}</span>
+            </Link>
           </motion.div>
-         )}
-        </AnimatePresence>
+        ) : success ? (
+          <motion.div
+            key="success"
+            initial={prefersReduced ? {} : { opacity: 0, scale: 0.95 }}
+            animate={prefersReduced ? {} : { opacity: 1, scale: 1 }}
+            className="text-center py-6"
+          >
+            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-400">
+              <FiCheckCircle aria-hidden="true" size={36} />
+            </div>
+            <h3 className="text-lg font-bold text-ink mb-1">{t('resetPassword.success')}</h3>
+            <p className="text-slate-500 dark:text-white/60 text-xs sm:text-sm max-w-xs mx-auto">
+              {t('resetPassword.successDesc')}
+            </p>
+          </motion.div>
+        ) : (
+          <motion.form key="form" onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label
+                  htmlFor="rp-new"
+                  className="block text-xs font-semibold text-slate-600 dark:text-white/70 mb-1.5 ms-1 uppercase tracking-wider"
+                >
+                  {t('resetPassword.newPassword')}
+                </label>
+                <SpatialInput
+                  id="rp-new"
+                  icon={FiLock}
+                  type={showNew ? 'text' : 'password'}
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="••••••••"
+                  isArabic={isArabic}
+                  autoComplete="new-password"
+                  disabled={loading}
+                  showToggle
+                  onToggle={() => setShowNew((v) => !v)}
+                  showPassword={showNew}
+                  aria-invalid={error ? 'true' : undefined}
+                  aria-describedby={error ? 'auth-form-alert' : undefined}
+                />
+              </div>
 
-        <div>
-         <label htmlFor="rp-new" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ms-1 uppercase tracking-wider">
-          {t('resetPassword.newPassword')}
-         </label>
-         <SpatialInput
-          id="rp-new"
-          icon={FiLock}
-          type={showNew ? 'text' : 'password'}
-          required
-          value={newPassword}
-          onChange={e => setNewPassword(e.target.value)}
-          placeholder="••••••"
-          aria-label={t('resetPassword.newPassword')}
-          aria-invalid={error ? 'true' : undefined}
-          aria-describedby={error ? 'rp-form-error' : undefined}
-          isArabic={isArabic}
-          autoComplete="new-password"
-          disabled={loading}
-          showToggle
-          onToggle={() => setShowNew(v => !v)}
-          showPassword={showNew}
-         />
-        </div>
+              <div>
+                <label
+                  htmlFor="rp-confirm"
+                  className="block text-xs font-semibold text-slate-600 dark:text-white/70 mb-1.5 ms-1 uppercase tracking-wider"
+                >
+                  {t('signup.confirmPassword')}
+                </label>
+                <SpatialInput
+                  id="rp-confirm"
+                  icon={FiLock}
+                  type={showConfirm ? 'text' : 'password'}
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  isArabic={isArabic}
+                  autoComplete="new-password"
+                  disabled={loading}
+                  showToggle
+                  onToggle={() => setShowConfirm((v) => !v)}
+                  showPassword={showConfirm}
+                  aria-invalid={error ? 'true' : undefined}
+                  aria-describedby={error ? 'auth-form-alert' : undefined}
+                />
+              </div>
+            </div>
 
-        <div>
-         <label htmlFor="rp-confirm" className="block text-xs font-medium text-slate-500 dark:text-white/60 mb-2 ms-1 uppercase tracking-wider">
-          {t('signup.confirmPassword')}
-         </label>
-         <SpatialInput
-          id="rp-confirm"
-          icon={FiLock}
-          type={showConfirm ? 'text' : 'password'}
-          required
-          value={confirmPassword}
-          onChange={e => setConfirmPassword(e.target.value)}
-          placeholder="••••••"
-          aria-label={t('signup.confirmPassword')}
-          aria-invalid={error ? 'true' : undefined}
-          aria-describedby={error ? 'rp-form-error' : undefined}
-          isArabic={isArabic}
-          autoComplete="new-password"
-          disabled={loading}
-          showToggle
-          onToggle={() => setShowConfirm(v => !v)}
-          showPassword={showConfirm}
-         />
-        </div>
+            {confirmPassword && newPassword !== confirmPassword && (
+              <p className="text-xs text-rose-500 dark:text-rose-400 ms-1 font-medium">
+                {t('forgotPassword.passwordsDoNotMatch')}
+              </p>
+            )}
 
-        <motion.button
-         type="submit"
-         whileHover={prefersReduced ? {} : { scale: loading ? 1 : 1.02 }}
-         whileTap={prefersReduced ? {} : { scale: loading ? 1 : 0.98 }}
-         disabled={loading}
-         className="w-full btn-spatial px-6 py-3.5 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            <AuthSubmitButton
+              loading={loading}
+              loadingText={t('forgotPassword.changing')}
+              buttonText={t('resetPassword.reset')}
+              isArabic={isArabic}
+              delay={0.25}
+            />
+          </motion.form>
+        )}
+      </AnimatePresence>
+
+      <div className="mt-6 pt-4 border-t border-slate-200/80 dark:border-white/10 text-center">
+        <Link
+          to="/login"
+          className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold text-slate-500 dark:text-white/60 hover:text-royal-600 dark:hover:text-cyan-300 transition-colors"
         >
-         {loading ? (
-          <>
-           <FiLoader size={18} className="animate-spin" />
-           {t('forgotPassword.changing')}
-          </>
-         ) : (
-          t('resetPassword.reset')
-         )}
-        </motion.button>
-       </motion.form>
-      )}
-     </AnimatePresence>
-
-     <div className="mt-6 pt-4 border-t border-white/10 text-center">
-      <Link to="/login" className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/70 transition-colors">
-       <FiArrowLeft size={16} className={isArabic ? 'rotate-180' : ''} />
-       {t('forgotPassword.backToLogin')}
-      </Link>
-     </div>
-    </div>
-   </motion.div>
-  </div>
- )
+          {isArabic ? <FiArrowRight size={14} /> : <FiArrowLeft size={14} />}
+          <span>{t('forgotPassword.backToLogin')}</span>
+        </Link>
+      </div>
+    </AuthLayout>
+  )
 }

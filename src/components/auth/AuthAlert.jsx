@@ -1,43 +1,42 @@
-﻿import { motion, AnimatePresence } from 'framer-motion'
-import { FiCheckCircle } from 'react-icons/fi'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi'
 
 export default function AuthAlert({ type, message, show }) {
- const styles = {
-  success: {
-   container: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400',
-   icon: <FiCheckCircle size={18} />,
-   animateIcon: true,
-  },
-  error: {
-   container: 'bg-red-500/10 border border-red-500/20 text-red-400',
-   icon: null,
-   animateIcon: false,
-  },
- }
+  const isError = type === 'error'
+  const styles = {
+    success: {
+      container: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400',
+      icon: <FiCheckCircle size={18} className="shrink-0 text-emerald-500" aria-hidden="true" />,
+      role: 'status',
+      live: 'polite',
+    },
+    error: {
+      container: 'bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-400',
+      icon: <FiAlertCircle size={18} className="shrink-0 text-rose-500" aria-hidden="true" />,
+      role: 'alert',
+      live: 'assertive',
+    },
+  }
 
- const config = styles[type] || styles.error
+  const config = isError ? styles.error : styles.success
 
- return (
-  <AnimatePresence>
-   {show && (
-    <motion.div
-     initial={{ opacity: 0, scale: 0.8, y: -10 }}
-     animate={{ opacity: 1, scale: 1, y: 0 }}
-     exit={{ opacity: 0, scale: 0.8, y: -10 }}
-className={`mb-6 p-4 border rounded-2xl text-sm text-center backdrop-blur-sm flex items-center justify-center gap-2 relative z-10 ${config.container}`}
-      id="auth-form-alert"
-      role={type === 'error' ? 'alert' : 'status'}
-      aria-live={type === 'error' ? 'assertive' : 'polite'}
-     >
-     {config.animateIcon && (
-      <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 0.6 }}>
-       {config.icon}
-      </motion.div>
-     )}
-     {!config.animateIcon && config.icon}
-     {message}
-    </motion.div>
-   )}
-  </AnimatePresence>
- )
+  return (
+    <AnimatePresence>
+      {show && message && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: -8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: -8 }}
+          transition={{ duration: 0.2 }}
+          className={`mb-5 p-3.5 border rounded-2xl text-xs md:text-sm font-medium backdrop-blur-sm flex items-center justify-start gap-2.5 relative z-10 ${config.container}`}
+          id="auth-form-alert"
+          role={config.role}
+          aria-live={config.live}
+        >
+          {config.icon}
+          <span className="flex-1 text-start leading-snug">{message}</span>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
 }
