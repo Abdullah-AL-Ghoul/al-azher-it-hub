@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { FiLayout, FiBook, FiVideo, FiLink, FiUsers, FiActivity, FiSettings, FiHome, FiClipboard, FiLogOut } from 'react-icons/fi'
+import { FiLayout, FiBook, FiVideo, FiLink, FiUsers, FiActivity, FiSettings, FiHome, FiClipboard, FiLogOut, FiTrendingUp, FiRadio } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import SiteLogo from '../components/shared/SiteLogo'
 
@@ -13,6 +13,8 @@ import AdminSearch from '../components/AdminDashboard/AdminSearch'
 
 const TABS = [
  { key: 'overview', icon: FiLayout, labelAr: 'ملخص', labelEn: 'Overview' },
+ { key: 'analytics', icon: FiTrendingUp, labelAr: 'إحصائيات الطلبة', labelEn: 'Student Analytics' },
+ { key: 'broadcast', icon: FiRadio, labelAr: 'البث والإعلانات', labelEn: 'Broadcast' },
  { key: 'courses', icon: FiBook, labelAr: 'المواد', labelEn: 'Courses' },
  { key: 'lectures', icon: FiVideo, labelAr: 'المحاضرات', labelEn: 'Lectures' },
  { key: 'sources', icon: FiLink, labelAr: 'المصادر', labelEn: 'Sources' },
@@ -24,6 +26,8 @@ const TABS = [
 
 const TAB_DATA_MAP = {
  overview: ['courses', 'lectures', 'sources', 'users', 'studentLogs', 'activity', 'additions'],
+ analytics: ['users', 'studentLogs', 'courses', 'lectures'],
+ broadcast: [],
  courses: ['courses'],
  lectures: ['lectures', 'courses'],
  sources: ['sources'],

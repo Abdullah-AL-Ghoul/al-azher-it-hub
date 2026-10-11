@@ -1,6 +1,6 @@
-﻿import { useState, useEffect, memo } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiX, FiUser, FiEye, FiHeart, FiStar, FiClock, FiLinkedin, FiArrowRight, FiLogIn, FiMessageSquare, FiCpu } from 'react-icons/fi'
+import { FiX, FiUser, FiEye, FiHeart, FiStar, FiClock, FiLinkedin, FiArrowRight, FiLogIn, FiMessageSquare, FiCpu, FiGlobe } from 'react-icons/fi'
 import { getUserStats, getFavorites, getRatings, getStudentLogs } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'
 import { useScrollLock } from '../../hooks/useScrollLock'
@@ -90,7 +90,14 @@ function StudentProfileModal({ student, isOpen, onClose }) {
         <FiUser size={20} className="text-royal-500" />
        </div>
        <div>
-        <h2 className="font-bold text-ink">{student.name || student.studentId}</h2>
+        <div className="flex items-center gap-2 flex-wrap">
+         <h2 className="font-bold text-ink">{student.name || student.studentId}</h2>
+         {student.studentId?.startsWith('oauth_') && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+           <FiGlobe size={11} /> {isArabic ? 'جوجل OAuth' : 'Google OAuth'}
+          </span>
+         )}
+        </div>
         <p className="text-xs text-slate-500 dark:text-slate-400 ">{student.studentId}</p>
        </div>
       </div>

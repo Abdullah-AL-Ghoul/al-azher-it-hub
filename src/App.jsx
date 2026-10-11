@@ -19,6 +19,7 @@ import WelcomeModal from './components/WelcomeModal'
 import ErrorBoundary from './components/ErrorBoundary'
 import SpatialBackground from './components/spatial/SpatialBackground'
 import GlobalSearchTrigger from './components/GlobalSearchTrigger'
+import BroadcastBanner from './components/shared/BroadcastBanner'
 
 const Chatbot = lazyWithRecovery(() => import('./components/Chatbot'))
 const GlobalSearch = lazyWithRecovery(() => import('./components/GlobalSearch'))
@@ -187,6 +188,7 @@ function AppContent() {
    {!hideLayout && (
     <ErrorBoundary lang={lang}>
      <Navbar />
+     <BroadcastBanner />
     </ErrorBoundary>
    )}
    <main id="main-content" className="flex-1 pb-16 lg:pb-0" tabIndex={-1}>

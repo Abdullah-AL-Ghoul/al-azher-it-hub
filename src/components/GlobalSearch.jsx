@@ -428,6 +428,46 @@ export default function GlobalSearch({ autoOpen = false }) {
     }
   }
 
+  if (!user) {
+    if (!open) return null
+    return (
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            {...modalOverlay}
+            className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-start justify-center pt-[10vh] p-4"
+            onClick={closeModal}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('inline.global-search.global-search')}
+          >
+            <motion.div
+              {...modalContent}
+              ref={panelRef}
+              className="modal-spatial rounded-2xl w-full max-w-md overflow-hidden shadow-2xl text-center p-8 border border-white/10"
+              onClick={e => e.stopPropagation()}
+            >
+              <FiSearch size={32} className="mx-auto mb-4 text-slate-300 dark:text-white/20" />
+              <p className="text-sm text-ink font-bold mb-1">
+                {t('inline.global-search.sign-in-to-search')}
+              </p>
+              <p className="text-xs text-slate-400 dark:text-white/40 mb-5">
+                {t('inline.global-search.sign-in-to-search-hint')}
+              </p>
+              <Link
+                to="/login"
+                onClick={closeModal}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-royal-500 hover:bg-royal-600 text-white rounded-xl text-sm font-semibold transition shadow-md"
+              >
+                {t('inline.global-search.sign-in')}
+              </Link>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    )
+  }
+
   return (
     <AnimatePresence>
       {open && (

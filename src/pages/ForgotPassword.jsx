@@ -155,7 +155,7 @@ export default function ForgotPassword() {
 
       {/* 4-Step Progress Indicator */}
       {!success && (
-        <div className="flex items-center justify-center gap-2 mb-6" aria-label={`Step ${step} of 4`}>
+        <div role="group" className="flex items-center justify-center gap-2 mb-6" aria-label={`Step ${step} of 4`}>
           {[1, 2, 3, 4].map((s) => (
             <div
               key={s}

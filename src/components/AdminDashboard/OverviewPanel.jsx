@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { FiBook, FiUsers, FiGrid, FiLogIn, FiUpload, FiDownload, FiActivity, FiFileText, FiVideo, FiUser, FiCpu, FiCheckCircle } from 'react-icons/fi'
+import { FiBook, FiUsers, FiGrid, FiLogIn, FiUpload, FiDownload, FiActivity, FiFileText, FiVideo, FiUser, FiCpu, FiCheckCircle, FiTrendingUp, FiRadio } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { importAllData } from '../../services'
 import { exportToJson } from '../../utils/adminShared'
@@ -64,6 +64,20 @@ export default function OverviewPanel({
         <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 me-1">
           {t('inline.overview-panel.quick-actions')}:
         </span>
+
+        <button
+          onClick={() => onNavigate('analytics')}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-royal-600 to-indigo-600 text-white rounded-lg text-sm font-semibold transition shadow-sm hover:opacity-95"
+        >
+          <FiTrendingUp size={14} /> {isArabic ? 'إحصائيات الطلبة' : 'Student Analytics'}
+        </button>
+
+        <button
+          onClick={() => onNavigate('broadcast')}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-sm font-semibold transition shadow-sm hover:opacity-95"
+        >
+          <FiRadio size={14} /> {isArabic ? 'البث والإعلانات' : 'Broadcast'}
+        </button>
 
         <button
           onClick={() => onNavigate('lectures')}

@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { FiSearch, FiDownload, FiTrash2, FiEdit2, FiUser, FiSave, FiX, FiKey, FiExternalLink, FiMail, FiBookOpen, FiCalendar } from 'react-icons/fi'
+import { FiSearch, FiDownload, FiTrash2, FiEdit2, FiUser, FiSave, FiX, FiKey, FiExternalLink, FiMail, FiBookOpen, FiCalendar, FiGlobe, FiFilter } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { deleteStudent, updateStudent, resetPassword } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'
@@ -36,9 +36,10 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
  const { t } = useLanguage()
  const prefersReduced = useReducedMotion()
  const [search, setSearch] = useState('')
+ const [filterType, setFilterType] = useState('all') // 'all', 'active', 'new', 'oauth', 'missingMajor'
  const [page, setPage] = useState(1)
  const [editingId, setEditingId] = useState(null)
- const [editForm, setEditForm] = useState({ name: '', email: '', role: 'student' })
+ const [editForm, setEditForm] = useState({ name: '', email: '', major: '', role: 'student' })
  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
  const [passwordForm, setPasswordForm] = useState({ studentId: '', password: '', confirm: '' })
  const [profileStudent, setProfileStudent] = useState(null)
@@ -46,25 +47,44 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
  const USERS_PER_PAGE = 10
 
- const filteredUsers = users.filter(user =>
-  (search === '' ||
+ const filteredUsers = users.filter(user => {
+  if ((user.role ?? 'student') !== 'student') return false
+
+  const matchesSearch = search === '' ||
    user.name?.toLowerCase().includes(search.toLowerCase()) ||
    user.studentId?.toLowerCase().includes(search.toLowerCase()) ||
    user.email?.toLowerCase().includes(search.toLowerCase()) ||
-   user.major?.toLowerCase().includes(search.toLowerCase())) &&
-  (user.role ?? 'student') === 'student'
- )
+   user.major?.toLowerCase().includes(search.toLowerCase())
+
+  if (!matchesSearch) return false
+
+  const now = Date.now()
+  if (filterType === 'active') {
+   return user.lastVisit && (now - new Date(user.lastVisit).getTime()) < 86400000
+  }
+  if (filterType === 'new') {
+   return user.createdAt && (now - new Date(user.createdAt).getTime()) < 7 * 86400000
+  }
+  if (filterType === 'oauth') {
+   return user.studentId && user.studentId.startsWith('oauth_')
+  }
+  if (filterType === 'missingMajor') {
+   return !user.major || user.major.trim() === ''
+  }
+
+  return true
+ })
 
  const paginatedUsers = filteredUsers.slice((page - 1) * USERS_PER_PAGE, page * USERS_PER_PAGE)
 
  const handleEdit = (user) => {
   setEditingId(user.studentId)
-  setEditForm({ name: user.name || '', email: user.email || '', role: user.role || 'student' })
+  setEditForm({ name: user.name || '', email: user.email || '', major: user.major || '', role: user.role || 'student' })
  }
 
  const handleSaveEdit = async (studentId) => {
   try {
-   await updateStudent(studentId, { name: editForm.name, email: editForm.email, role: editForm.role })
+   await updateStudent(studentId, { name: editForm.name, email: editForm.email, major: editForm.major, role: editForm.role })
    setEditingId(null)
    toast.success(t('usersTable.studentUpdated'))
    if (onRefresh) onRefresh()
@@ -165,7 +185,7 @@ const handleBulkDelete = async () => {
       className={`ps-9 pe-4 py-2 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 w-64`}
      />
     </div>
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 flex-wrap">
      <span className="text-sm text-slate-500 dark:text-slate-400 ">
       {isArabic ? `${filteredUsers.length} طالب` : `${filteredUsers.length} students`}
      </span>
@@ -181,6 +201,45 @@ const handleBulkDelete = async () => {
       <FiDownload size={14} /> JSON
      </button>
     </div>
+   </div>
+
+   {/* Smart Filter Pills */}
+   <div className="flex items-center gap-2 flex-wrap pt-1 text-xs">
+    <button
+     type="button"
+     onClick={() => { setFilterType('all'); setPage(1) }}
+     className={`px-3 py-1.5 rounded-lg font-semibold transition ${filterType === 'all' ? 'bg-royal-600 text-white shadow-xs' : 'glass text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10'}`}
+    >
+     {isArabic ? 'الكل' : 'All'}
+    </button>
+    <button
+     type="button"
+     onClick={() => { setFilterType('active'); setPage(1) }}
+     className={`px-3 py-1.5 rounded-lg font-semibold transition ${filterType === 'active' ? 'bg-emerald-600 text-white shadow-xs' : 'glass text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10'}`}
+    >
+     {isArabic ? 'النشطون اليوم' : 'Active Today'}
+    </button>
+    <button
+     type="button"
+     onClick={() => { setFilterType('new'); setPage(1) }}
+     className={`px-3 py-1.5 rounded-lg font-semibold transition ${filterType === 'new' ? 'bg-cyan-600 text-white shadow-xs' : 'glass text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10'}`}
+    >
+     {isArabic ? 'الجدد هذا الأسبوع' : 'New This Week'}
+    </button>
+    <button
+     type="button"
+     onClick={() => { setFilterType('oauth'); setPage(1) }}
+     className={`px-3 py-1.5 rounded-lg font-semibold transition ${filterType === 'oauth' ? 'bg-amber-600 text-white shadow-xs' : 'glass text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10'}`}
+    >
+     {isArabic ? 'جوجل OAuth' : 'Google OAuth'}
+    </button>
+    <button
+     type="button"
+     onClick={() => { setFilterType('missingMajor'); setPage(1) }}
+     className={`px-3 py-1.5 rounded-lg font-semibold transition ${filterType === 'missingMajor' ? 'bg-rose-600 text-white shadow-xs' : 'glass text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10'}`}
+    >
+     {isArabic ? 'بحاجة لتحديد التخصص' : 'Missing Major'}
+    </button>
    </div>
 
    {filteredUsers.length === 0 ? (
@@ -216,14 +275,20 @@ const handleBulkDelete = async () => {
             <input
              value={editForm.name}
              onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-             className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
+             className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[130px]"
              placeholder={t('inline.users-table.name')}
             />
             <input
               value={editForm.email}
               onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-              className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[150px]"
+              className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[130px]"
               placeholder={t('inline.users-table.email')}
+             />
+            <input
+              value={editForm.major}
+              onChange={e => setEditForm({ ...editForm, major: e.target.value })}
+              className="px-3 py-1.5 bg-white dark:bg-navy-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-royal-400/50 flex-1 min-w-[130px]"
+              placeholder={isArabic ? 'التخصص' : 'Major'}
              />
              <select
               value={editForm.role}
@@ -258,6 +323,11 @@ const handleBulkDelete = async () => {
            <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
              <h3 className="font-semibold text-ink text-sm">{user.name || user.studentId}</h3>
+             {user.studentId?.startsWith('oauth_') && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+               <FiGlobe size={11} /> {isArabic ? 'جوجل OAuth' : 'Google OAuth'}
+              </span>
+             )}
              <div className="flex items-center gap-1.5">
               <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
               <span className={`text-xs ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 '}`}>
@@ -274,9 +344,13 @@ const handleBulkDelete = async () => {
                <FiMail size={12} /> {user.email}
               </span>
              )}
-             {user.major && (
-              <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 ">
-               <FiBookOpen size={12} /> {user.major}
+             {user.major ? (
+              <span className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 font-medium">
+               <FiBookOpen size={12} className="text-royal-500" /> {user.major}
+              </span>
+             ) : (
+              <span className="flex items-center gap-1 text-xs text-rose-500 font-medium">
+               <FiBookOpen size={12} /> {isArabic ? 'لم يُحدد التخصص' : 'No Major'}
               </span>
              )}
              {user.createdAt && (

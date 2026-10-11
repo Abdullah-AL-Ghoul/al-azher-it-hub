@@ -107,7 +107,7 @@ export default function AuthLayout({ children, isArabic, onBack, showBrand = tru
       </main>
 
       {/* Footer copyright */}
-      <footer className="relative z-10 w-full text-center mt-6 text-slate-400 dark:text-white/40 text-xs">
+      <footer className="relative z-10 w-full text-center mt-6 text-slate-600 dark:text-slate-400 text-xs">
         <p>Al-Azher IT Hub © {new Date().getFullYear()} • جامعة الأزهر — غزة</p>
       </footer>
     </div>

@@ -182,6 +182,16 @@ export default function InteractivePrerequisiteTree({
                     <motion.div
                       key={c.id || c.code}
                       layout
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isTarget ? 'true' : 'false'}
+                      aria-label={isArabic ? `عرض تفاصيل ${c.nameAr}` : `Show details for ${c.nameEn || c.nameAr}`}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleCardClick(c)
+                        }
+                      }}
                       onClick={() => handleCardClick(c)}
                       className={`p-3 rounded-2xl border ${borderClass} ${bgClass} cursor-pointer transition-all duration-200 select-none ${
                         isDimmed ? 'opacity-35 hover:opacity-80' : 'hover:scale-[1.02]'

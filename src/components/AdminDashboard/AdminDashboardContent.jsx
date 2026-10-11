@@ -19,6 +19,8 @@ import FormActions from './FormActions'
 import CourseProfileModal from './CourseProfileModal'
 import SmartCourseModal from './SmartCourseModal'
 import OverviewPanel from './OverviewPanel'
+import StudentAnalyticsPanel from './StudentAnalyticsPanel'
+import BroadcastPanel from './BroadcastPanel'
 import { INPUT_CLASS } from '../../utils/adminShared'
 import { computeActiveStudents, computeNewStudents } from '../../utils/adminStatsLogic'
 import { useLanguage } from '../../context/LanguageContext'
@@ -661,6 +663,23 @@ setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString
       onRefresh={onRefresh}
      />
     </div>
+   )}
+
+   {/* ========== ANALYTICS TAB ========== */}
+   {selectedTab === 'analytics' && (
+    <StudentAnalyticsPanel
+     users={users}
+     studentLogs={studentLogs}
+     isArabic={isArabic}
+    />
+   )}
+
+   {/* ========== BROADCAST TAB ========== */}
+   {selectedTab === 'broadcast' && (
+    <BroadcastPanel
+     isArabic={isArabic}
+     onRefresh={onRefresh}
+    />
    )}
 
    {/* ========== OVERVIEW TAB ========== */}
