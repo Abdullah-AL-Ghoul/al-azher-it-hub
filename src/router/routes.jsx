@@ -60,7 +60,7 @@ export const APP_ROUTES = [
   { path: '/videos', redirect: '/lectures' },
   { path: '/books', redirect: '/home' },
   { path: '/courses', redirect: '/home' },
-  { path: '/schedule', redirect: '/home' },
+  { path: '/schedule', redirect: '/study-plan?tab=schedule' },
   { path: '/university', redirect: '/home' },
 
   { path: '*', Component: NotFound },

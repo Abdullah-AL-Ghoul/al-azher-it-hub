@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
@@ -22,7 +23,8 @@ import {
   FiAward,
   FiChevronDown,
   FiCheck,
-  FiPrinter
+  FiPrinter,
+  FiCalendar
 } from 'react-icons/fi'
 import { FaCalculator } from 'react-icons/fa'
 import ErrorState from '../components/feedback/ErrorState'
@@ -32,6 +34,7 @@ import toast from 'react-hot-toast'
 import PageHero from '../components/shared/PageHero'
 import Skeleton from '../components/shared/Skeleton'
 import GpaCalculator from '../components/studyPlan/GpaCalculator'
+import WeeklyScheduleBuilder from '../components/studyPlan/WeeklyScheduleBuilder'
 import EligibleCoursesAdvisor from '../components/studyPlan/EligibleCoursesAdvisor'
 import PrintableCurriculumReport from '../components/studyPlan/PrintableCurriculumReport'
 import { ACADEMIC_PLANS, getAcademicPlan, COURSE_TYPES } from '../data/academicCurriculum'
@@ -42,13 +45,35 @@ const itemVariants = pageItem
 export default function StudyPlan() {
   const { lang, t } = useLanguage()
   const { user, isAdmin } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const isArabic = lang === 'ar'
   const canEdit = isAdmin
   const prefersReduced = useReducedMotion()
   const [showPrintReport, setShowPrintReport] = useState(false)
 
-  // Tabs: 'curriculum' (مسار الخطة التخصصية), 'calculator' (حاسبة المعدل), 'links' (الروابط الرسمية)
-  const [activeTab, setActiveTab] = useState('curriculum')
+  // Tabs: 'curriculum' (مسار الخطة), 'schedule' (الجدول الأسبوعي), 'calculator' (حاسبة المعدل), 'links' (الروابط الرسمية)
+  const tabParam = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState(() => {
+    if (['curriculum', 'schedule', 'calculator', 'links'].includes(tabParam)) return tabParam
+    return 'curriculum'
+  })
+
+  // Synchronize when query param changes
+  useEffect(() => {
+    if (tabParam && ['curriculum', 'schedule', 'calculator', 'links'].includes(tabParam) && tabParam !== activeTab) {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
+
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab)
+    setSearchParams(prev => {
+      const p = new URLSearchParams(prev)
+      if (newTab === 'curriculum') p.delete('tab')
+      else p.set('tab', newTab)
+      return p
+    }, { replace: true })
+  }
 
   // --- Active Academic Plan (Major) ---
   const [selectedPlanId, setSelectedPlanId] = useState(() => {
@@ -331,8 +356,8 @@ export default function StudyPlan() {
           <div className="flex items-center gap-1.5 w-full sm:w-auto">
             <button
               type="button"
-              onClick={() => setActiveTab('curriculum')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap min-h-[44px] ${
+              onClick={() => handleTabChange('curriculum')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap min-h-[44px] cursor-pointer ${
                 activeTab === 'curriculum'
                   ? 'bg-royal-600 text-white shadow-lg shadow-royal-600/25'
                   : 'text-slate-600 dark:text-white/70 hover:text-ink hover:bg-black/5 dark:hover:bg-white/5'
@@ -347,8 +372,21 @@ export default function StudyPlan() {
 
             <button
               type="button"
-              onClick={() => setActiveTab('calculator')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap min-h-[44px] ${
+              onClick={() => handleTabChange('schedule')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap min-h-[44px] cursor-pointer ${
+                activeTab === 'schedule'
+                  ? 'bg-royal-600 text-white shadow-lg shadow-royal-600/25'
+                  : 'text-slate-600 dark:text-white/70 hover:text-ink hover:bg-black/5 dark:hover:bg-white/5'
+              }`}
+            >
+              <FiCalendar size={15} />
+              <span>{isArabic ? 'الجدول الدراسي الأسبوعي' : 'Weekly Timetable'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTabChange('calculator')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap min-h-[44px] cursor-pointer ${
                 activeTab === 'calculator'
                   ? 'bg-royal-600 text-white shadow-lg shadow-royal-600/25'
                   : 'text-slate-600 dark:text-white/70 hover:text-ink hover:bg-black/5 dark:hover:bg-white/5'
@@ -360,8 +398,8 @@ export default function StudyPlan() {
 
             <button
               type="button"
-              onClick={() => setActiveTab('links')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap min-h-[44px] ${
+              onClick={() => handleTabChange('links')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap min-h-[44px] cursor-pointer ${
                 activeTab === 'links'
                   ? 'bg-royal-600 text-white shadow-lg shadow-royal-600/25'
                   : 'text-slate-600 dark:text-white/70 hover:text-ink hover:bg-black/5 dark:hover:bg-white/5'
@@ -833,7 +871,16 @@ export default function StudyPlan() {
           </div>
         )}
 
-        {/* TAB 2: GPA CALCULATOR */}
+        {/* TAB 2: WEEKLY SCHEDULE BUILDER */}
+        {activeTab === 'schedule' && (
+          <WeeklyScheduleBuilder
+            activePlan={activePlan}
+            isArabic={isArabic}
+            t={t}
+          />
+        )}
+
+        {/* TAB 3: GPA CALCULATOR */}
         {activeTab === 'calculator' && (
           <GpaCalculator isArabic={isArabic} t={t} />
         )}

@@ -181,6 +181,13 @@ export default function GlobalSearch({ autoOpen = false }) {
     },
     {
       type: 'action',
+      title: isArabic ? 'مخطط الجدول الدراسي الأسبوعي' : 'Weekly Timetable Builder',
+      subtitle: isArabic ? 'بناء وتوزيع جدول المحاضرات الأسبوعي وفحص التعارض الزمني' : 'Build lecture schedule and detect time conflicts',
+      to: '/study-plan?tab=schedule',
+      icon: FiClock,
+    },
+    {
+      type: 'action',
       title: isArabic ? 'تقرير الإنجاز الأكاديمي المطبوع' : 'Printable Degree Report',
       subtitle: isArabic ? 'كشف تفصيلي بالمساقات المنجزة والمعدل التقديري' : 'Official degree progress transcript',
       to: '/profile?report=true',
@@ -256,6 +263,19 @@ export default function GlobalSearch({ autoOpen = false }) {
             subtitle: isArabic ? 'عرض كافة نماذج الامتحانات النصفية والنهائية المعتمدة' : 'Show all accredited midterms & finals',
             to: '/sources?examOnly=true',
             icon: FiCheckCircle,
+          })
+        }
+      }
+
+      // Schedule timetable instant intent
+      if (['جدول', 'جدولي', 'مواعيد', 'schedule', 'timetable'].some(k => lower.includes(k))) {
+        if (!items.some(it => it.to === '/study-plan?tab=schedule')) {
+          items.unshift({
+            type: 'action',
+            title: isArabic ? 'فتح مخطط الجدول الدراسي الأسبوعي' : 'Open Weekly Timetable Builder',
+            subtitle: isArabic ? 'بناء وتوزيع المحاضرات وفحص التعارض الزمني' : 'Build lecture timetable & detect clashes',
+            to: '/study-plan?tab=schedule',
+            icon: FiClock,
           })
         }
       }
