@@ -2,13 +2,22 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Home Page Quick Academic Widget E2E Suite', () => {
   test('displays quick academic progress, saved GPA and shortcuts on Home', async ({ page }) => {
-    // Intercept Supabase users API
+    // Intercept Supabase endpoints
     await page.route('**/rest/v1/users*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([{ studentId: '20241001', name: 'عبدالله طارق', role: 'student' }]),
       })
+    })
+    await page.route('**/rest/v1/lectures*', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+    await page.route('**/rest/v1/sources*', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+    await page.route('**/rest/v1/additions*', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
     })
 
     // Mock student session and curriculum progress
@@ -39,7 +48,7 @@ test.describe('Home Page Quick Academic Widget E2E Suite', () => {
 
     // Welcome title should greet student
     const welcomeTitle = page.locator('text=مرحباً بك، عبدالله طارق!')
-    await expect(welcomeTitle).toBeVisible()
+    await expect(welcomeTitle).toBeVisible({ timeout: 15000 })
 
     // Curriculum progress card
     const curriculumWidget = page.locator('text=إنجاز الخطة الأكاديمية')

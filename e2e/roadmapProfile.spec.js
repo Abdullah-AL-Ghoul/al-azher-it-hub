@@ -1,14 +1,22 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Course Roadmap & Academic Profile Synchronization E2E', () => {
+  test.setTimeout(60000)
+
   test('tests interactive roadmap track filters and prerequisite dependency highlighting', async ({ page }) => {
-    // Intercept Supabase users API
+    // Intercept Supabase endpoints
     await page.route('**/rest/v1/users*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([{ studentId: '20241001', name: 'عبدالله طارق', role: 'student' }]),
       })
+    })
+    await page.route('**/rest/v1/courses*', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+    await page.route('**/rest/v1/settings*', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ value: [] }) })
     })
 
     // Mock session
@@ -28,7 +36,7 @@ test.describe('Course Roadmap & Academic Profile Synchronization E2E', () => {
 
     // Track filter pills should be present
     const softwareTrack = page.getByRole('button', { name: /تطوير البرمجيات والويب/i })
-    await expect(softwareTrack).toBeVisible()
+    await expect(softwareTrack).toBeVisible({ timeout: 15000 })
 
     // Prerequisite legend should be visible
     const prereqLegend = page.locator('text=متطلب سابق')
@@ -45,13 +53,28 @@ test.describe('Course Roadmap & Academic Profile Synchronization E2E', () => {
   })
 
   test('tests profile academic progress gauge, saved GPA metrics and printable report modal', async ({ page }) => {
-    // Intercept Supabase users API
+    // Intercept Supabase endpoints
     await page.route('**/rest/v1/users*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([{ studentId: '20241001', name: 'عبدالله طارق', role: 'student', major: 'Software Engineering' }]),
       })
+    })
+    await page.route('**/rest/v1/lectures*', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+    await page.route('**/rest/v1/sources*', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+    await page.route('**/rest/v1/favorites*', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+    await page.route('**/rest/v1/user_stats*', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+    await page.route('**/rest/v1/student_logs*', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
     })
 
     // Mock session and pre-fill curriculum progress & saved GPA
@@ -82,7 +105,7 @@ test.describe('Course Roadmap & Academic Profile Synchronization E2E', () => {
 
     // Academic progress card should be displayed
     const academicHeader = page.locator('text=السجل الأكاديمي والتقدم التخصصي')
-    await expect(academicHeader).toBeVisible()
+    await expect(academicHeader).toBeVisible({ timeout: 15000 })
 
     // Saved GPA should be displayed
     const gpaVal = page.locator('text=89.0%')

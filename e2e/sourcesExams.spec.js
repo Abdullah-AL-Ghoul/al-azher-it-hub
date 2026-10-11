@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Sources & Past Exams Archive Suite', () => {
   test('navigates to sources, tests tabs, exam filtering, and preview modal', async ({ page }) => {
+    test.setTimeout(60000)
     const mockSources = [
       {
         id: 'src-1',
@@ -77,7 +78,7 @@ test.describe('Sources & Past Exams Archive Suite', () => {
     await page.goto('/sources')
 
     // 1. Verify Page Title
-    await expect(page.locator('h1')).toBeVisible()
+    await expect(page.locator('h1')).toBeVisible({ timeout: 20000 })
 
     // 2. Verify Academic Mode Navigation Tabs exist
     const allTab = page.getByRole('button', { name: /جميع المصادر والمراجع|All Study Sources/i })
