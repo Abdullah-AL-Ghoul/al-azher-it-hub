@@ -16,6 +16,7 @@ import motivationalQuotes from '../data/quotes'
 import ErrorState from '../components/feedback/ErrorState'
 import Skeleton from '../components/shared/Skeleton'
 import { ACADEMIC_PLANS, getAcademicPlan } from '../data/academicCurriculum'
+import AcademicAnalyticsDashboard from '../components/profile/AcademicAnalyticsDashboard'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
@@ -600,6 +601,19 @@ export default function Profile() {
        </button>
       </div>
      )}
+    </motion.div>
+
+    {/* Advanced Academic Analytics & Graduation Target Predictor */}
+    <motion.div variants={itemVariants}>
+      <AcademicAnalyticsDashboard
+        activePlan={activePlan}
+        curriculumProgressState={curriculumProgressState}
+        passedHours={passedHours}
+        totalCurriculumHours={totalCurriculumHours}
+        savedGpa={savedGpaData?.gpaPct}
+        isArabic={isArabic}
+        t={t}
+      />
     </motion.div>
 
     {/* Activity heatmap */}
