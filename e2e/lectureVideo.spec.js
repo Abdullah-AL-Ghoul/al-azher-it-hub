@@ -78,4 +78,22 @@ test('clicking a lecture navigates to /lecture/:id and displays full 16:9 player
 
   // 5. Take screenshot of the lecture page with the full video player
   await page.screenshot({ path: 'e2e/screenshot-verified-player.png', fullPage: false })
+
+  // 6. Test Theater mode toggle
+  const theaterBtn = page.locator('button:has-text("وضع المسرح")')
+  await expect(theaterBtn).toBeVisible()
+  await theaterBtn.click()
+  await expect(page.locator('button:has-text("عرض عادي")')).toBeVisible()
+
+  const theaterBox = await videoCanvas.boundingBox()
+  expect(theaterBox.width).toBeGreaterThanOrEqual(box.width)
+  console.log(`VERIFIED: Theater mode expanded video width to ${theaterBox.width}px!`)
+
+  // 7. Test Timestamped note creation
+  const noteInput = page.locator('input[placeholder*="اكتب ملاحظة"]')
+  await expect(noteInput).toBeVisible()
+  await noteInput.fill('ملاحظة هامة حول قواعد البيانات')
+  await page.locator('button:has-text("إضافة")').click()
+  await expect(page.locator('text=ملاحظة هامة حول قواعد البيانات')).toBeVisible()
+  console.log('VERIFIED: Timestamped note added and visible!')
 })

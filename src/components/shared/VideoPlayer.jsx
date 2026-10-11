@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo, forwardRef, useImperativeHandle } from 'react'
 import {
   FiPlay,
   FiPause,
@@ -11,6 +11,7 @@ import {
   FiVolumeX,
   FiX,
   FiRotateCcw,
+  FiTv,
 } from 'react-icons/fi'
 import LectureThumbnail from './LectureThumbnail'
 import { useLanguage } from '../../context/LanguageContext'
@@ -47,8 +48,9 @@ function fmt(seconds) {
  * - Handles YouTube embeds with auto-resume, play/pause controls, speed menu, and fullscreen.
  * - Auto-detects direct video URLs (.mp4/.webm) and renders native HTML5 video.
  * - Surfaces instant, helpful fallback when YouTube disables embedding (Error 150/101).
+ * - Exposes seekTo and getCurrentTime via ref for timestamped notes.
  */
-export default function VideoPlayer({
+const VideoPlayer = forwardRef(function VideoPlayer({
   videoId,
   url,
   thumbnail,
@@ -57,8 +59,12 @@ export default function VideoPlayer({
   autoPlay = false,
   lectureId = '',
   studentId: studentIdProp = '',
-}) {
-  const { t } = useLanguage()
+  isTheater = false,
+  onToggleTheater,
+  onTimeUpdate,
+}, ref) {
+  const { t, lang } = useLanguage()
+  const isArabic = lang === 'ar'
   const { user } = useAuth()
   const studentId = studentIdProp || user?.studentId || 'guest'
 
@@ -196,6 +202,7 @@ export default function VideoPlayer({
         const info = data.info
         if (!Number.isFinite(info.currentTime)) return
         timeRef.current = info.currentTime
+        onTimeUpdate?.(info.currentTime)
         if (Number.isFinite(info.duration) && info.duration > 0) {
           const p = Math.min(100, Math.round((info.currentTime / info.duration) * 100))
           setPct((prev) => (prev === p ? prev : p))
@@ -216,7 +223,7 @@ export default function VideoPlayer({
       window.removeEventListener('message', onMessage)
       clearTimeout(loadTimer)
     }
-  }, [inline, videoId, storageKey, onWatch])
+  }, [inline, videoId, storageKey, onWatch, onTimeUpdate])
 
   // Fullscreen sync
   useEffect(() => {
@@ -241,6 +248,16 @@ export default function VideoPlayer({
     post(next ? 'playVideo' : 'pauseVideo')
     setIsPlaying(next)
   }, [isPlaying, post])
+
+  useImperativeHandle(ref, () => ({
+    seekTo: (sec) => {
+      const target = Math.max(0, Number(sec) || 0)
+      timeRef.current = target
+      post('seekTo', [target, true])
+    },
+    getCurrentTime: () => timeRef.current,
+    togglePlayPause: () => togglePlayPause(),
+  }), [post, togglePlayPause])
 
   const onKeyDown = useCallback((e) => {
     if (!inline) return
@@ -502,6 +519,19 @@ export default function VideoPlayer({
             {muted ? <FiVolumeX size={15} /> : <FiVolume2 size={15} />}
           </button>
 
+          {/* Theater Mode toggle */}
+          {onToggleTheater && (
+            <button
+              type="button"
+              onClick={onToggleTheater}
+              className={`${controlBtn} ${isTheater ? 'text-cyan-400 bg-white/10' : ''}`}
+              aria-label={isTheater ? (isArabic ? 'الخروج من وضع المسرح' : 'Exit Theater Mode') : (isArabic ? 'وضع المسرح العريض' : 'Theater Mode')}
+              title={isTheater ? (isArabic ? 'الخروج من وضع المسرح' : 'Exit Theater Mode') : (isArabic ? 'وضع المسرح العريض' : 'Theater Mode')}
+            >
+              <FiTv size={15} />
+            </button>
+          )}
+
           {/* Fullscreen toggle */}
           <button
             type="button"
@@ -586,4 +616,6 @@ export default function VideoPlayer({
       )}
     </div>
   )
-}
+})
+
+export default VideoPlayer

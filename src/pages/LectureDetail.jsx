@@ -11,11 +11,40 @@ import { pageContainer, pageItem, revealItem } from '../utils/motionTokens'
 import { lectureVideoId, lectureThumb, getSourceFiles } from '../utils/helpers'
 import VideoPlayer from '../components/shared/VideoPlayer'
 import StarRating from '../components/shared/StarRating'
-import { FiPlay, FiHeart, FiCheck, FiExternalLink, FiBookOpen, FiFileText, FiClock, FiUser, FiArrowRight, FiArrowLeft, FiLink, FiCopy, FiCheckCircle, FiDownload, FiFile } from 'react-icons/fi'
+import {
+  FiPlay,
+  FiHeart,
+  FiCheck,
+  FiExternalLink,
+  FiBookOpen,
+  FiFileText,
+  FiClock,
+  FiUser,
+  FiArrowRight,
+  FiArrowLeft,
+  FiLink,
+  FiCopy,
+  FiCheckCircle,
+  FiDownload,
+  FiFile,
+  FiTv,
+  FiTrash2,
+  FiBookmark,
+  FiPlus,
+} from 'react-icons/fi'
 import { FaWhatsapp, FaTelegramPlane } from 'react-icons/fa'
 import ErrorState from '../components/feedback/ErrorState'
 import { toast } from 'react-hot-toast'
 import Skeleton from '../components/shared/Skeleton'
+
+function fmtTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
+  const s = Math.floor(seconds)
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = String(s % 60).padStart(2, '0')
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`
+}
 
 export default function LectureDetail() {
  const { id } = useParams()
@@ -30,6 +59,28 @@ export default function LectureDetail() {
  const [error, setError] = useState(null)
  const [note, setNote] = useState('')
  const [noteSaved, setNoteSaved] = useState(false)
+
+ const playerRef = useRef(null)
+ const [currentTime, setCurrentTime] = useState(0)
+ const [theaterMode, setTheaterMode] = useState(() => {
+  try {
+   return localStorage.getItem('al_azher_theater_mode') === 'true'
+  } catch {
+   return false
+  }
+ })
+
+ const toggleTheaterMode = useCallback(() => {
+  setTheaterMode(prev => {
+   const next = !prev
+   try { localStorage.setItem('al_azher_theater_mode', String(next)) } catch {}
+   return next
+  })
+ }, [])
+
+ // Timestamped notes
+ const [timestampNotes, setTimestampNotes] = useState([])
+ const [newNoteText, setNewNoteText] = useState('')
 
  // Favorites/ratings/viewed come from the shared UserDataContext (SWR-cached),
  // so toggling a favorite here is instantly in sync with Lectures and Profile.
@@ -96,6 +147,55 @@ export default function LectureDetail() {
    })
   }
  }, [lecture, isArabic, t])
+
+ // Timestamped notes storage sync
+ useEffect(() => {
+  if (!lecture) return
+  try {
+   const saved = localStorage.getItem(`lecture_ts_notes_${lecture.id}`)
+   if (saved) setTimestampNotes(JSON.parse(saved))
+   else setTimestampNotes([])
+  } catch {
+   setTimestampNotes([])
+  }
+ }, [lecture])
+
+ const saveTimestampNotesToStorage = useCallback((notesList) => {
+  if (!lecture) return
+  try {
+   localStorage.setItem(`lecture_ts_notes_${lecture.id}`, JSON.stringify(notesList))
+  } catch { /* silent */ }
+ }, [lecture])
+
+ const addTimestampNote = useCallback(() => {
+  if (!newNoteText.trim() || !lecture) return
+  const curSec = Math.floor(playerRef.current?.getCurrentTime?.() ?? currentTime ?? 0)
+  const newNote = {
+   id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+   time: curSec,
+   text: newNoteText.trim(),
+   createdAt: new Date().toISOString(),
+  }
+  const updated = [...timestampNotes, newNote].sort((a, b) => a.time - b.time)
+  setTimestampNotes(updated)
+  saveTimestampNotesToStorage(updated)
+  setNewNoteText('')
+  toast.success(isArabic ? `تم حفظ الملاحظة عند ${fmtTime(curSec)}` : `Note saved at ${fmtTime(curSec)}`)
+ }, [newNoteText, lecture, currentTime, timestampNotes, saveTimestampNotesToStorage, isArabic])
+
+ const deleteTimestampNote = useCallback((noteId) => {
+  const updated = timestampNotes.filter(n => n.id !== noteId)
+  setTimestampNotes(updated)
+  saveTimestampNotesToStorage(updated)
+  toast.success(isArabic ? 'تم حذف الملاحظة' : 'Note deleted')
+ }, [timestampNotes, saveTimestampNotesToStorage, isArabic])
+
+ const jumpToNoteTime = useCallback((timeSec) => {
+  if (playerRef.current?.seekTo) {
+   playerRef.current.seekTo(timeSec)
+   toast.success(isArabic ? `انتقال إلى ${fmtTime(timeSec)}` : `Jumped to ${fmtTime(timeSec)}`)
+  }
+ }, [isArabic])
 
  
  useEffect(() => {
@@ -242,18 +342,35 @@ export default function LectureDetail() {
    <ReadingProgress reduced={prefersReduced} />
    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    {/* Breadcrumb */}
-    <motion.nav variants={pageItem} aria-label={t('inline.lecture-detail.breadcrumb')} className="flex items-center gap-2 text-sm text-slate-500 dark:text-white/50 mb-6 flex-wrap">
-     <Link to="/lectures" className="hover:text-royal-500 dark:hover:text-cyan-400 transition-colors">{t('lectures.title')}</Link>
-     <span>›</span>
-     <span className="text-navy-900 dark:text-white/80">{isArabic ? lecture.subjectAr : lecture.subjectEn}</span>
-    </motion.nav>
+    {/* Breadcrumb + Theater mode toggle */}
+    <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+     <motion.nav variants={pageItem} aria-label={t('inline.lecture-detail.breadcrumb')} className="flex items-center gap-2 text-sm text-slate-500 dark:text-white/50 flex-wrap">
+      <Link to="/lectures" className="hover:text-royal-500 dark:hover:text-cyan-400 transition-colors">{t('lectures.title')}</Link>
+      <span>›</span>
+      <span className="text-navy-900 dark:text-white/80">{isArabic ? lecture.subjectAr : lecture.subjectEn}</span>
+     </motion.nav>
 
-    <div className="grid lg:grid-cols-3 gap-6 items-start">
+     <button
+      type="button"
+      onClick={toggleTheaterMode}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition border ${
+       theaterMode
+        ? 'bg-royal-500/15 border-royal-500/30 text-accent dark:text-cyan-400 shadow-sm'
+        : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-slate-600 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10'
+      }`}
+      aria-label={theaterMode ? (isArabic ? 'الخروج من وضع المسرح' : 'Exit Theater Mode') : (isArabic ? 'وضع المسرح العريض' : 'Theater Mode')}
+     >
+      <FiTv size={14} />
+      <span>{theaterMode ? (isArabic ? 'عرض عادي' : 'Standard View') : (isArabic ? 'وضع المسرح' : 'Theater Mode')}</span>
+     </button>
+    </div>
+
+    <div className={`grid gap-6 items-start ${theaterMode ? 'grid-cols-1' : 'lg:grid-cols-3'}`}>
      {/* Video / thumbnail */}
-     <motion.div variants={revealItem} className="lg:col-span-2">
-      <div className="glass rounded-2xl overflow-hidden border border-white/10">
+     <motion.div variants={revealItem} className={theaterMode ? 'col-span-1' : 'lg:col-span-2'}>
+      <div className="glass rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
        <VideoPlayer
+        ref={playerRef}
         videoId={videoId}
         url={lecture.url}
         thumbnail={lecture.thumbnail || lecture.thumbUrl}
@@ -262,8 +379,61 @@ export default function LectureDetail() {
         lectureId={lecture.id}
         onWatch={handleWatch}
         autoPlay={true}
+        isTheater={theaterMode}
+        onToggleTheater={toggleTheaterMode}
+        onTimeUpdate={(t) => setCurrentTime(t)}
        />
       </div>
+
+      {/* Smart Next/Previous Lecture Navigation Bar */}
+      {subjectLectures.length > 1 && (
+       <div className="glass rounded-2xl p-3 sm:p-4 border border-white/10 mt-4 flex items-center justify-between gap-3 flex-wrap">
+        {prevNext.prev ? (
+         <Link
+          to={`/lecture/${prevNext.prev.id}`}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/10 text-xs sm:text-sm font-semibold text-ink transition max-w-[45%] truncate border border-transparent hover:border-royal-500/20"
+          title={isArabic ? prevNext.prev.titleAr : prevNext.prev.titleEn}
+         >
+          <FiArrowRight className={isArabic ? '' : 'rotate-180'} size={14} />
+          <div className="min-w-0 text-start">
+           <span className="block text-[10px] text-slate-500 dark:text-white/50">{isArabic ? 'المحاضرة السابقة' : 'Previous'}</span>
+           <span className="block truncate">{isArabic ? prevNext.prev.titleAr : prevNext.prev.titleEn}</span>
+          </div>
+         </Link>
+        ) : (
+         <div className="text-xs text-slate-400 dark:text-white/30 px-2 py-1">
+          {isArabic ? 'أول محاضرة' : 'First lecture'}
+         </div>
+        )}
+
+        {/* Center counter */}
+        <div className="text-center px-3 py-1 bg-royal-500/10 dark:bg-cyan-500/10 rounded-xl border border-royal-500/20 dark:border-cyan-500/20">
+         <span className="text-xs font-bold text-accent dark:text-cyan-400">
+          {isArabic
+           ? `محاضرة ${(subjectLectures.findIndex(l => l.id === lecture.id) + 1)} من ${subjectLectures.length}`
+           : `Lecture ${(subjectLectures.findIndex(l => l.id === lecture.id) + 1)} of ${subjectLectures.length}`}
+         </span>
+        </div>
+
+        {prevNext.next ? (
+         <Link
+          to={`/lecture/${prevNext.next.id}`}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-600/90 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition max-w-[45%] truncate shadow-md"
+          title={isArabic ? prevNext.next.titleAr : prevNext.next.titleEn}
+         >
+          <div className="min-w-0 text-end">
+           <span className="block text-[10px] text-white/80">{isArabic ? 'المحاضرة التالية' : 'Next'}</span>
+           <span className="block truncate">{isArabic ? prevNext.next.titleAr : prevNext.next.titleEn}</span>
+          </div>
+          <FiArrowLeft className={isArabic ? '' : 'rotate-180'} size={14} />
+         </Link>
+        ) : (
+         <div className="text-xs text-slate-400 dark:text-white/30 px-2 py-1">
+          {isArabic ? 'آخر محاضرة' : 'Last lecture'}
+         </div>
+        )}
+       </div>
+      )}
 
       {/* Related sources for this subject */}
       {relatedSources.length > 0 && (
@@ -312,8 +482,9 @@ export default function LectureDetail() {
       )}
      </motion.div>
 
-     {/* Sidebar info */}
-     <motion.div variants={revealItem} className="space-y-4">
+     {/* Sidebar info & notes */}
+     <motion.div variants={revealItem} className={theaterMode ? 'grid md:grid-cols-2 gap-6' : 'space-y-4'}>
+      {/* 1. Main Info Card */}
       <div className="glass rounded-2xl p-6 border border-white/10">
        <div className="flex items-start justify-between gap-3 mb-3">
         <span className="inline-block text-xs bg-royal-500/10 dark:bg-cyan-500/10 border border-royal-500/20 dark:border-cyan-500/20 text-accent px-2.5 py-1 rounded-full">
@@ -349,7 +520,7 @@ export default function LectureDetail() {
          <div className="flex items-center gap-3">
           <span className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0"><FiUser size={14} /></span>
           <div>
-           <p className="text-xs text-slate-500 dark:text-white/50">{t('inline.lecture-detail.doctor')}</p>
+           <p className="text-xs text-slate-500 dark:text-white/50">{t('inline.lecture-detail.instructor')}</p>
            <p className="text-ink font-medium">{isArabic ? lecture.doctorAr : lecture.doctorEn}</p>
           </div>
          </div>
@@ -362,42 +533,139 @@ export default function LectureDetail() {
         </div>
        )}
 
-        <div className="mt-5 space-y-3">
-         {lecture.url && (
-          <a href={lecture.url} target="_blank" rel="noopener noreferrer" onClick={handleWatch} className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 btn-secondary rounded-xl font-semibold text-sm">
-           <FiExternalLink size={16} /> {t('inline.lecture-detail.open-on-youtube')}
-          </a>
-         )}
-         <Link to="/lectures" className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 btn-secondary rounded-xl font-semibold text-sm">
-           <FiArrowRight className={isArabic ? 'rotate-180' : ''} size={16} /> {t('inline.lecture-detail.all-lectures')}
-         </Link>
-        </div>
+       <div className="mt-5 space-y-3">
+        {lecture.url && (
+         <a href={lecture.url} target="_blank" rel="noopener noreferrer" onClick={handleWatch} className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 btn-secondary rounded-xl font-semibold text-sm">
+          <FiExternalLink size={16} /> {t('inline.lecture-detail.open-on-youtube')}
+         </a>
+        )}
+        <Link to="/lectures" className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 btn-secondary rounded-xl font-semibold text-sm">
+          <FiArrowRight className={isArabic ? 'rotate-180' : ''} size={16} /> {t('inline.lecture-detail.all-lectures')}
+        </Link>
+       </div>
 
-        {/* Share */}
-        <div className="mt-5">
-         <p className="text-xs font-medium text-slate-500 dark:text-white/50 mb-2">{t('inline.lecture-detail.share-lecture')}</p>
-         <div className="flex items-center gap-2">
-          <button onClick={() => shareLink('whatsapp')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/25 transition" aria-label={t('inline.lecture-detail.share-on-whatsapp')}>
-           <FaWhatsapp size={16} />
-          </button>
-          <button onClick={() => shareLink('telegram')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/25 transition" aria-label={t('inline.lecture-detail.share-on-telegram')}>
-           <FaTelegramPlane size={16} />
-          </button>
-          <button onClick={() => shareLink('copy')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-royal-500/10 hover:bg-royal-500/20 text-accent border border-royal-500/25 dark:border-cyan-500/25 transition" aria-label={t('inline.lecture-detail.copy-link')}>
-           <FiCopy size={16} />
-          </button>
-         </div>
+       {/* Share */}
+       <div className="mt-5">
+        <p className="text-xs font-medium text-slate-500 dark:text-white/50 mb-2">{t('inline.lecture-detail.share-lecture')}</p>
+        <div className="flex items-center gap-2">
+         <button onClick={() => shareLink('whatsapp')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/25 transition" aria-label={t('inline.lecture-detail.share-on-whatsapp')}>
+          <FaWhatsapp size={16} />
+         </button>
+         <button onClick={() => shareLink('telegram')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/25 transition" aria-label={t('inline.lecture-detail.share-on-telegram')}>
+          <FaTelegramPlane size={16} />
+         </button>
+         <button onClick={() => shareLink('copy')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-royal-500/10 hover:bg-royal-500/20 text-accent border border-royal-500/25 dark:border-cyan-500/25 transition" aria-label={t('inline.lecture-detail.copy-link')}>
+          <FiCopy size={16} />
+         </button>
         </div>
        </div>
 
-       {/* Notes */}
+       {/* Rating */}
        {user && (
-        <div className="glass rounded-2xl p-5 border border-white/10">
-         <div className="flex items-center gap-2 mb-3">
-          <FiFileText size={16} className="text-amber-500" />
-          <h2 className="text-sm font-bold text-ink">{t('inline.lecture-detail.my-notes')}</h2>
+        <div className="mt-5 pt-4 border-t border-black/5 dark:border-white/5">
+         <h2 className="text-xs font-bold text-ink mb-2">{t('inline.lecture-detail.rate-this-lecture')}</h2>
+         <StarRating value={ratings[id] || 0} onRate={handleRate} size={20} />
+         <p className="text-[11px] text-slate-500 dark:text-white/50 mt-1">{t('inline.lecture-detail.tap-the-stars-to')}</p>
+        </div>
+       )}
+      </div>
+
+      {/* 2. Interactive Notes Card: Timestamped + General */}
+      {user && (
+       <div className="glass rounded-2xl p-5 border border-white/10 space-y-4">
+        {/* Timestamped notes header */}
+        <div>
+         <div className="flex items-center justify-between gap-2 mb-1.5">
+          <div className="flex items-center gap-2">
+           <FiBookmark size={16} className="text-royal-500 dark:text-cyan-400" />
+           <h2 className="text-sm font-bold text-ink">
+            {isArabic ? 'الملاحظات الزمنية' : 'Timestamped Notes'}
+           </h2>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-royal-500/10 dark:bg-cyan-500/10 text-accent dark:text-cyan-400 font-semibold tabular-nums">
+           {timestampNotes.length}
+          </span>
+         </div>
+         <p className="text-[11px] text-slate-500 dark:text-white/50 mb-3">
+          {isArabic
+           ? 'سجّل نقاط مهمة مربوطة بالدقيقة الحالية للرجوع إليها فوراً.'
+           : 'Pin study points to the current video playback time.'}
+         </p>
+
+         {/* Add timestamp note input */}
+         <div className="flex items-center gap-2">
+          <span className="shrink-0 px-2.5 py-1.5 rounded-lg bg-black/10 dark:bg-white/10 text-xs font-mono font-bold text-accent dark:text-cyan-400 tabular-nums">
+           {fmtTime(currentTime)}
+          </span>
+          <input
+           type="text"
+           value={newNoteText}
+           onChange={(e) => setNewNoteText(e.target.value)}
+           onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+             e.preventDefault()
+             addTimestampNote()
+            }
+           }}
+           placeholder={isArabic ? 'اكتب ملاحظة هنا ثم اضغط إضافة...' : 'Type note and click Add...'}
+           className="input-spatial flex-1 rounded-xl px-3 py-1.5 text-xs text-ink placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none"
+          />
+          <button
+           type="button"
+           onClick={addTimestampNote}
+           disabled={!newNoteText.trim()}
+           className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-royal-600 hover:bg-royal-500 disabled:opacity-40 text-white text-xs font-semibold transition"
+           title={isArabic ? 'حفظ الملاحظة مع التوقيت' : 'Save note with timestamp'}
+          >
+           <FiPlus size={14} />
+           <span className="hidden sm:inline">{isArabic ? 'إضافة' : 'Add'}</span>
+          </button>
+         </div>
+
+         {/* List of timestamped notes */}
+         {timestampNotes.length > 0 ? (
+          <div className="mt-3 space-y-1.5 max-h-52 overflow-y-auto pr-1">
+           {timestampNotes.map((tn) => (
+            <div
+             key={tn.id}
+             className="flex items-center justify-between gap-2 p-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/10 dark:hover:bg-cyan-500/10 transition group"
+            >
+             <button
+              type="button"
+              onClick={() => jumpToNoteTime(tn.time)}
+              className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-royal-500/15 dark:bg-cyan-500/20 text-accent dark:text-cyan-400 text-[11px] font-mono font-bold hover:scale-105 transition transform"
+              title={isArabic ? 'انتقال لتوقيت الملاحظة بالفيديو' : 'Jump to timestamp'}
+             >
+              <FiPlay size={10} />
+              <span>{fmtTime(tn.time)}</span>
+             </button>
+             <span
+              onClick={() => jumpToNoteTime(tn.time)}
+              className="flex-1 text-xs text-ink truncate cursor-pointer hover:text-accent transition-colors"
+             >
+              {tn.text}
+             </span>
+             <button
+              type="button"
+              onClick={() => deleteTimestampNote(tn.id)}
+              className="shrink-0 p-1 text-slate-400 hover:text-rose-500 opacity-60 group-hover:opacity-100 transition"
+              aria-label={isArabic ? 'حذف الملاحظة' : 'Delete note'}
+             >
+              <FiTrash2 size={12} />
+             </button>
+            </div>
+           ))}
+          </div>
+         ) : null}
+        </div>
+
+        {/* General notes area */}
+        <div className="pt-3 border-t border-black/5 dark:border-white/5">
+         <div className="flex items-center gap-2 mb-2">
+          <FiFileText size={15} className="text-amber-500" />
+          <h3 className="text-xs font-bold text-ink">{t('inline.lecture-detail.my-notes')}</h3>
           <span className="ms-auto flex items-center gap-1.5">
-           {noteSaved && <FiCheckCircle size={14} className="text-emerald-500" />}
+           {noteSaved && <FiCheckCircle size={13} className="text-emerald-500" />}
            <span aria-live="polite" className={`text-[10px] font-medium ${noteSaved ? 'text-emerald-500' : 'text-slate-400 dark:text-white/40'}`}>
             {noteSaved ? (t('inline.lecture-detail.auto-saved')) : (t('inline.lecture-detail.auto-saves'))}
            </span>
@@ -406,11 +674,10 @@ export default function LectureDetail() {
          <textarea
           value={note}
           onChange={e => setNote(e.target.value)}
-          rows="4"
+          rows="3"
           placeholder={t('inline.lecture-detail.write-your-notes-about')}
           aria-label={t('inline.lecture-detail.my-notes')}
-          className="input-spatial w-full rounded-xl px-3 py-2.5 text-sm text-ink placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none resize-none"
-          dir={t('inline.lecture-detail.ltr')}
+          className="input-spatial w-full rounded-xl px-3 py-2 text-xs text-ink placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none resize-none"
           onKeyDown={(e) => {
            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
             e.preventDefault()
@@ -418,21 +685,15 @@ export default function LectureDetail() {
            }
           }}
          />
-         <p className="mt-1 text-[10px] text-slate-400 dark:text-white/40 text-end">
-          {note.length} {t('inline.lecture-detail.chars')}
-         </p>
-         <button onClick={saveNote} className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition">
-          <FiCheck size={14} /> {t('inline.lecture-detail.save-note')}
-         </button>
+         <div className="flex items-center justify-between mt-2">
+          <p className="text-[10px] text-slate-400 dark:text-white/40">
+           {note.length} {t('inline.lecture-detail.chars')}
+          </p>
+          <button onClick={saveNote} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium transition">
+           <FiCheck size={12} /> {t('inline.lecture-detail.save-note')}
+          </button>
+         </div>
         </div>
-       )}
-
-      {/* Rating */}
-      {user && (
-       <div className="glass rounded-2xl p-6 border border-white/10">
-        <h2 className="text-sm font-bold text-ink mb-3">{t('inline.lecture-detail.rate-this-lecture')}</h2>
-        <StarRating value={ratings[id] || 0} onRate={handleRate} size={22} />
-        <p className="text-xs text-slate-500 dark:text-white/50 mt-2">{t('inline.lecture-detail.tap-the-stars-to')}</p>
        </div>
       )}
      </motion.div>
