@@ -1,9 +1,10 @@
-﻿import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { pageContainer, pageItem } from '../utils/motionTokens'
 import { uid } from '../utils/helpers'
+import { isSafeUrl } from '../utils/sanitize'
 import { getAdditions, saveAdditions, addComment, deleteComment, getCommentsForAddition, addActivity, addStudentLog } from '../services'
 import { FiPlus, FiTrash2, FiEdit2, FiSave, FiX, FiSend, FiVideo, FiLink2, FiFileText, FiMessageCircle, FiUsers } from 'react-icons/fi'
 import toast from 'react-hot-toast'
@@ -343,7 +344,7 @@ export default function Additions() {
              {(item.descriptionAr || item.descriptionEn) && (
               <p className={`text-sm text-slate-500 dark:text-slate-400 ${expandedId !== item.id ? 'line-clamp-2' : 'whitespace-pre-wrap'}`}>{isArabic ? item.descriptionAr : item.descriptionEn}</p>
              )}
-             {item.url && (
+             {item.url && isSafeUrl(item.url) && (
               <a href={item.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-xs text-royal-500 hover:text-royal-600 mt-1 inline-flex items-center gap-1">
                <FiLink2 size={12} /> {t('additions.openLink')}
               </a>

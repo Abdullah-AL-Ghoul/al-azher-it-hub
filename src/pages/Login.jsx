@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -26,7 +26,51 @@ export default function Login() {
  const [showSuccess, setShowSuccess] = useState(false)
  const navigateTimer = useRef(null)
 
- 
+ const [lockoutSeconds, setLockoutSeconds] = useState(() => {
+  try {
+   const until = Number(sessionStorage.getItem('login_lockout_until') || 0)
+   const rem = Math.ceil((until - Date.now()) / 1000)
+   return rem > 0 ? rem : 0
+  } catch {
+   return 0
+  }
+ })
+
+ useEffect(() => {
+  if (lockoutSeconds <= 0) return
+  const interval = setInterval(() => {
+   setLockoutSeconds(prev => {
+    if (prev <= 1) {
+     clearInterval(interval)
+     try { sessionStorage.removeItem('login_lockout_until') } catch (_e) {}
+     setError('')
+     return 0
+    }
+    return prev - 1
+   })
+  }, 1000)
+  return () => clearInterval(interval)
+ }, [lockoutSeconds])
+
+ useEffect(() => {
+  if (lockoutSeconds > 0) {
+   setError(isArabic
+    ? `تم قفل تسجيل الدخول مؤقتاً لحماية الحساب. يرجى الانتظار ${lockoutSeconds} ثانية`
+    : `Login locked temporarily. Please wait ${lockoutSeconds}s`)
+  }
+ }, [lockoutSeconds, isArabic])
+
+ useEffect(() => {
+  try {
+   if (sessionStorage.getItem('al_azher_session_expired') === '1') {
+    sessionStorage.removeItem('al_azher_session_expired')
+    setError(isArabic
+     ? 'تم تسجيل الخروج تلقائياً بسبب عدم النشاط لفترة طويلة لحماية حسابك.'
+     : 'Session expired due to inactivity. Please log in again.')
+   }
+  } catch (_e) {}
+ }, [isArabic])
+
  useEffect(() => {
   return () => { if (navigateTimer.current) clearTimeout(navigateTimer.current) }
  }, [])
@@ -46,18 +90,23 @@ export default function Login() {
 
  const handleSubmit = async (e) => {
   e.preventDefault()
+  if (lockoutSeconds > 0) return
   setError('')
   if (!form.studentId.trim() || !form.password) {
    setError(t('inline.login.enter-your-id-and'))
    return
   }
-   setLoading(true)
+  setLoading(true)
 
-   const result = await login(form.studentId, form.password)
+  const result = await login(form.studentId, form.password)
   setLoading(false)
 
   if (result.ok) {
    setShowSuccess(true)
+   try {
+    sessionStorage.removeItem('login_consecutive_failures')
+    sessionStorage.removeItem('login_lockout_until')
+   } catch (_e) {}
    sessionStorage.setItem('al_azher_just_auth', '1')
    // IP logging is telemetry, not part of the login flow — run it after the
    // user has already navigated so it never delays the redirect.
@@ -77,11 +126,33 @@ export default function Login() {
    if (result.error === 'EMAIL_NOT_CONFIRMED') {
     setError(t('login.emailNotConfirmed'))
    } else if (result.error === 'TOO_MANY_ATTEMPTS' && result.retryAfter) {
-    setError(isArabic
-     ? `محاولات كثيرة، حاول بعد ${result.retryAfter} ثانية`
-     : `Too many attempts. Try again in ${result.retryAfter} seconds`)
+    const secs = Number(result.retryAfter) || 30
+    try {
+     sessionStorage.setItem('login_lockout_until', String(Date.now() + secs * 1000))
+    } catch (_e) {}
+    setLockoutSeconds(secs)
    } else {
-    setError(t('login.error'))
+    let failures = 1
+    try {
+     failures = (Number(sessionStorage.getItem('login_consecutive_failures')) || 0) + 1
+     sessionStorage.setItem('login_consecutive_failures', String(failures))
+    } catch (_e) {}
+
+    if (failures >= 5) {
+     const LOCK_TIME = 30
+     try {
+      sessionStorage.setItem('login_lockout_until', String(Date.now() + LOCK_TIME * 1000))
+      sessionStorage.setItem('login_consecutive_failures', '0')
+     } catch (_e) {}
+     setLockoutSeconds(LOCK_TIME)
+    } else if (failures >= 3) {
+     const rem = 5 - failures
+     setError(isArabic
+      ? `${t('login.error')} (تبقى ${rem} محاولات قبل الإيقاف المؤقت)`
+      : `${t('login.error')} (${rem} attempts remaining before temporary lockout)`)
+    } else {
+     setError(t('login.error'))
+    }
    }
   }
  }
@@ -127,7 +198,7 @@ export default function Login() {
          value={form[field.key]}
          onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
          placeholder={isArabic ? field.placeholderAr : field.placeholderEn}
-         disabled={loading}
+         disabled={loading || lockoutSeconds > 0}
          isArabic={isArabic}
          showToggle={field.hasToggle}
          onToggle={() => setShowPassword(!showPassword)}
@@ -148,14 +219,15 @@ export default function Login() {
 
        <AuthSubmitButton
         loading={loading}
+        disabled={lockoutSeconds > 0}
         loadingText={t('login.loggingIn')}
-        buttonText={t('login.login')}
+        buttonText={lockoutSeconds > 0 ? (isArabic ? `يرجى الانتظار (${lockoutSeconds})` : `Please wait (${lockoutSeconds}s)`) : t('login.login')}
         isArabic={isArabic}
         delay={0.85}
        />
       </form>
 
-     <SocialAuth isArabic={isArabic} disabled={loading} />
+     <SocialAuth isArabic={isArabic} disabled={loading || lockoutSeconds > 0} />
 
      <motion.div
       initial={{ opacity: 0 }}

@@ -20,3 +20,37 @@ export function sanitizeObject(obj, fields) {
   }
   return clean
 }
+
+const DANGEROUS_PROTOCOL_RE = /^(?:javascript|data|vbscript|file):/i
+
+/**
+ * Validates whether a given URL is safe to navigate to or render as an external href.
+ * Blocks dangerous schemes (javascript:, data:, vbscript:, file:) while allowing
+ * https:, http:, mailto:, tel:, and safe in-app relative/hash paths.
+ */
+export function isSafeUrl(url) {
+  if (!url || typeof url !== 'string') return false
+  const trimmed = url.trim()
+  if (!trimmed) return false
+
+  if (DANGEROUS_PROTOCOL_RE.test(trimmed)) return false
+
+  if (trimmed.startsWith('#') || (trimmed.startsWith('/') && !trimmed.startsWith('//'))) {
+    return true
+  }
+
+  try {
+    const base = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'https://al-azher-it-hub.vercel.app'
+    const parsed = new URL(trimmed, base)
+    return ['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol)
+  } catch (_e) {
+    return false
+  }
+}
+
+/**
+ * Returns the URL if safe, or a fallback safe URL (defaults to '#')
+ */
+export function sanitizeUrl(url, fallback = '#') {
+  return isSafeUrl(url) ? url.trim() : fallback
+}

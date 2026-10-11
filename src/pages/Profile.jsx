@@ -17,6 +17,7 @@ import ErrorState from '../components/feedback/ErrorState'
 import Skeleton from '../components/shared/Skeleton'
 import { ACADEMIC_PLANS, getAcademicPlan } from '../data/academicCurriculum'
 import AcademicAnalyticsDashboard from '../components/profile/AcademicAnalyticsDashboard'
+import { isSafeUrl } from '../utils/sanitize'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
@@ -693,7 +694,7 @@ export default function Profile() {
         {editing ? (
          <input id="profile-google" name="google" type="url" autoComplete="url" value={profileData.google} onChange={e => setProfileData(p => ({ ...p, google: e.target.value }))} placeholder="https://..." className={inputClass} />
         ) : (
-         profileData.google ? (
+         profileData.google && isSafeUrl(profileData.google) ? (
            <a href={profileData.google} target="_blank" rel="noopener noreferrer" className="text-cyan-500 dark:text-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-300 text-sm underline">{t('profile.google')}</a>
           ) : <p className="text-slate-500 dark:text-white/50">—</p>
         )}
@@ -703,7 +704,7 @@ export default function Profile() {
         {editing ? (
          <input id="profile-linkedin" name="linkedin" type="url" autoComplete="url" value={profileData.linkedin} onChange={e => setProfileData(p => ({ ...p, linkedin: e.target.value }))} placeholder="https://linkedin.com/in/..." className={inputClass} />
         ) : (
-         profileData.linkedin ? (
+         profileData.linkedin && isSafeUrl(profileData.linkedin) ? (
            <a href={profileData.linkedin} target="_blank" rel="noopener noreferrer" className="text-cyan-500 dark:text-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-300 text-sm underline">LinkedIn</a>
           ) : <p className="text-slate-500 dark:text-white/50">—</p>
         )}

@@ -3,12 +3,16 @@ import { authenticateUser, registerUser, addStudentLog, getSessionUser, findOrCr
 import { RateLimitService } from '../services/rateLimitService'
 
 const STORAGE_KEY = 'al_azher_session'
+const LAST_ACTIVE_KEY = 'al_azher_last_active'
+export const EXPIRED_KEY = 'al_azher_session_expired'
+export const INACTIVITY_TIMEOUT_MS = 2 * 60 * 60 * 1000 // 2 hours
 
 const AuthContext = createContext()
 
 function saveSession(userData) {
  try {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
+  sessionStorage.setItem(LAST_ACTIVE_KEY, String(Date.now()))
  } catch (_e) { /* silent */ }
 }
 
@@ -61,6 +65,18 @@ export function AuthProvider({ children }) {
    } catch (_e) { /* fallback to sessionStorage */ }
 
    if (stored?.studentId) {
+    const lastActive = Number(sessionStorage.getItem(LAST_ACTIVE_KEY) || 0)
+    if (lastActive && Date.now() - lastActive > INACTIVITY_TIMEOUT_MS) {
+     try {
+      sessionStorage.removeItem(STORAGE_KEY)
+      sessionStorage.removeItem(LAST_ACTIVE_KEY)
+      sessionStorage.setItem(EXPIRED_KEY, '1')
+     } catch (_e) {}
+     setUser(null)
+     setLoading(false)
+     return
+    }
+
     try {
      const dbUser = await getSessionUser(stored.studentId)
      if (!mounted) return
@@ -236,11 +252,40 @@ export function AuthProvider({ children }) {
   const sid = userRef.current?.studentId
   setUser(null)
   sessionStorage.removeItem(STORAGE_KEY)
+  sessionStorage.removeItem(LAST_ACTIVE_KEY)
   sessionStorage.removeItem('login_attempts')
   sessionStorage.removeItem('al_azher_just_auth')
   if (sid) RateLimitService.cleanup(sid)
   try { await supabaseSignOut() } catch (_e) { /* session may already be gone */ }
  }, [])
+
+ useEffect(() => {
+  if (!user) return
+  const recordActivity = () => {
+   const now = Date.now()
+   const prev = Number(sessionStorage.getItem(LAST_ACTIVE_KEY) || 0)
+   if (now - prev > 30000) {
+    try { sessionStorage.setItem(LAST_ACTIVE_KEY, String(now)) } catch (_e) {}
+   }
+  }
+
+  recordActivity()
+  const events = ['mousedown', 'keydown', 'scroll', 'touchstart']
+  events.forEach(evt => window.addEventListener(evt, recordActivity, { passive: true }))
+
+  const checkInterval = setInterval(() => {
+   const lastActive = Number(sessionStorage.getItem(LAST_ACTIVE_KEY) || 0)
+   if (lastActive && Date.now() - lastActive > INACTIVITY_TIMEOUT_MS) {
+    try { sessionStorage.setItem(EXPIRED_KEY, '1') } catch (_e) {}
+    logout()
+   }
+  }, 60000)
+
+  return () => {
+   events.forEach(evt => window.removeEventListener(evt, recordActivity))
+   clearInterval(checkInterval)
+  }
+ }, [user, logout])
 
 const value = useMemo(() => ({
    user,

@@ -7,7 +7,7 @@ import {
   lectureVideoId,
   SORT_OPTIONS,
 } from '../utils/helpers'
-import { sanitizeString, sanitizeObject } from '../utils/sanitize'
+import { sanitizeString, sanitizeObject, isSafeUrl, sanitizeUrl } from '../utils/sanitize'
 import { hashPassword, hashPasswordLegacy, generateSalt } from '../utils/crypto'
 import { matchCourseLectures, matchCourseSources, computeCourseStats } from '../utils/courseStats'
 import { recordToday, currentStreak, bestStreak } from '../utils/achievements'
@@ -83,6 +83,27 @@ describe('sanitize utility suite', () => {
     const sanitized = sanitizeObject(data, ['title', 'note'])
     expect(sanitized.title).not.toContain('<img')
     expect(sanitized.count).toBe(42)
+  })
+
+  it('validates safe and malicious URLs correctly with isSafeUrl and sanitizeUrl', () => {
+    expect(isSafeUrl('https://example.com/test')).toBe(true)
+    expect(isSafeUrl('http://example.com/test')).toBe(true)
+    expect(isSafeUrl('mailto:student@alazher.edu')).toBe(true)
+    expect(isSafeUrl('tel:+970599000000')).toBe(true)
+    expect(isSafeUrl('/sources')).toBe(true)
+    expect(isSafeUrl('#schedule-section')).toBe(true)
+
+    // Unsafe schemes must be blocked
+    expect(isSafeUrl('javascript:alert(1)')).toBe(false)
+    expect(isSafeUrl('JAVASCRIPT:alert(document.cookie)')).toBe(false)
+    expect(isSafeUrl('data:text/html,<script>alert(1)</script>')).toBe(false)
+    expect(isSafeUrl('vbscript:msgbox("hi")')).toBe(false)
+    expect(isSafeUrl('file:///etc/passwd')).toBe(false)
+    expect(isSafeUrl('')).toBe(false)
+    expect(isSafeUrl(null)).toBe(false)
+
+    expect(sanitizeUrl('https://example.com')).toBe('https://example.com')
+    expect(sanitizeUrl('javascript:bad()', '#fallback')).toBe('#fallback')
   })
 })
 

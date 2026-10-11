@@ -11,6 +11,7 @@ import { signSourceForFetch } from '../services/sourceStorage'
 import useSecureSourceFile from '../hooks/useSecureSourceFile'
 import { pageContainer, pageItem } from '../utils/motionTokens'
 import { SORT_OPTIONS, getSourceFiles, storagePathFromUrl } from '../utils/helpers'
+import { isSafeUrl } from '../utils/sanitize'
 import toast from 'react-hot-toast'
 import PageHero from '../components/shared/PageHero'
 import FilterBar from '../components/FilterBar'
@@ -853,7 +854,11 @@ export default function Sources() {
 
               const openSecure = async (f, mode) => {
                 if (!f.path) {
-                  if (f.url) window.open(f.url, '_blank', 'noopener,noreferrer')
+                  if (f.url && isSafeUrl(f.url)) {
+                    window.open(f.url, '_blank', 'noopener,noreferrer')
+                  } else if (f.url) {
+                    toast.error(t('inline.sources.file-open-failed'))
+                  }
                   return
                 }
                 try {
@@ -1005,7 +1010,7 @@ export default function Sources() {
                             </button>
                           )}
                         </div>
-                      ) : source.url ? (
+                      ) : source.url && isSafeUrl(source.url) ? (
                         <div className="mb-4">
                           <a
                             href={source.url}

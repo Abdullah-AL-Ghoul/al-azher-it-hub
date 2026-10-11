@@ -1,7 +1,7 @@
-﻿import { motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { FiLoader, FiArrowLeft, FiArrowRight } from 'react-icons/fi'
 
-export default function AuthSubmitButton({ loading, loadingText, buttonText, isArabic, delay = 0.85 }) {
+export default function AuthSubmitButton({ loading, disabled = false, loadingText, buttonText, isArabic, delay = 0.85 }) {
  return (
   <motion.div
    initial={{ opacity: 0, y: 20 }}
@@ -11,9 +11,9 @@ export default function AuthSubmitButton({ loading, loadingText, buttonText, isA
   >
    <motion.button
     type="submit"
-    whileHover={!loading ? { scale: 1.02 } : {}}
-    whileTap={!loading ? { scale: 0.97 } : {}}
-    disabled={loading}
+    whileHover={!loading && !disabled ? { scale: 1.02 } : {}}
+    whileTap={!loading && !disabled ? { scale: 0.97 } : {}}
+    disabled={loading || disabled}
     className="w-full relative overflow-hidden btn-spatial py-4 rounded-2xl font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
    >
     {!loading && (
