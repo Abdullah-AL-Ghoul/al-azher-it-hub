@@ -19,7 +19,9 @@ import {
   FiSearch, 
   FiFilter, 
   FiRotateCcw,
-  FiAward
+  FiAward,
+  FiChevronDown,
+  FiCheck
 } from 'react-icons/fi'
 import { FaCalculator } from 'react-icons/fa'
 import ErrorState from '../components/feedback/ErrorState'
@@ -29,7 +31,7 @@ import toast from 'react-hot-toast'
 import PageHero from '../components/shared/PageHero'
 import Skeleton from '../components/shared/Skeleton'
 import GpaCalculator from '../components/studyPlan/GpaCalculator'
-import { ACADEMIC_CURRICULUM, COURSE_TYPES } from '../data/academicCurriculum'
+import { ACADEMIC_PLANS, getAcademicPlan, COURSE_TYPES } from '../data/academicCurriculum'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
@@ -44,25 +46,62 @@ export default function StudyPlan() {
   // Tabs: 'curriculum' (مسار الخطة التخصصية), 'calculator' (حاسبة المعدل), 'links' (الروابط الرسمية)
   const [activeTab, setActiveTab] = useState('curriculum')
 
+  // --- Active Academic Plan (Major) ---
+  const [selectedPlanId, setSelectedPlanId] = useState(() => {
+    try {
+      const saved = localStorage.getItem('al_azher_active_major_plan')
+      if (saved && ACADEMIC_PLANS.some(p => p.id === saved)) return saved
+    } catch {}
+    return 'cse-2025'
+  })
+
+  const activePlan = useMemo(() => getAcademicPlan(selectedPlanId), [selectedPlanId])
+
+  // Helper to load progress for a specific plan
+  const loadPlanProgress = (planId) => {
+    try {
+      const specific = localStorage.getItem(`al_azher_curriculum_progress_${planId}`)
+      if (specific) return JSON.parse(specific)
+      if (planId === 'cse-2025') {
+        const legacy = localStorage.getItem('al_azher_curriculum_progress')
+        if (legacy) return JSON.parse(legacy)
+      }
+    } catch {}
+    return {}
+  }
+
   // --- Curriculum Tracker State ---
   const [selectedYear, setSelectedYear] = useState('all') // 'all' | 1 | 2 | 3 | 4
   const [selectedType, setSelectedType] = useState('all') // 'all' | 'university' | 'college' | 'major' | 'elective'
   const [searchQuery, setSearchQuery] = useState('')
 
   // Course status: { [courseId]: 'passed' | 'enrolled' | 'remaining' }
-  const [courseProgress, setCourseProgress] = useState(() => {
-    try {
-      const saved = localStorage.getItem('al_azher_curriculum_progress')
-      if (saved) return JSON.parse(saved)
-    } catch {}
-    return {}
-  })
+  const [courseProgress, setCourseProgress] = useState(() => loadPlanProgress(selectedPlanId))
 
-  const saveProgress = (newProgress) => {
+  const saveProgress = (newProgress, planId = selectedPlanId) => {
     setCourseProgress(newProgress)
     try {
-      localStorage.setItem('al_azher_curriculum_progress', JSON.stringify(newProgress))
+      localStorage.setItem(`al_azher_curriculum_progress_${planId}`, JSON.stringify(newProgress))
+      if (planId === 'cse-2025') {
+        localStorage.setItem('al_azher_curriculum_progress', JSON.stringify(newProgress))
+      }
     } catch {}
+  }
+
+  const handlePlanChange = (newPlanId) => {
+    if (newPlanId === selectedPlanId) return
+    setSelectedPlanId(newPlanId)
+    try {
+      localStorage.setItem('al_azher_active_major_plan', newPlanId)
+    } catch {}
+    const newProgress = loadPlanProgress(newPlanId)
+    setCourseProgress(newProgress)
+    const targetPlan = getAcademicPlan(newPlanId)
+    toast.success(
+      isArabic
+        ? `تم الانتقال إلى خطة: ${targetPlan.nameAr} (خطة رقم ${targetPlan.planNumber})`
+        : `Switched to: ${targetPlan.nameEn} (Plan #${targetPlan.planNumber})`
+    )
   }
 
   const toggleCourseStatus = (courseId, status) => {
@@ -87,10 +126,10 @@ export default function StudyPlan() {
 
   const resetAllProgress = () => {
     saveProgress({})
-    toast.success(isArabic ? 'تمت إعادة ضبط الخطة بالكامل' : 'All curriculum progress reset')
+    toast.success(isArabic ? 'تمت إعادة ضبط الخطة المحددة بالكامل' : 'Current plan progress reset')
   }
 
-  // Calculate degree statistics
+  // Calculate degree statistics dynamically based on active plan
   const curriculumStats = useMemo(() => {
     let totalHours = 0
     let passedHours = 0
@@ -98,7 +137,7 @@ export default function StudyPlan() {
     let totalCourses = 0
     let passedCourses = 0
 
-    ACADEMIC_CURRICULUM.forEach(yr => {
+    activePlan.curriculum.forEach(yr => {
       yr.semesters.forEach(sem => {
         sem.courses.forEach(c => {
           totalHours += c.hours
@@ -126,7 +165,7 @@ export default function StudyPlan() {
       passedCourses,
       pct,
     }
-  }, [courseProgress])
+  }, [activePlan, courseProgress])
 
   // --- Official Links / Admin CRUD State ---
   const [links, setLinks] = useState([])
@@ -232,7 +271,7 @@ export default function StudyPlan() {
 
   // Filter curriculum courses
   const filteredCurriculum = useMemo(() => {
-    return ACADEMIC_CURRICULUM
+    return activePlan.curriculum
       .filter(yr => selectedYear === 'all' || yr.year === selectedYear)
       .map(yr => ({
         ...yr,
@@ -249,7 +288,7 @@ export default function StudyPlan() {
           })
         })).filter(sem => sem.courses.length > 0)
       })).filter(yr => yr.semesters.length > 0)
-  }, [selectedYear, selectedType, searchQuery])
+  }, [activePlan, selectedYear, selectedType, searchQuery])
 
   if (error) return <ErrorState error={error} onRetry={handleRetry} />
 
@@ -336,17 +375,141 @@ export default function StudyPlan() {
         {/* TAB 1: CURRICULUM TRACKER */}
         {activeTab === 'curriculum' && (
           <div className="space-y-8">
+            {/* Major & Accredited Plan Selector Card */}
+            <div className="glass rounded-2xl p-6 border border-white/10 shadow-xl relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-black/5 dark:border-white/5">
+                <div className="flex items-center gap-3">
+                  <span className="p-3 rounded-2xl bg-royal-500/10 text-royal-600 dark:text-cyan-400 shrink-0">
+                    <FiLayers size={22} />
+                  </span>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold text-ink">
+                      {isArabic ? 'الخطة الأكاديمية للتخصص المعتمد' : 'Accredited Major Study Plan'}
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-white/50">
+                      {isArabic
+                        ? 'اختر خطتك الدراسية المعتمدة لعرض شجرة مساقاتها وحساب إنجازك الأكاديمي تلقائياً'
+                        : 'Select your degree plan to track courses, prerequisites, and graduation completion'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Plan Dropdown */}
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <label htmlFor="academic-plan-select" className="sr-only">
+                    {isArabic ? 'اختر الخطة الدراسية' : 'Select Study Plan'}
+                  </label>
+                  <div className="relative w-full md:min-w-[300px]">
+                    <select
+                      id="academic-plan-select"
+                      value={selectedPlanId}
+                      onChange={(e) => handlePlanChange(e.target.value)}
+                      className="input-spatial w-full px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-ink appearance-none cursor-pointer focus:outline-none"
+                    >
+                      {ACADEMIC_PLANS.map(plan => (
+                        <option key={plan.id} value={plan.id} className="bg-white dark:bg-navy-900 text-ink">
+                          {isArabic ? plan.nameAr : plan.nameEn} — ({isArabic ? `خطة ${plan.planNumber}` : `Plan #${plan.planNumber}`})
+                        </option>
+                      ))}
+                    </select>
+                    <FiChevronDown className="absolute inset-y-0 end-3 my-auto pointer-events-none text-slate-400" size={16} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Major Selector Pills */}
+              <div className="pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-white/50">
+                    {isArabic ? 'التخصصات والبرامج الأكاديمية المعتمدة:' : 'Accredited Degree Programs:'}
+                  </span>
+                  <span className="text-[11px] font-mono text-royal-600 dark:text-cyan-400 font-bold">
+                    6 {isArabic ? 'خطط معتمدة' : 'Accredited Plans'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                  {ACADEMIC_PLANS.map(plan => {
+                    const isSelected = plan.id === selectedPlanId
+                    return (
+                      <button
+                        key={plan.id}
+                        type="button"
+                        onClick={() => handlePlanChange(plan.id)}
+                        className={`p-2.5 rounded-xl text-start transition border flex flex-col justify-between gap-1.5 ${
+                          isSelected
+                            ? 'bg-royal-600/15 border-royal-500/40 text-royal-700 dark:text-cyan-300 ring-2 ring-royal-500/30 shadow-md'
+                            : 'bg-black/5 dark:bg-white/5 border-transparent text-slate-600 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1 w-full">
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-slate-500 dark:text-white/60">
+                            #{plan.planNumber}
+                          </span>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                            plan.year === '2025'
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-sky-500/15 text-sky-600 dark:text-sky-400'
+                          }`}>
+                            {plan.badge}
+                          </span>
+                        </div>
+                        <span className="text-xs font-bold leading-snug line-clamp-2">
+                          {isArabic ? plan.nameAr.replace(/\s*\(\d+\)/, '') : plan.nameEn.replace(/\s*\(\d+\)/, '')}
+                        </span>
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-white/40 pt-1 border-t border-black/5 dark:border-white/5">
+                          <span>{plan.year}</span>
+                          {isSelected && <FiCheck size={12} className="text-emerald-500" />}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Active Plan Metadata Card Strip */}
+                <div className="p-3 rounded-xl bg-royal-500/5 dark:bg-cyan-500/5 border border-royal-500/15 dark:border-cyan-500/15 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-ink">
+                      {isArabic ? activePlan.nameAr : activePlan.nameEn}
+                    </span>
+                    <span className="text-slate-400">•</span>
+                    <span className="text-slate-500 dark:text-white/60">
+                      {isArabic ? activePlan.departmentAr : activePlan.departmentEn}
+                    </span>
+                    <span className="text-slate-400">•</span>
+                    <span className="text-slate-500 dark:text-white/60">
+                      {isArabic ? activePlan.facultyAr : activePlan.facultyEn}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                      {isArabic ? `رقم الخطة: ${activePlan.planNumber}` : `Plan #${activePlan.planNumber}`}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-lg bg-royal-500/15 text-royal-600 dark:text-cyan-400 font-bold text-[11px]">
+                      {curriculumStats.totalHours} {isArabic ? 'ساعة معتمدة' : 'credit hours'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Degree Progress Dashboard */}
             <div className="glass rounded-2xl p-6 border border-white/10 shadow-xl relative overflow-hidden">
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-royal-500 via-cyan-400 to-emerald-400" />
               
               <div className="flex items-center justify-between gap-4 flex-wrap mb-5">
                 <div>
-                  <h2 className="text-base sm:text-lg font-bold text-ink flex items-center gap-2">
-                    <FiAward className="text-accent" />
-                    <span>{isArabic ? 'مستوى الإنجاز الأكاديمي للدرجة الجامعية' : 'Degree Academic Completion'}</span>
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-white/50 mt-0.5">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h2 className="text-base sm:text-lg font-bold text-ink flex items-center gap-2">
+                      <FiAward className="text-accent" />
+                      <span>{isArabic ? 'مستوى الإنجاز الأكاديمي للدرجة الجامعية' : 'Degree Academic Completion'}</span>
+                    </h2>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-royal-500/10 text-royal-600 dark:text-cyan-400 font-bold">
+                      {isArabic ? activePlan.nameAr : activePlan.nameEn}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-white/50">
                     {isArabic
                       ? 'حدد المساقات المنجزة والمُسجّلة لحساب الساعات المكتملة والمتبقية لتخرجك تلقائياً.'
                       : 'Mark passed and enrolled courses to track completed and remaining graduation hours automatically.'}
@@ -506,137 +669,147 @@ export default function StudyPlan() {
             </div>
 
             {/* Curriculum Years & Semesters Grid */}
-            <div className="space-y-8">
-              {filteredCurriculum.map(yr => (
-                <div key={yr.year} className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-xl bg-royal-500/15 text-accent dark:text-cyan-400 flex items-center justify-center font-black text-sm">
-                      {yr.year}
-                    </span>
-                    <h3 className="text-lg font-bold text-ink">
-                      {isArabic ? yr.yearNameAr : yr.yearNameEn}
-                    </h3>
-                  </div>
+            {filteredCurriculum.length === 0 ? (
+              <div className="glass rounded-2xl p-8 border border-white/10 text-center">
+                <EmptyState
+                  icon={FiBookOpen}
+                  title={isArabic ? 'لم يتم العثور على مساقات مطابقة' : 'No matching courses found'}
+                  description={isArabic ? 'جرب البحث باسم مساق آخر أو تغيير سنة أو نوع المتطلب.' : 'Try adjusting your search criteria or filter options.'}
+                />
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {filteredCurriculum.map(yr => (
+                  <div key={yr.year} className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <span className="w-8 h-8 rounded-xl bg-royal-500/15 text-accent dark:text-cyan-400 flex items-center justify-center font-black text-sm">
+                        {yr.year}
+                      </span>
+                      <h3 className="text-lg font-bold text-ink">
+                        {isArabic ? yr.yearNameAr : yr.yearNameEn}
+                      </h3>
+                    </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {yr.semesters.map(sem => {
-                      const allPassed = sem.courses.every(c => courseProgress[c.id] === 'passed')
-                      const semesterHours = sem.courses.reduce((sum, c) => sum + c.hours, 0)
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {yr.semesters.map(sem => {
+                        const allPassed = sem.courses.every(c => courseProgress[c.id] === 'passed')
+                        const semesterHours = sem.courses.reduce((sum, c) => sum + c.hours, 0)
 
-                      return (
-                        <div key={sem.semester} className="glass rounded-2xl p-5 border border-white/10 flex flex-col justify-between">
-                          <div>
-                            {/* Semester Header */}
-                            <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-black/5 dark:border-white/5">
-                              <div>
-                                <h4 className="font-bold text-ink text-sm sm:text-base">
-                                  {isArabic ? sem.semesterNameAr : sem.semesterNameEn}
-                                </h4>
-                                <span className="text-[11px] text-slate-500 dark:text-white/50">
-                                  {sem.courses.length} {isArabic ? 'مساقات' : 'courses'} • {semesterHours} {isArabic ? 'ساعة معتمدة' : 'credit hours'}
-                                </span>
+                        return (
+                          <div key={sem.semester} className="glass rounded-2xl p-5 border border-white/10 flex flex-col justify-between">
+                            <div>
+                              {/* Semester Header */}
+                              <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-black/5 dark:border-white/5">
+                                <div>
+                                  <h4 className="font-bold text-ink text-sm sm:text-base">
+                                    {isArabic ? sem.semesterNameAr : sem.semesterNameEn}
+                                  </h4>
+                                  <span className="text-[11px] text-slate-500 dark:text-white/50">
+                                    {sem.courses.length} {isArabic ? 'مساقات' : 'courses'} • {semesterHours} {isArabic ? 'ساعة معتمدة' : 'credit hours'}
+                                  </span>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setSemesterStatus(sem.courses, allPassed ? 'remaining' : 'passed')}
+                                  className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition border flex items-center gap-1 ${
+                                    allPassed
+                                      ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                                      : 'bg-black/5 dark:bg-white/5 border-line text-slate-600 dark:text-white/60 hover:text-ink'
+                                  }`}
+                                >
+                                  <FiCheckCircle size={13} />
+                                  <span>{allPassed ? (isArabic ? 'مكتمل بالكامل' : 'Completed') : (isArabic ? 'تحديد الكل كناجح' : 'Mark All Passed')}</span>
+                                </button>
                               </div>
 
-                              <button
-                                type="button"
-                                onClick={() => setSemesterStatus(sem.courses, allPassed ? 'remaining' : 'passed')}
-                                className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition border flex items-center gap-1 ${
-                                  allPassed
-                                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-                                    : 'bg-black/5 dark:bg-white/5 border-line text-slate-600 dark:text-white/60 hover:text-ink'
-                                }`}
-                              >
-                                <FiCheckCircle size={13} />
-                                <span>{allPassed ? (isArabic ? 'مكتمل بالكامل' : 'Completed') : (isArabic ? 'تحديد الكل كناجح' : 'Mark All Passed')}</span>
-                              </button>
-                            </div>
+                              {/* Courses List */}
+                              <div className="space-y-3">
+                                {sem.courses.map(course => {
+                                  const st = courseProgress[course.id] || 'remaining'
+                                  const typeMeta = COURSE_TYPES[course.type] || COURSE_TYPES.major
 
-                            {/* Courses List */}
-                            <div className="space-y-3">
-                              {sem.courses.map(course => {
-                                const st = courseProgress[course.id] || 'remaining'
-                                const typeMeta = COURSE_TYPES[course.type] || COURSE_TYPES.major
+                                  return (
+                                    <div
+                                      key={course.id}
+                                      className={`p-3.5 rounded-xl border transition-all ${
+                                        st === 'passed'
+                                          ? 'bg-emerald-500/5 border-emerald-500/30 dark:border-emerald-500/20'
+                                          : st === 'enrolled'
+                                          ? 'bg-amber-500/5 border-amber-500/30 dark:border-amber-500/20'
+                                          : 'bg-black/5 dark:bg-white/5 border-line'
+                                      }`}
+                                    >
+                                      <div className="flex items-start justify-between gap-3">
+                                        <div className="space-y-1 min-w-0 flex-1">
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="font-mono text-xs font-bold text-accent dark:text-cyan-400 px-2 py-0.5 rounded-md bg-royal-500/10">
+                                              {course.code}
+                                            </span>
+                                            <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${typeMeta.color}`}>
+                                              {isArabic ? typeMeta.labelAr : typeMeta.labelEn}
+                                            </span>
+                                            <span className="text-[11px] text-slate-500 dark:text-white/50 font-semibold">
+                                              {course.hours} {isArabic ? 'ساعات' : 'hrs'}
+                                            </span>
+                                          </div>
 
-                                return (
-                                  <div
-                                    key={course.id}
-                                    className={`p-3.5 rounded-xl border transition-all ${
-                                      st === 'passed'
-                                        ? 'bg-emerald-500/5 border-emerald-500/30 dark:border-emerald-500/20'
-                                        : st === 'enrolled'
-                                        ? 'bg-amber-500/5 border-amber-500/30 dark:border-amber-500/20'
-                                        : 'bg-black/5 dark:bg-white/5 border-line'
-                                    }`}
-                                  >
-                                    <div className="flex items-start justify-between gap-3">
-                                      <div className="space-y-1 min-w-0 flex-1">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          <span className="font-mono text-xs font-bold text-accent dark:text-cyan-400 px-2 py-0.5 rounded-md bg-royal-500/10">
-                                            {course.code}
-                                          </span>
-                                          <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${typeMeta.color}`}>
-                                            {isArabic ? typeMeta.labelAr : typeMeta.labelEn}
-                                          </span>
-                                          <span className="text-[11px] text-slate-500 dark:text-white/50 font-semibold">
-                                            {course.hours} {isArabic ? 'ساعات' : 'hrs'}
-                                          </span>
+                                          <h5 className="font-semibold text-ink text-sm leading-snug">
+                                            {isArabic ? course.nameAr : course.nameEn}
+                                          </h5>
+
+                                          {course.prereq && (
+                                            <p className="text-[11px] text-slate-400 dark:text-white/40">
+                                              {isArabic ? `المتطلب السابق: ` : `Prerequisite: `}
+                                              <span className="font-medium text-slate-600 dark:text-white/70">{course.prereq}</span>
+                                            </p>
+                                          )}
                                         </div>
 
-                                        <h5 className="font-semibold text-ink text-sm leading-snug">
-                                          {isArabic ? course.nameAr : course.nameEn}
-                                        </h5>
+                                        {/* Quick Status Buttons */}
+                                        <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                                          <button
+                                            type="button"
+                                            onClick={() => toggleCourseStatus(course.id, 'passed')}
+                                            title={isArabic ? 'ناجح' : 'Passed'}
+                                            className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                                              st === 'passed'
+                                                ? 'bg-emerald-600 text-white shadow-sm'
+                                                : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10'
+                                            }`}
+                                          >
+                                            <FiCheckCircle size={15} />
+                                            <span className="text-[11px] hidden sm:inline">{isArabic ? 'ناجح' : 'Passed'}</span>
+                                          </button>
 
-                                        {course.prereq && (
-                                          <p className="text-[11px] text-slate-400 dark:text-white/40">
-                                            {isArabic ? `المتطلب السابق: ` : `Prerequisite: `}
-                                            <span className="font-medium text-slate-600 dark:text-white/70">{course.prereq}</span>
-                                          </p>
-                                        )}
-                                      </div>
-
-                                      {/* Quick Status Buttons */}
-                                      <div className="flex items-center gap-1 shrink-0 pt-0.5">
-                                        <button
-                                          type="button"
-                                          onClick={() => toggleCourseStatus(course.id, 'passed')}
-                                          title={isArabic ? 'ناجح' : 'Passed'}
-                                          className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                                            st === 'passed'
-                                              ? 'bg-emerald-600 text-white shadow-sm'
-                                              : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10'
-                                          }`}
-                                        >
-                                          <FiCheckCircle size={15} />
-                                          <span className="text-[11px] hidden sm:inline">{isArabic ? 'ناجح' : 'Passed'}</span>
-                                        </button>
-
-                                        <button
-                                          type="button"
-                                          onClick={() => toggleCourseStatus(course.id, 'enrolled')}
-                                          title={isArabic ? 'قيد الدراسة' : 'Enrolled'}
-                                          className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                                            st === 'enrolled'
-                                              ? 'bg-amber-500 text-white shadow-sm'
-                                              : 'text-slate-400 hover:text-amber-500 hover:bg-amber-500/10'
-                                          }`}
-                                        >
-                                          <FiClock size={15} />
-                                          <span className="text-[11px] hidden sm:inline">{isArabic ? 'قيد الدراسة' : 'Enrolled'}</span>
-                                        </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => toggleCourseStatus(course.id, 'enrolled')}
+                                            title={isArabic ? 'قيد الدراسة' : 'Enrolled'}
+                                            className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                                              st === 'enrolled'
+                                                ? 'bg-amber-500 text-white shadow-sm'
+                                                : 'text-slate-400 hover:text-amber-500 hover:bg-amber-500/10'
+                                            }`}
+                                          >
+                                            <FiClock size={15} />
+                                            <span className="text-[11px] hidden sm:inline">{isArabic ? 'قيد الدراسة' : 'Enrolled'}</span>
+                                          </button>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                )
-                              })}
+                                  )
+                                })}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

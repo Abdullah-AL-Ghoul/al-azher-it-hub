@@ -13,7 +13,7 @@ import ErrorState from '../components/feedback/ErrorState'
 import { useUserData } from '../context/UserDataContext'
 import { currentStreak } from '../utils/achievements'
 import Skeleton from '../components/shared/Skeleton'
-import { ACADEMIC_CURRICULUM } from '../data/academicCurriculum'
+import { ACADEMIC_PLANS, getAcademicPlan } from '../data/academicCurriculum'
 
 const quickLinks = [
  { to: '/lectures', icon: FiFileText, color: 'from-slate-800 to-navy-700', bgLight: 'bg-slate-100 dark:bg-slate-800/50', key: 'lectures', solidColor: '#0f2744' },
@@ -49,13 +49,15 @@ export default function Home() {
 
  const degreeProgress = useMemo(() => {
   try {
-   const raw = localStorage.getItem('al_azher_curriculum_progress')
-   if (!raw) return { count: 0, hours: 0, totalHours: 136, pct: 0 }
-   const progress = JSON.parse(raw)
+   const activePlanId = localStorage.getItem('al_azher_active_major_plan') || 'cse-2025'
+   const plan = getAcademicPlan(activePlanId)
+   const raw = localStorage.getItem(`al_azher_curriculum_progress_${activePlanId}`) ||
+               (activePlanId === 'cse-2025' ? localStorage.getItem('al_azher_curriculum_progress') : null)
+   const progress = raw ? JSON.parse(raw) : {}
    let passedHours = 0
    let count = 0
    let totalHours = 0
-   ACADEMIC_CURRICULUM.forEach((yr) => {
+   plan.curriculum.forEach((yr) => {
     yr.semesters.forEach((sem) => {
      sem.courses.forEach((c) => {
       totalHours += (c.hours || 0)
@@ -67,9 +69,9 @@ export default function Home() {
     })
    })
    const pct = totalHours > 0 ? Math.min(100, Math.round((passedHours / totalHours) * 100)) : 0
-   return { count, hours: passedHours, totalHours: totalHours || 136, pct }
+   return { count, hours: passedHours, totalHours: totalHours || 160, pct, plan }
   } catch {
-   return { count: 0, hours: 0, totalHours: 136, pct: 0 }
+   return { count: 0, hours: 0, totalHours: 160, pct: 0, plan: getAcademicPlan('cse-2025') }
   }
  }, [])
 

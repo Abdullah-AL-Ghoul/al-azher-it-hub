@@ -26,7 +26,8 @@ import ConfirmDialog from '../components/shared/ConfirmDialog'
 import Lazy3DScene from '../components/three/Lazy3DScene'
 import toast from 'react-hot-toast'
 import Skeleton from '../components/shared/Skeleton'
-import { ACADEMIC_CURRICULUM } from '../data/academicCurriculum'
+import { ACADEMIC_PLANS, getAcademicPlan } from '../data/academicCurriculum'
+import { FiChevronDown } from 'react-icons/fi'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
@@ -39,9 +40,10 @@ const YEAR_COLORS = [
 ]
 
 // Convert official curriculum data into roadmap items
-function buildCurriculumDefaults() {
+function buildCurriculumDefaults(plan) {
+  const targetCurriculum = plan?.curriculum || ACADEMIC_PLANS[0].curriculum
   const list = []
-  ACADEMIC_CURRICULUM.forEach(yr => {
+  targetCurriculum.forEach(yr => {
     yr.semesters.forEach(sem => {
       sem.courses.forEach((c, idx) => {
         list.push({
@@ -76,6 +78,16 @@ export default function CourseRoadmap() {
   const isArabic = lang === 'ar'
   const canEdit = isAdmin
 
+  const [selectedPlanId, setSelectedPlanId] = useState(() => {
+    try {
+      const saved = localStorage.getItem('al_azher_active_major_plan')
+      if (saved && ACADEMIC_PLANS.some(p => p.id === saved)) return saved
+    } catch {}
+    return 'cse-2025'
+  })
+
+  const activePlan = useMemo(() => getAcademicPlan(selectedPlanId), [selectedPlanId])
+
   const [courses, setCourses] = useState([])
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [roadmap, setRoadmap] = useState([])
@@ -105,20 +117,39 @@ export default function CourseRoadmap() {
 
   const mountedRef = useRef(true)
 
+  const handlePlanChange = (newPlanId) => {
+    if (newPlanId === selectedPlanId) return
+    setSelectedPlanId(newPlanId)
+    try {
+      localStorage.setItem('al_azher_active_major_plan', newPlanId)
+    } catch {}
+    const planObj = getAcademicPlan(newPlanId)
+    const newItems = buildCurriculumDefaults(planObj)
+    setRoadmap(newItems)
+    setEditData(newItems)
+    setSelectedCourseKey(null)
+    setActiveCourseHover(null)
+    toast.success(
+      isArabic
+        ? `تم تحديث الشجرة لتخصص: ${planObj.nameAr}`
+        : `Roadmap switched to: ${planObj.nameEn}`
+    )
+  }
+
   const loadData = async () => {
     setLoading(true)
     try {
       const [c, r] = await Promise.all([getCourses(), getRoadmap()])
       if (!mountedRef.current) return
       setCourses(c || [])
-      const initial = (Array.isArray(r) && r.length > 0) ? r : buildCurriculumDefaults()
+      const initial = (Array.isArray(r) && r.length > 0) ? r : buildCurriculumDefaults(activePlan)
       setRoadmap(initial)
       setEditData(initial)
       setError(null)
     } catch (e) {
       if (mountedRef.current) {
         // Fallback to curriculum defaults gracefully on network glitch
-        const fallback = buildCurriculumDefaults()
+        const fallback = buildCurriculumDefaults(activePlan)
         setRoadmap(fallback)
         setEditData(fallback)
         setError(null)
@@ -353,8 +384,42 @@ export default function CourseRoadmap() {
       </div>
 
       <div className="container-page">
-        {/* Controls Bar: Tracks Filter, Search, and Dependency Guide */}
+        {/* Controls Bar: Major Selector, Tracks Filter, Search, and Dependency Guide */}
         <div className="glass rounded-2xl p-4 sm:p-5 mb-8 border border-white/10 space-y-4">
+          {/* Major Selector Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-black/5 dark:border-white/5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-slate-500 dark:text-white/50">
+                {isArabic ? 'خطة التخصص المعتمدة:' : 'Active Major Plan:'}
+              </span>
+              <span className="text-xs px-2.5 py-1 rounded-xl bg-royal-500/10 text-royal-600 dark:text-cyan-400 font-bold">
+                {isArabic ? activePlan.nameAr : activePlan.nameEn} (#{activePlan.planNumber})
+              </span>
+              <span className="text-[11px] px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold">
+                {activePlan.badge}
+              </span>
+            </div>
+
+            <div className="relative min-w-[240px] max-w-sm">
+              <label htmlFor="roadmap-major-select" className="sr-only">
+                {isArabic ? 'تغيير خطة التخصص' : 'Select Major Plan'}
+              </label>
+              <select
+                id="roadmap-major-select"
+                value={selectedPlanId}
+                onChange={(e) => handlePlanChange(e.target.value)}
+                className="input-spatial w-full px-3 py-1.5 rounded-xl text-xs font-bold text-ink appearance-none cursor-pointer focus:outline-none"
+              >
+                {ACADEMIC_PLANS.map(plan => (
+                  <option key={plan.id} value={plan.id} className="bg-white dark:bg-navy-900 text-ink">
+                    {isArabic ? plan.nameAr : plan.nameEn} — (#{plan.planNumber})
+                  </option>
+                ))}
+              </select>
+              <FiChevronDown className="absolute inset-y-0 end-2.5 my-auto pointer-events-none text-slate-400" size={14} />
+            </div>
+          </div>
+
           <div className="flex items-center justify-between gap-3 flex-wrap">
             {/* Track Switcher */}
             <div className="flex items-center gap-1.5 flex-wrap">

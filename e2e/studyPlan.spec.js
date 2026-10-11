@@ -40,13 +40,26 @@ test.describe('Study Plan & Academic GPA Calculator E2E Suite', () => {
     const trackerTab = page.getByRole('button', { name: /مسار الخطة التخصصية|Curriculum Tracker/i })
     await expect(trackerTab).toBeVisible()
 
-    // Degree Academic Completion box should be visible
-    const completionCard = page.locator('text=مستوى الإنجاز الأكاديمي للدرجة الجامعية')
-    await expect(completionCard).toBeVisible()
+    // Major Selector card and select dropdown should be visible
+    const planSelectorCard = page.locator('text=الخطة الأكاديمية للتخصص المعتمد')
+    await expect(planSelectorCard).toBeVisible()
 
-    // Check that a core course like CS 101 or CS 102 exists
-    const cs101Code = page.locator('text=CS 101').first()
-    await expect(cs101Code).toBeVisible()
+    const planSelect = page.locator('#academic-plan-select')
+    await expect(planSelect).toBeVisible()
+
+    // Check that an official Al-Azhar accredited course code (e.g., ITCS1401 or MATH1320) exists
+    const officialCourse = page.locator('text=ITCS1401').first()
+    await expect(officialCourse).toBeVisible()
+
+    // Test multi-plan switching: switch to Computer Science 2020 (Plan 9243)
+    await planSelect.selectOption('cs-2020')
+    await expect(planSelect).toHaveValue('cs-2020')
+    await expect(page.locator('span').filter({ hasText: 'علوم الحاسوب (2020)' }).first()).toBeVisible()
+
+    // Switch back to CSE 2025 (Plan 9312)
+    await planSelect.selectOption('cse-2025')
+    await expect(planSelect).toHaveValue('cse-2025')
+    await expect(page.locator('span').filter({ hasText: 'هندسة أنظمة الحاسوب (2025)' }).first()).toBeVisible()
 
     // Test status toggle on a course: click "ناجح" or "Passed"
     const passedBtn = page.getByTitle('ناجح').first()

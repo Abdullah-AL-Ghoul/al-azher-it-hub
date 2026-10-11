@@ -15,7 +15,7 @@ import toast from 'react-hot-toast'
 import motivationalQuotes from '../data/quotes'
 import ErrorState from '../components/feedback/ErrorState'
 import Skeleton from '../components/shared/Skeleton'
-import { ACADEMIC_CURRICULUM } from '../data/academicCurriculum'
+import { ACADEMIC_PLANS, getAcademicPlan } from '../data/academicCurriculum'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
@@ -80,9 +80,19 @@ export default function Profile() {
  const [logDates, setLogDates] = useState([])
  const [showPrintReport, setShowPrintReport] = useState(false)
 
+ const activePlanId = useMemo(() => {
+  try {
+   const saved = localStorage.getItem('al_azher_active_major_plan')
+   if (saved && ACADEMIC_PLANS.some(p => p.id === saved)) return saved
+  } catch {}
+  return 'cse-2025'
+ }, [])
+
+ const activePlan = useMemo(() => getAcademicPlan(activePlanId), [activePlanId])
+
  const allCurriculumCourses = useMemo(() => {
   const list = []
-  ACADEMIC_CURRICULUM.forEach((yr) => {
+  activePlan.curriculum.forEach((yr) => {
    yr.semesters.forEach((sem) => {
     sem.courses.forEach((c) => {
      list.push({ ...c, year: yr.year, semester: sem.semester })
@@ -90,7 +100,7 @@ export default function Profile() {
    })
   })
   return list
- }, [])
+ }, [activePlan])
 
  const totalCurriculumHours = useMemo(() => {
   return allCurriculumCourses.reduce((sum, c) => sum + (c.hours || 0), 0)
@@ -98,11 +108,15 @@ export default function Profile() {
 
  const curriculumProgressState = useMemo(() => {
   try {
-   const raw = localStorage.getItem('al_azher_curriculum_progress')
-   if (raw) return JSON.parse(raw)
+   const specific = localStorage.getItem(`al_azher_curriculum_progress_${activePlanId}`)
+   if (specific) return JSON.parse(specific)
+   if (activePlanId === 'cse-2025') {
+    const legacy = localStorage.getItem('al_azher_curriculum_progress')
+    if (legacy) return JSON.parse(legacy)
+   }
   } catch {}
   return {}
- }, [])
+ }, [activePlanId])
 
  const passedCourses = useMemo(() => {
   return allCurriculumCourses.filter((c) => curriculumProgressState[c.id] === 'passed')
@@ -804,7 +818,7 @@ export default function Profile() {
         </div>
         <div>
          <span className="text-slate-500 dark:text-white/50 print:text-slate-600 block">{isArabic ? 'التخصص:' : 'Major:'}</span>
-         <span className="font-bold text-ink print:text-black">{profileData.major || (isArabic ? 'تكنولوجيا المعلومات' : 'Information Technology')}</span>
+         <span className="font-bold text-ink print:text-black">{profileData.major || (isArabic ? activePlan.nameAr : activePlan.nameEn)}</span>
         </div>
         <div>
          <span className="text-slate-500 dark:text-white/50 print:text-slate-600 block">{isArabic ? 'الساعات المنجزة:' : 'Passed Hours:'}</span>
@@ -824,7 +838,7 @@ export default function Profile() {
        <div>
         <h4 className="font-bold text-sm text-ink print:text-black mb-2 flex items-center gap-1.5">
          <FiCheckSquare className="text-emerald-500" />
-         {isArabic ? 'المساقات المجتازة من الخطة الأكاديمية (136 ساعة):' : 'Completed Curriculum Courses:'}
+         {isArabic ? `المساقات المجتازة من الخطة الأكاديمية (${totalCurriculumHours} ساعة - خطة ${activePlan.planNumber}):` : `Completed Curriculum Courses (${totalCurriculumHours} hrs - Plan #${activePlan.planNumber}):`}
         </h4>
         {passedCourses.length === 0 ? (
          <p className="text-xs text-slate-500 italic p-4 text-center border border-dashed rounded-xl">
