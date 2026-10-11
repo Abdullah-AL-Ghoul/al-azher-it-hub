@@ -44,6 +44,7 @@ export default function LectureThumbnail({
         alt={alt}
         width={width}
         height={height}
+        sizes={sizes}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
         fetchPriority={priority ? 'high' : 'low'}
@@ -82,6 +83,7 @@ export default function LectureThumbnail({
       alt={alt}
       width={width}
       height={height}
+      sizes={sizes}
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"
       fetchPriority={priority ? 'high' : 'low'}

@@ -85,8 +85,8 @@ export async function parseLecturesFromInput(text, defaultSubject = '') {
     if (i > 0) {
       const prevLine = lines[i - 1]
       if (!prevLine.match(/https?:\/\//i) && !extractYouTubeId(prevLine)) {
-        if (/^(?:lec(?:ture)?|محاضرة|درس|part|ch(?:apter)?)\s*[\d.:\-]/i.test(prevLine)) {
-          precedingHint = prevLine.replace(/[:\-–]/g, ' ').trim()
+        if (/^(?:lec(?:ture)?|محاضرة|درس|part|ch(?:apter)?)\s*[\d.:-]/i.test(prevLine)) {
+          precedingHint = prevLine.replace(/[:-–]/g, ' ').trim()
         }
       }
     }

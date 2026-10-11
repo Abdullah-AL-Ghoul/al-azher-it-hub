@@ -6,7 +6,7 @@ import { deleteLecture, updateLecture } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'
 import usePagination from '../../hooks/usePagination'
 import { pageContainer, pageItem, pageContainerReduced, pageItemReduced } from '../../utils/motionTokens'
-import { lectureVideoId, lectureThumb, extractYouTubeId } from '../../utils/helpers'
+import { lectureVideoId, extractYouTubeId } from '../../utils/helpers'
 import { exportToJson } from '../../utils/adminShared'
 import ConfirmDialog from '../shared/ConfirmDialog'
 import SkeletonRow from './SkeletonRow'
@@ -123,7 +123,9 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
       try {
         await deleteLecture(id)
         count++
-      } catch (_e) {}
+      } catch (_e) {
+        /* ignore individual deletion failures */
+      }
     }
     toast.success(isArabic ? `تم حذف ${count} محاضرة بنجاح` : `Deleted ${count} lectures`)
     setSelectedIds(new Set())
@@ -419,7 +421,7 @@ function LecturesTable({ lectures, courses, loading, isArabic, onEdit, onAdd, on
           size="lg"
         >
           <div className="space-y-4">
-            <div className="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
+            <div className="w-full rounded-xl overflow-hidden bg-black shadow-lg">
               <VideoPlayer
                 videoId={lectureVideoId(previewLecture)}
                 url={previewLecture.url}

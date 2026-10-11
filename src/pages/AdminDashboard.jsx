@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
@@ -113,7 +113,7 @@ export default function AdminDashboard() {
   } finally {
    if (generation === loadGeneration.current) setLoading(false)
   }
- }, [isArabic])
+ }, [t])
 
  useEffect(() => {
   loadTabData(tab)

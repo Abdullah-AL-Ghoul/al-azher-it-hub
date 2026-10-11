@@ -118,7 +118,7 @@ function TypingIndicator() {
  )
 }
 
-const CopyButton = memo(function CopyButton({ text, isArabic }) {
+const CopyButton = memo(function CopyButton({ text }) {
  const { t } = useLanguage()
  const [copied, setCopied] = useState(false)
 
@@ -142,7 +142,7 @@ const CopyButton = memo(function CopyButton({ text, isArabic }) {
   } catch {
    toast.error(t('inline.chatbot.copy-failed'))
   }
- }, [text, isArabic])
+ }, [text, t])
 
   return (
    <button
@@ -314,7 +314,7 @@ export default function Chatbot() {
     time: formatTime()
    }])
   }
- }, [open, isArabic, user])
+ }, [open, isArabic, user, messages.length, t])
 
  useEffect(() => {
   if (open) {
@@ -414,7 +414,7 @@ export default function Chatbot() {
     time: formatTime()
    }])
    }, 100)
-  }, [isArabic, user, getHistoryKey])
+  }, [isArabic, user, getHistoryKey, t])
 
   useEffect(() => () => { if (greetTimer.current) clearTimeout(greetTimer.current) }, [])
 

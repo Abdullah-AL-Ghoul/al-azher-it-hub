@@ -51,7 +51,7 @@ export default function AdminSearch({
       },
     ]
     return groups.filter(g => g.items.length > 0)
-  }, [q, users, lectures, sources, courses, isArabic])
+  }, [q, users, lectures, sources, courses, isArabic, t])
 
   // Flat list for keyboard navigation (group headers are not focusable).
   const flat = useMemo(() => {

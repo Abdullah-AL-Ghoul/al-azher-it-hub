@@ -185,9 +185,9 @@ export function UserDataProvider({ children }) {
   }, [studentId])
 
   const markViewed = useCallback(async (lectureId) => {
-    if (!studentId || viewed.includes(lectureId)) return viewed
-    const prev = viewed
-    const optimistic = [...prev, lectureId]
+    const curViewed = viewedRef.current
+    if (!studentId || curViewed.includes(lectureId)) return curViewed
+    const optimistic = [...curViewed, lectureId]
     setViewed(optimistic)
     setStats((s) => ({ ...s, viewed: optimistic }))
     const c = getCached(studentId)

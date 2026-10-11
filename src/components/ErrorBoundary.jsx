@@ -1,8 +1,18 @@
-﻿import { Component } from 'react'
+import { Component } from 'react'
 import { motion } from 'framer-motion'
 import { FiAlertTriangle, FiRefreshCw } from 'react-icons/fi'
-import ar from '../i18n/ar.json'
-import en from '../i18n/en.json'
+const ERROR_STRINGS = {
+  ar: {
+    title: 'حدث خطأ!',
+    message: 'شيء ما خلّطنا، بس ما تقلق — اضغط الزر وحاول مرة أخرى',
+    retry: 'حاول مرة أخرى',
+  },
+  en: {
+    title: 'Something went wrong!',
+    message: 'We encountered an unexpected error. Please try again.',
+    retry: 'Try Again',
+  },
+}
 
 export default class ErrorBoundary extends Component {
  constructor(props) {
@@ -39,7 +49,7 @@ export default class ErrorBoundary extends Component {
  render() {
   const { lang = 'ar', fallback } = this.props
   const isArabic = lang === 'ar'
-  const t = isArabic ? ar : en
+  const t = isArabic ? ERROR_STRINGS.ar : ERROR_STRINGS.en
 
   if (this.state.hasError) {
    // Floating widgets (Chatbot, GlobalSearch, WelcomeModal) pass a minimal
@@ -57,16 +67,16 @@ export default class ErrorBoundary extends Component {
        <FiAlertTriangle className="text-red-500" size={32} />
       </div>
       <h1 className="text-2xl font-bold text-ink mb-2">
-       {t.errorBoundary.title}
+       {t.title}
       </h1>
       <p className="text-slate-500 dark:text-white/50 mb-6">
-       {t.errorBoundary.message}
+       {t.message}
       </p>
       <button
        onClick={() => window.location.reload()}
        className="inline-flex items-center gap-2 px-6 py-3 btn-spatial rounded-xl font-semibold"
       >
-       <FiRefreshCw size={18} /> {t.errorBoundary.retry}
+       <FiRefreshCw size={18} /> {t.retry}
       </button>
      </motion.div>
     </div>

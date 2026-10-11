@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, memo } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { FiSearch, FiDownload, FiTrash2, FiEdit2, FiUser, FiSave, FiX, FiKey, FiExternalLink, FiMail, FiBookOpen, FiCalendar } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
@@ -112,7 +112,7 @@ function UsersTable({ users, loading, onRefresh, isArabic }) {
  useEffect(() => {
   const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE)
   if (totalPages > 0 && page > totalPages) setPage(totalPages)
- }, [filteredUsers.length])
+ }, [filteredUsers.length, page])
 
  const toggleSelect = (id) => {
   setSelectedIds(prev => {

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -419,7 +419,7 @@ export default function Sources() {
    }
   })
   return result
- }, [sources, activeSubject, search, sortBy, isArabic])
+ }, [sources, activeSubject, search, sortBy, isArabic, t])
 
  if (error) return <ErrorState error={error} onRetry={handleRetry} />
 

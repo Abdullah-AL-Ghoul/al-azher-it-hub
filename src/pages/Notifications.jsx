@@ -24,7 +24,7 @@ export default function Notifications() {
     try {
       return parseInt(localStorage.getItem(`al_azher_last_visit_${user?.studentId || 'anon'}`) || '0', 10)
     } catch (_e) { return 0 }
-  }, [user, notifications])
+  }, [user])
 
   const visible = useMemo(() => {
     if (filter === 'unread') {

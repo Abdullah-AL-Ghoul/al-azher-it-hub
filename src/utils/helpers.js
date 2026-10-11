@@ -109,7 +109,10 @@ export function lectureVideoId(lecture) {
     extractYouTubeId(lecture.video_id) ||
     extractYouTubeId(lecture.url) ||
     extractYouTubeId(lecture.videoUrl) ||
+    extractYouTubeId(lecture.video_url) ||
     extractYouTubeId(lecture.youtubeUrl) ||
+    extractYouTubeId(lecture.youtube_url) ||
+    extractYouTubeId(lecture.link) ||
     null
   )
 }

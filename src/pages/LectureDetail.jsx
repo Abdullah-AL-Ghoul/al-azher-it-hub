@@ -95,7 +95,7 @@ export default function LectureDetail() {
     toast.error(t('inline.lecture-detail.copy-failed'))
    })
   }
- }, [lecture, isArabic])
+ }, [lecture, isArabic, t])
 
  
  useEffect(() => {
@@ -261,6 +261,7 @@ export default function LectureDetail() {
         isArabic={isArabic}
         lectureId={lecture.id}
         onWatch={handleWatch}
+        autoPlay={true}
        />
       </div>
 

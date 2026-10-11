@@ -5,11 +5,11 @@ import { useLanguage } from '../context/LanguageContext'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { welcomeContainer, welcomeItem, springSoft } from '../utils/motionTokens'
+import { getLectures, getSources } from '../services'
 import {
   FiLogIn, FiUserPlus, FiFileText, FiLayers, FiArrowUpRight, FiSun, FiMoon, FiMonitor,
-  FiShield, FiStar, FiDatabase, FiCpu, FiGlobe, FiCloud, FiCode, FiBookOpen, FiCheck,
-  FiChevronDown, FiVideo, FiClock, FiAward, FiUsers, FiHelpCircle, FiZap, FiCheckCircle,
-  FiArrowRight, FiCompass, FiTerminal, FiPlay
+  FiShield, FiDatabase, FiCpu, FiGlobe, FiCloud, FiCode, FiBookOpen,
+  FiChevronDown, FiVideo, FiClock, FiAward, FiUsers, FiHelpCircle, FiCheckCircle
 } from 'react-icons/fi'
 import SiteLogo from '../components/shared/SiteLogo'
 import Reveal from '../components/shared/Reveal'
@@ -28,7 +28,7 @@ function MagneticLink({ to, className, children }) {
   )
 }
 
-function FaqItem({ q, a, isArabic }) {
+function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false)
   const prefersReduced = useReducedMotion()
   return (
@@ -86,6 +86,19 @@ export default function WelcomeGate() {
   const heroClusterInView = useInView(heroClusterRef, { margin: '80px' })
   const marqueeRef = useRef(null)
   const marqueeInView = useInView(marqueeRef, { margin: '80px' })
+
+  const [dbStats, setDbStats] = useState({ lectures: 0, sources: 0, loaded: false })
+
+  useEffect(() => {
+    let mounted = true
+    Promise.allSettled([getLectures(), getSources()]).then(([lRes, sRes]) => {
+      if (!mounted) return
+      const lCount = lRes.status === 'fulfilled' && Array.isArray(lRes.value) ? lRes.value.length : 0
+      const sCount = sRes.status === 'fulfilled' && Array.isArray(sRes.value) ? sRes.value.length : 0
+      setDbStats({ lectures: lCount, sources: sCount, loaded: true })
+    })
+    return () => { mounted = false }
+  }, [])
 
   useEffect(() => {
     if (user) navigate('/home', { replace: true })
@@ -171,24 +184,50 @@ export default function WelcomeGate() {
     },
   ]
 
-  const testimonials = [
+  const capabilities = [
     {
-      name: 'أحمد محمود',
-      role: 'سنة ثانية — هندسة برمجيات',
-      textAr: 'المنصة وفّرت عليّ ساعات من التشتت بين روابط اليوتيوب والجروبات. كل محاضرة تجد تحتها سلايداتها وتلخيصها فوراً.',
-      textEn: 'Saved me countless hours searching through scattered links. Every lecture has its slides and notes right underneath.'
+      key: 'resume-player',
+      icon: FiVideo,
+      titleAr: 'مشغل محاضرات مع استئناف فوري',
+      titleEn: 'Timestamp Resume Video Player',
+      descAr: 'حفظ تلقائي لتقدم المشاهدة لكل طالب والعودة للنقطة التي توقفت عندها بدقة دون تشتت.',
+      descEn: 'Automatic per-student position saving; pick up right where you left off across sessions.',
+      badgeAr: 'استئناف ذكي وموثوق',
+      badgeEn: 'Smart Video Resume',
+      grad: 'from-blue-600 to-indigo-600',
     },
     {
-      name: 'سارة خالد',
-      role: 'سنة ثالثة — ذكاء اصطناعي',
-      textAr: 'خاصية تتبع التقدم والـ Streaks خلتني ملتزمة يومياً قبل الامتحانات النصفية، ومحتوى المواد منظم بشكل أكاديمي ممتاز.',
-      textEn: 'Progress tracking and learning streaks kept me consistent through midterms. The academic organization is top tier.'
+      key: 'degree-roadmap',
+      icon: FiClock,
+      titleAr: 'شجرة المتطلبات والخطة الدراسية',
+      titleEn: 'Interactive Prerequisite Map',
+      descAr: 'عرض شجري تفاعلي للمواد ومتطلباتها السابقة لـ 4 سنوات لتسجيل فصلي خالٍ من التعارضات.',
+      descEn: 'Visual course dependency graph across 4 years to streamline semester registration.',
+      badgeAr: 'تخطيط أكاديمي متكامل',
+      badgeEn: 'Degree Prerequisite Tree',
+      grad: 'from-emerald-600 to-teal-600',
     },
     {
-      name: 'محمد عوض',
-      role: 'سنة أولى — علوم حاسوب',
-      textAr: 'كمبتدئ في الكلية، الشجرة الدراسية والمساعد الذكي في الموقع ساعدوني أعرف كيف أدرس كل مادة وما هي متطلباتها.',
-      textEn: 'As a freshman, the degree roadmap and chatbot guided me on course requirements and studying best practices.'
+      key: 'secure-archive',
+      icon: FiFileText,
+      titleAr: 'أرشيف الملخصات والامتحانات',
+      titleEn: 'Curated Study & Exam Archive',
+      descAr: 'ملفات PDF رسمية، سلايدات معتمدة، وأسئلة امتحانات نصفية ونهائية بروابط تحميل آمنة ومباشرة.',
+      descEn: 'Direct PDF summaries, authorized lecture slides, and midterms/finals exam archives.',
+      badgeAr: 'تحميل مباشر وآمن',
+      badgeEn: 'Verified Study Archive',
+      grad: 'from-amber-600 to-orange-600',
+    },
+    {
+      key: 'bilingual-ux',
+      icon: FiGlobe,
+      titleAr: 'تجربة ثنائية اللغة متكاملة',
+      titleEn: 'First-Class Bilingual RTL/LTR',
+      descAr: 'واجهة مصممة للأكاديميين بالعربية والإنجليزية مع دعم كامل للاتجاهات واختصارات لوحة المفاتيح.',
+      descEn: 'Tailored Arabic and English interfaces with full keyboard shortcuts and WCAG AA accessibility.',
+      badgeAr: 'معايير WCAG 2.1 AA',
+      badgeEn: 'WCAG 2.1 AA Compliant',
+      grad: 'from-sky-600 to-cyan-600',
     },
   ]
 
@@ -200,9 +239,24 @@ export default function WelcomeGate() {
   ]
 
   const heroStats = [
-    { end: 60, suffix: '+', labelAr: 'محاضرة مسجلة', labelEn: 'HD Lectures' },
-    { end: 300, suffix: '+', labelAr: 'مصدر وملخص', labelEn: 'Study Sources' },
-    { end: 4, suffix: ' سنين', labelAr: 'سنوات دراسية', labelEn: 'Academic Years' },
+    {
+      end: dbStats.lectures,
+      suffix: dbStats.lectures > 0 ? '+' : '',
+      labelAr: 'محاضرة مسجلة',
+      labelEn: 'Library Lectures',
+    },
+    {
+      end: dbStats.sources,
+      suffix: dbStats.sources > 0 ? '+' : '',
+      labelAr: 'مرجع وملخص',
+      labelEn: 'Study Sources',
+    },
+    {
+      end: 4,
+      suffix: ' سنين',
+      labelAr: 'سنوات دراسية',
+      labelEn: 'Academic Years',
+    },
   ]
 
   return (
@@ -266,8 +320,8 @@ export default function WelcomeGate() {
                 <FiShield size={12} />
               </span>
               <span>{t('inline.welcome-gate.trusted-platform-for-it')}</span>
-              <span className="hidden sm:inline-flex items-center gap-1 text-amber-700 dark:text-amber-300 font-semibold ms-1">
-                <FiStar size={12} className="fill-amber-500 text-amber-600 dark:text-amber-300" /> 4.9/5
+              <span className="hidden sm:inline-flex items-center gap-1 text-royal-600 dark:text-cyan-400 font-semibold ms-1">
+                <FiBookOpen size={12} /> {isArabic ? 'علوم الحاسوب وتكنولوجيا المعلومات' : 'Computer Science & IT'}
               </span>
             </motion.div>
 
@@ -305,22 +359,20 @@ export default function WelcomeGate() {
               </MagneticLink>
             </motion.div>
 
-            {/* Social Trust row */}
-            <motion.div variants={itemVariants} className="mt-7 flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start text-xs text-slate-500 dark:text-white/60">
-              <div className="flex -space-x-2">
-                {[0, 1, 2].map(i => (
-                  <div
-                    key={i}
-                    className="w-7 h-7 rounded-full border-2 border-white dark:border-navy-900 bg-gradient-to-br from-royal-500 to-cyan-400 flex items-center justify-center text-white text-[10px] font-bold shadow-sm"
-                  >
-                    {String.fromCharCode(65 + i)}
-                  </div>
-                ))}
-                <div className="w-7 h-7 rounded-full border-2 border-white dark:border-navy-900 bg-slate-900 dark:bg-white text-white dark:text-navy-900 flex items-center justify-center text-[10px] font-bold shadow-sm">
-                  +500
-                </div>
-              </div>
-              <span className="font-medium">{t('inline.welcome-gate.trusted-by-4-cohorts')}</span>
+            {/* Academic Trust row */}
+            <motion.div variants={itemVariants} className="mt-7 flex flex-wrap items-center gap-4 justify-center lg:justify-start text-xs text-slate-500 dark:text-white/60">
+              <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-white/80">
+                <FiCheckCircle size={14} className="text-emerald-500" />
+                {isArabic ? 'منصة أكاديمية مجانية 100%' : '100% Free for Students'}
+              </span>
+              <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-white/80">
+                <FiCheckCircle size={14} className="text-emerald-500" />
+                {isArabic ? 'بدون إعلانات تجارية' : 'Zero Commercial Ads'}
+              </span>
+              <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-white/80">
+                <FiCheckCircle size={14} className="text-emerald-500" />
+                {isArabic ? 'منهج جامعي معتمد' : 'Accredited Curriculum'}
+              </span>
             </motion.div>
 
             {/* Quick Hero Statistics Grid */}
@@ -468,42 +520,40 @@ export default function WelcomeGate() {
         </Reveal>
       </section>
 
-      {/* ===== STUDENT TESTIMONIALS ===== */}
+      {/* ===== ACADEMIC CAPABILITIES & WORKFLOW ===== */}
       <section className="relative z-10 py-16 container-page">
         <SectionHeading
-          eyebrow={t('inline.welcome-gate.student-voices')}
-          title={t('inline.welcome-gate.what-our-students-say')}
-          subtitle={t('inline.welcome-gate.real-experiences-from-students')}
+          eyebrow={isArabic ? 'إمكانيات المنصة التعليمية' : 'Platform Capabilities'}
+          title={isArabic ? 'أدوات هندسية مصممة للتميز الأكاديمي' : 'Engineered for Academic Excellence'}
+          subtitle={isArabic ? 'منظومة دراسية متكاملة تلبي احتياجات طلبة تكنولوجيا المعلومات من السنة الأولى وحتى التخرج' : 'A cohesive study ecosystem supporting IT students from freshman year to graduation'}
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((tm, i) => (
-            <Reveal
-              key={tm.name}
-              delay={i * 0.08}
-              className="glass rounded-2xl p-7 border border-white/10 hover:border-royal-500/30 transition-all flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center gap-1 mb-4 text-amber-400">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <FiStar key={star} size={14} className="fill-amber-400" />
-                  ))}
-                </div>
-                <p className="text-sm sm:text-base text-slate-700 dark:text-white/80 leading-relaxed mb-6 italic">
-                  &ldquo;{isArabic ? tm.textAr : tm.textEn}&rdquo;
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-white/5">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-royal-500 to-cyan-400 flex items-center justify-center text-white text-sm font-bold shadow-sm">
-                  {tm.name.charAt(0)}
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {capabilities.map((cap, i) => {
+            const Icon = cap.icon
+            return (
+              <Reveal
+                key={cap.key}
+                delay={i * 0.08}
+                className="glass rounded-2xl p-6 border border-white/10 hover:border-royal-500/30 transition-all flex flex-col justify-between group"
+              >
                 <div>
-                  <p className="text-sm font-bold text-ink">{tm.name}</p>
-                  <p className="text-xs text-slate-500 dark:text-white/50">{tm.role}</p>
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cap.grad} flex items-center justify-center text-white mb-5 shadow-md shadow-royal-500/10 group-hover:scale-105 transition-transform`}>
+                    <Icon size={22} />
+                  </div>
+                  <h3 className="text-base font-bold text-ink mb-2">
+                    {isArabic ? cap.titleAr : cap.titleEn}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-white/65 leading-relaxed">
+                    {isArabic ? cap.descAr : cap.descEn}
+                  </p>
                 </div>
-              </div>
-            </Reveal>
-          ))}
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center gap-2 text-xs font-semibold text-royal-600 dark:text-cyan-400">
+                  <FiCheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
+                  <span>{isArabic ? cap.badgeAr : cap.badgeEn}</span>
+                </div>
+              </Reveal>
+            )
+          })}
         </div>
       </section>
 

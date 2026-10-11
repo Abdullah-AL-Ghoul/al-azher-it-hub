@@ -11,9 +11,7 @@ import EmptyState from '../components/shared/EmptyState'
 import { lectureVideoId, SORT_OPTIONS } from '../utils/helpers'
 import FilterBar from '../components/FilterBar'
 import CustomSelect from '../components/shared/CustomSelect'
-import VideoPlayer from '../components/shared/VideoPlayer'
 import ErrorState from '../components/feedback/ErrorState'
-import Modal from '../components/ui/Modal'
 import StarRating from '../components/shared/StarRating'
 import Skeleton from '../components/shared/Skeleton'
 import usePagination from '../hooks/usePagination'
@@ -32,7 +30,6 @@ export default function Lectures() {
  const { user } = useAuth()
  const isArabic = lang === 'ar'
  const [searchParams, setSearchParams] = useSearchParams()
- const [activeLecture, setActiveLecture] = useState(null)
  const [watchFilter, setWatchFilter] = useState('all')
  const initRef = useRef(false)
 
@@ -192,7 +189,7 @@ export default function Lectures() {
        {continueWatching.slice(0, 6).map(l => {
         const vid = lectureVideoId(l)
         return (
-         <button key={l.id} onClick={() => setActiveLecture(l)} className="snap-start shrink-0 w-44 glass rounded-xl overflow-hidden text-start group hover:border-royal-500/30 transition-colors border border-transparent">
+         <Link key={l.id} to={`/lecture/${l.id}`} className="snap-start shrink-0 w-44 glass rounded-xl overflow-hidden text-start group hover:border-royal-500/30 transition-colors border border-transparent">
           <div className="relative aspect-video bg-black/30">
            <LectureThumbnail videoId={vid} alt="" width={176} height={99} />
            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -205,7 +202,7 @@ export default function Lectures() {
            <p className="text-[10px] text-slate-500 dark:text-white/50 truncate">{isArabic ? l.subjectAr : l.subjectEn}</p>
            <p className="text-xs font-semibold text-ink truncate">{isArabic ? l.titleAr : l.titleEn}</p>
           </div>
-         </button>
+         </Link>
         )
        })}
       </div>
@@ -308,13 +305,13 @@ export default function Lectures() {
     ) : viewMode === 'grid' ? (
      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {visibleLectures.map(lecture => (
-       <LectureCard key={lecture.id} lecture={lecture} isArabic={isArabic} user={user} localFavorites={localFavorites} localRatings={localRatings} viewedIds={viewedIds} onToggleFavorite={handleToggleFavorite} onRate={handleRate} onWatch={handleWatch} onPlay={setActiveLecture} />
+       <LectureCard key={lecture.id} lecture={lecture} isArabic={isArabic} user={user} localFavorites={localFavorites} localRatings={localRatings} viewedIds={viewedIds} onToggleFavorite={handleToggleFavorite} onRate={handleRate} onWatch={handleWatch} />
       ))}
      </motion.div>
     ) : (
      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
       {visibleLectures.map(lecture => (
-       <LectureListItem key={lecture.id} lecture={lecture} isArabic={isArabic} user={user} localFavorites={localFavorites} localRatings={localRatings} viewedIds={viewedIds} onToggleFavorite={handleToggleFavorite} onRate={handleRate} onWatch={handleWatch} onPlay={setActiveLecture} />
+       <LectureListItem key={lecture.id} lecture={lecture} isArabic={isArabic} user={user} localFavorites={localFavorites} localRatings={localRatings} viewedIds={viewedIds} onToggleFavorite={handleToggleFavorite} onRate={handleRate} onWatch={handleWatch} />
       ))}
      </motion.div>
     )}
@@ -330,64 +327,8 @@ export default function Lectures() {
       </button>
      </div>
     )}
-
-    {/* Video modal */}
-    <VideoPlayerModal
-     lecture={activeLecture}
-     onClose={() => setActiveLecture(null)}
-     isArabic={isArabic}
-     onWatch={handleWatch}
-     localFavorites={localFavorites}
-     localRatings={localRatings}
-     onToggleFavorite={handleToggleFavorite}
-     onRate={handleRate}
-    />
    </div>
   </div>
- )
-}
-
-function VideoPlayerModal({ lecture, onClose, isArabic, onWatch, localFavorites, localRatings, onToggleFavorite, onRate }) {
- const { t } = useLanguage()
- const isFavorite = lecture ? localFavorites.includes(lecture.id) : false
- const rating = lecture ? localRatings[lecture.id] || 0 : 0
-
- return (
-  <Modal isOpen={!!lecture} onClose={onClose} size="lg" className="p-4 sm:p-6">
-   {lecture && (
-    <>
-     <div className="flex items-center justify-between gap-3 mb-4">
-      <div className="min-w-0 flex-1">
-       <h2 className="text-base sm:text-lg font-bold text-ink truncate">{isArabic ? lecture.titleAr : lecture.titleEn}</h2>
-       <span className="text-xs text-accent">{isArabic ? lecture.subjectAr : lecture.subjectEn}</span>
-      </div>
-      <Link to={`/lecture/${lecture.id}`} className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 glass rounded-lg text-xs font-medium text-ink hover:text-accent transition-colors" onClick={onClose}>
-       {t('inline.lectures.full-page')} <FiExternalLink size={12} />
-      </Link>
-     </div>
-
-     <VideoPlayer
-      videoId={lectureVideoId(lecture)}
-      url={lecture.url}
-      thumbnail={lecture.thumbnail || lecture.thumbUrl}
-      title={isArabic ? lecture.titleAr : lecture.titleEn}
-      isArabic={isArabic}
-      lectureId={lecture.id}
-      onWatch={onWatch ? () => onWatch(lecture.id, lecture) : undefined}
-      autoPlay
-     />
-
-     {/* Quick actions */}
-     <div className="flex items-center justify-between mt-4 pt-3 border-t border-line">
-      <StarRating value={rating} onRate={(star) => onRate?.(lecture.id, star, lecture)} target="sm" />
-      <button onClick={() => onToggleFavorite?.(lecture.id, lecture)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition hover:bg-black/5 dark:hover:bg-white/5" aria-label={isFavorite ? (t('inline.lectures.unfavorite')) : (t('inline.lectures.favorite'))}>
-       <FiHeart size={16} className={isFavorite ? 'fill-rose-500 text-rose-500' : 'text-slate-500'} />
-       <span className="text-slate-500 dark:text-white/60">{t('inline.lectures.favorite-2')}</span>
-      </button>
-     </div>
-    </>
-   )}
-  </Modal>
  )
 }
 
@@ -409,98 +350,188 @@ function useSpotlightVars() {
   }, [])
 }
 
-const LectureCard = memo(function LectureCard({ lecture, isArabic, user, localFavorites, localRatings, viewedIds, onToggleFavorite, onRate, onWatch, onPlay }) {
+const LectureCard = memo(function LectureCard({ lecture, isArabic, user, localFavorites, localRatings, viewedIds, onToggleFavorite, onRate, onWatch }) {
   const { t } = useLanguage()
   const onSpotlightMove = useSpotlightVars()
   const { ref: tiltRef, tiltHandlers } = useTilt3D({ max: 6 })
   const isViewed = viewedIds.includes(lecture.id)
   const videoId = lectureVideoId(lecture)
   const title = isArabic ? lecture.titleAr : lecture.titleEn
+  const lectureUrl = `/lecture/${lecture.id}`
+
   return (
-     <div ref={tiltRef} {...tiltHandlers} className="relative group glass-panel gradient-border spotlight-card tilt-card lift rounded-xl overflow-hidden card-shine" onMouseMove={onSpotlightMove}>
-      <Link to={`/lecture/${lecture.id}`} onClick={() => onWatch(lecture.id, lecture)} className="absolute inset-0 z-0 rounded-xl" aria-label={title} />
-      <div className="relative aspect-video pointer-events-none bg-black/30 flex items-center justify-center overflow-hidden">
-      <LectureThumbnail
-       videoId={videoId}
-       thumbnail={lecture.thumbnail || lecture.thumbUrl}
-       alt={title || ''}
-       sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(50vw - 2.5rem), calc(33.333vw - 2.7rem)"
-       className="group-hover:scale-[1.07] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
-      />
-      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
-     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <button type="button" onClick={(e) => { e.preventDefault(); onPlay(lecture) }} className="pointer-events-auto relative z-10 w-16 h-16 bg-rose-500/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white transition duration-300 group-hover:scale-110 shadow-xl shadow-rose-500/20 backdrop-blur-sm" aria-label={t('inline.lectures.play-inside-the-site')}>
-       <FiPlay size={28} className="ms-0.5" />
-      </button>
-     </div>
-     {isViewed && (
-      <div className="absolute top-3 start-3 flex items-center gap-1 px-2 py-1 bg-emerald-500/80 backdrop-blur-sm rounded-full text-white text-xs font-medium">
-       <FiCheck size={12} />
-       <span>{t('lectures.watched')}</span>
+    <div
+      ref={tiltRef}
+      {...tiltHandlers}
+      className="relative group glass-panel gradient-border spotlight-card tilt-card lift rounded-2xl overflow-hidden card-shine flex flex-col"
+      onMouseMove={onSpotlightMove}
+    >
+      {/* Thumbnail Area - Click goes directly to lecture detail page */}
+      <Link
+        to={lectureUrl}
+        onClick={() => onWatch(lecture.id, lecture)}
+        className="relative block aspect-video bg-black/40 overflow-hidden cursor-pointer"
+        aria-label={`${t('inline.lectures.play-inside-the-site')}: ${title}`}
+      >
+        <LectureThumbnail
+          videoId={videoId}
+          thumbnail={lecture.thumbnail || lecture.thumbUrl}
+          alt={title || ''}
+          sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(50vw - 2.5rem), calc(33.333vw - 2.7rem)"
+          className="group-hover:scale-[1.06] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
+        />
+        <div className="absolute inset-0 bg-black/25 group-hover:bg-black/10 transition-colors duration-300" />
+
+        {/* Play button indicator */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-16 h-16 bg-rose-600/90 group-hover:bg-rose-600 text-white rounded-full flex items-center justify-center shadow-2xl shadow-rose-600/40 group-hover:scale-110 transition-all duration-300 backdrop-blur-xs">
+            <FiPlay size={28} className="ms-1" />
+          </div>
+        </div>
+
+        {isViewed && (
+          <div className="absolute top-3 start-3 flex items-center gap-1 px-2.5 py-1 bg-emerald-500/90 backdrop-blur-md rounded-full text-white text-xs font-semibold shadow-md">
+            <FiCheck size={12} />
+            <span>{t('lectures.watched')}</span>
+          </div>
+        )}
+
+        {user && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onToggleFavorite(lecture.id, lecture)
+            }}
+            className="absolute top-3 end-3 z-10 p-2.5 bg-black/40 hover:bg-black/70 backdrop-blur-md rounded-full transition text-white"
+            aria-label={localFavorites.includes(lecture.id) ? t('lectures.unfavorite') : t('lectures.favorite')}
+          >
+            <FiHeart size={16} className={localFavorites.includes(lecture.id) ? 'fill-rose-500 text-rose-500' : 'text-white'} />
+          </button>
+        )}
+      </Link>
+
+      {/* Info Body */}
+      <div className="relative p-5 flex-1 flex flex-col justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="eyebrow text-[10px] !mb-0 !gap-1.5">{isArabic ? lecture.subjectAr : lecture.subjectEn}</span>
+            <span className="ms-auto text-[10px] tracking-widest uppercase font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/10 text-slate-500 dark:text-white/60 tabular-nums">
+              {lecture.date || '—'}
+            </span>
+          </div>
+          <Link
+            to={lectureUrl}
+            onClick={() => onWatch(lecture.id, lecture)}
+            className="font-bold text-ink hover:text-accent transition-colors line-clamp-2 text-base leading-snug"
+          >
+            {title}
+          </Link>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-black/5 dark:border-white/5">
+            <Link
+              to={lectureUrl}
+              onClick={() => onWatch(lecture.id, lecture)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-colors"
+            >
+              <FiPlay size={13} />
+              <span>{isArabic ? 'مشاهدة المحاضرة' : 'Watch Lecture'}</span>
+            </Link>
+            <Link
+              to={lectureUrl}
+              onClick={() => onWatch(lecture.id, lecture)}
+              className="text-xs font-medium text-accent hover:text-royal-600 dark:hover:text-cyan-300 transition-colors inline-flex items-center gap-1"
+            >
+              <span>{t('lectures.viewLink')}</span>
+              <FiExternalLink size={12} />
+            </Link>
+          </div>
+
+          {user && (
+            <div className="relative z-10 mt-3 pt-2 border-t border-black/5 dark:border-white/5 flex items-center gap-1">
+              <StarRating value={localRatings[lecture.id] || 0} onRate={(star) => onRate(lecture.id, star, lecture)} />
+            </div>
+          )}
+        </div>
       </div>
-     )}
-     {user && (
-      <button onClick={(e) => { e.preventDefault(); onToggleFavorite(lecture.id, lecture) }} className="pointer-events-auto absolute top-3 end-3 z-10 p-2 bg-black/30 backdrop-blur-sm rounded-full transition hover:bg-black/50" aria-label={localFavorites.includes(lecture.id) ? t('lectures.unfavorite') : t('lectures.favorite')}>
-       <FiHeart size={16} className={localFavorites.includes(lecture.id) ? 'fill-rose-500 text-rose-500' : 'text-white'} />
-      </button>
-     )}
-    </div>
-    <div className="relative p-5 pointer-events-none">
-     <div className="flex items-center gap-2 mb-2">
-      <span className="eyebrow text-[10px] !mb-0 !gap-1.5">{isArabic ? lecture.subjectAr : lecture.subjectEn}</span>
-      <span className="ms-auto text-[10px] tracking-widest uppercase font-semibold px-2 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/10 text-slate-500 dark:text-white/60 tabular-nums">{lecture.date || '—'}</span>
-     </div>
-     <h2 className="font-semibold text-ink mb-1 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors line-clamp-2">{title}</h2>
-     <div className="flex items-center justify-between mt-3">
-      <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-white/50"><FiCalendar size={12} /> {t('inline.lectures.lecture')}</span>
-      <span className="text-sm font-medium text-accent group-hover:text-royal-600 dark:group-hover:text-cyan-300 transition-colors inline-flex items-center gap-1">{t('lectures.viewLink')} <span aria-hidden="true">→</span></span>
-     </div>
-      {user && (
-       <div className="relative z-10 pointer-events-auto mt-3 pt-3 border-t border-black/5 dark:border-white/5 flex items-center gap-1">
-        <StarRating value={localRatings[lecture.id] || 0} onRate={(star) => onRate(lecture.id, star, lecture)} />
-       </div>
-       )}
-     </div>
     </div>
   )
- })
+})
 
-const LectureListItem = memo(function LectureListItem({ lecture, isArabic, user, localFavorites, localRatings, viewedIds, onToggleFavorite, onRate, onWatch, onPlay }) {
+const LectureListItem = memo(function LectureListItem({ lecture, isArabic, user, localFavorites, localRatings, viewedIds, onToggleFavorite, onRate, onWatch }) {
   const { t } = useLanguage()
   const isViewed = viewedIds.includes(lecture.id)
   const videoId = lectureVideoId(lecture)
   const title = isArabic ? lecture.titleAr : lecture.titleEn
+  const lectureUrl = `/lecture/${lecture.id}`
+
   return (
     <div className="relative group glass glass-hover flex items-center gap-4 p-4 rounded-xl">
-     <Link to={`/lecture/${lecture.id}`} onClick={() => onWatch(lecture.id, lecture)} className="absolute inset-0 z-0 rounded-xl" aria-label={title} />
-      <div className="pointer-events-none relative w-32 h-20 flex-shrink-0 bg-black/30 rounded-xl overflow-hidden flex items-center justify-center">
-      <LectureThumbnail videoId={videoId} thumbnail={lecture.thumbnail || lecture.thumbUrl} alt={title || ''} width={128} height={80} sizes="128px" />
-     <div className="absolute inset-0 flex items-center justify-center">
-      <button type="button" onClick={(e) => { e.preventDefault(); onPlay(lecture) }} className="pointer-events-auto relative z-10 w-10 h-10 bg-rose-500/80 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-sm" aria-label={t('inline.lectures.play-inside-the-site')}>
-        <FiPlay size={18} className="ms-0.5" />
-      </button>
-     </div>
-     {isViewed && (
-      <div className="absolute top-1 start-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
-       <FiCheck size={12} className="text-white" />
+      <Link
+        to={lectureUrl}
+        onClick={() => onWatch(lecture.id, lecture)}
+        className="relative w-36 h-24 flex-shrink-0 bg-black/40 rounded-xl overflow-hidden cursor-pointer block"
+        aria-label={`${t('inline.lectures.play-inside-the-site')}: ${title}`}
+      >
+        <LectureThumbnail videoId={videoId} thumbnail={lecture.thumbnail || lecture.thumbUrl} alt={title || ''} width={144} height={96} sizes="144px" />
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/5 transition-colors" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-10 h-10 bg-rose-600/90 group-hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-xs transition transform group-hover:scale-110">
+            <FiPlay size={18} className="ms-0.5" />
+          </div>
+        </div>
+        {isViewed && (
+          <div className="absolute top-1 start-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shadow">
+            <FiCheck size={12} className="text-white" />
+          </div>
+        )}
+      </Link>
+
+      <div className="relative flex-1 min-w-0">
+        <span className="inline-block text-xs bg-royal-500/10 dark:bg-white/5 border border-royal-500/20 dark:border-white/10 text-royal-500 dark:text-white/60 px-2 py-0.5 rounded-full mb-1">
+          {isArabic ? lecture.subjectAr : lecture.subjectEn}
+        </span>
+        <Link
+          to={lectureUrl}
+          onClick={() => onWatch(lecture.id, lecture)}
+          className="block font-semibold text-ink text-sm hover:text-accent transition-colors truncate"
+        >
+          {title}
+        </Link>
+        <span className="text-xs text-slate-500 dark:text-white/50">{lecture.date || '—'}</span>
       </div>
-     )}
+
+      <div className="relative z-10 flex items-center gap-2 flex-shrink-0">
+        <Link
+          to={lectureUrl}
+          onClick={() => onWatch(lecture.id, lecture)}
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold transition"
+        >
+          <FiPlay size={12} />
+          <span className="hidden sm:inline">{isArabic ? 'مشاهدة' : 'Watch'}</span>
+        </Link>
+
+        {user && (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleFavorite(lecture.id, lecture)
+              }}
+              className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              aria-label={localFavorites.includes(lecture.id) ? t('lectures.unfavorite') : t('lectures.favorite')}
+            >
+              <FiHeart size={16} className={localFavorites.includes(lecture.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-500 dark:text-white/60'} />
+            </button>
+            <StarRating value={localRatings[lecture.id] || 0} onRate={(star) => onRate(lecture.id, star, lecture)} size={14} />
+          </>
+        )}
+      </div>
     </div>
-    <div className="relative flex-1 min-w-0 pointer-events-none">
-     <span className="inline-block text-xs bg-royal-500/10 dark:bg-white/5 border border-royal-500/20 dark:border-white/10 text-royal-500 dark:text-white/60 px-2 py-0.5 rounded-full mb-1">{isArabic ? lecture.subjectAr : lecture.subjectEn}</span>
-     <h2 className="font-semibold text-ink text-sm group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors truncate">{title}</h2>
-     <span className="text-xs text-slate-500 dark:text-white/50">{lecture.date}</span>
-    </div>
-    <div className="relative z-10 pointer-events-auto flex items-center gap-1.5 flex-shrink-0 flex-wrap">
-     {user && (
-      <>
-       <button onClick={(e) => { e.preventDefault(); onToggleFavorite(lecture.id, lecture) }} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors" aria-label={localFavorites.includes(lecture.id) ? t('lectures.unfavorite') : t('lectures.favorite')}>
-        <FiHeart size={16} className={localFavorites.includes(lecture.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-500 dark:text-white/60'} />
-       </button>
-       <StarRating value={localRatings[lecture.id] || 0} onRate={(star) => onRate(lecture.id, star, lecture)} size={14} />
-      </>
-     )}
-    </div>
-   </div>
   )
- })
+})

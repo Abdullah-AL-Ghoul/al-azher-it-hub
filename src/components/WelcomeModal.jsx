@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
@@ -21,6 +21,11 @@ export default function WelcomeModal() {
   const remainingRef = useRef(1)
   const progressRef = useRef(null)
 
+  const getRandomQuote = useCallback(() => {
+    const quotes = motivationalQuotes[lang] || motivationalQuotes.en
+    return quotes[Math.floor(Math.random() * quotes.length)]
+  }, [lang])
+
   useEffect(() => {
     if (!user || isAdmin) return
     const key = `welcome_shown_${user.studentId}`
@@ -28,7 +33,7 @@ export default function WelcomeModal() {
       setShow(true)
       setQuote(getRandomQuote())
     }
-  }, [user, isAdmin])
+  }, [user, isAdmin, getRandomQuote])
 
   useEffect(() => {
     if (!show || paused || prefersReduced) return undefined
@@ -49,11 +54,6 @@ export default function WelcomeModal() {
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
   }, [show, paused, prefersReduced, user])
-
-  const getRandomQuote = () => {
-    const quotes = motivationalQuotes[lang] || motivationalQuotes.en
-    return quotes[Math.floor(Math.random() * quotes.length)]
-  }
 
   const handleDismiss = () => {
     if (user && typeof sessionStorage !== 'undefined') {

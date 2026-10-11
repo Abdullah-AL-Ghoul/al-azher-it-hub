@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { FiCpu, FiPlus, FiCheck, FiX, FiLoader, FiList, FiTrash2, FiPlay, FiBookOpen } from 'react-icons/fi'
+import { FiCpu, FiCheck, FiLoader, FiList, FiTrash2, FiPlay } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { parseLecturesFromInput } from '../../utils/aiLectureParser'
 import { addCourse, addLecture } from '../../services'

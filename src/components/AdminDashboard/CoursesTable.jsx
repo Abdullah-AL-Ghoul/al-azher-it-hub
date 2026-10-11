@@ -1,6 +1,6 @@
 import { useState, memo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { FiPlus, FiEdit2, FiTrash2, FiBookOpen, FiSearch, FiVideo, FiFile, FiCheckSquare, FiSquare, FiExternalLink } from 'react-icons/fi'
+import { FiPlus, FiEdit2, FiTrash2, FiBookOpen, FiSearch, FiVideo, FiFile, FiCheckSquare, FiSquare } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { deleteCourse, addActivity } from '../../services'
 import usePagination from '../../hooks/usePagination'
@@ -70,7 +70,9 @@ function CoursesTable({ courses, loading, isArabic, onEdit, onAdd, onRefresh }) 
         await deleteCourse(id)
         addActivity('courses', 'DELETE', id)
         count++
-      } catch (_e) {}
+      } catch (_e) {
+        /* ignore individual deletion failures */
+      }
     }
     toast.success(isArabic ? `تم حذف ${count} مادة بنجاح` : `Deleted ${count} courses`)
     setSelectedIds(new Set())

@@ -31,7 +31,7 @@ test.describe('keyboard shortcuts (anonymous)', () => {
 		await page.locator('#main-content form').waitFor()
 		// The login form autofocuses its first field — take focus off it so the
 		// app-level shortcuts (skipped while typing) actually fire.
-		await page.mouse.click(5, 300)
+		await page.locator('#login-studentId').blur()
 		await page.keyboard.press('g')
 		await page.keyboard.press('p', { delay: 60 })
 		// /profile is protected — the anonymous user bounces to the welcome gate

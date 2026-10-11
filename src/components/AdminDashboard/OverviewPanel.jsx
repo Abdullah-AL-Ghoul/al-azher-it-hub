@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { FiBook, FiUsers, FiGrid, FiLogIn, FiUpload, FiDownload, FiActivity, FiFileText, FiVideo, FiUser, FiCpu, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi'
+import { FiBook, FiUsers, FiGrid, FiLogIn, FiUpload, FiDownload, FiActivity, FiFileText, FiVideo, FiUser, FiCpu, FiCheckCircle } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { importAllData } from '../../services'
 import { exportToJson } from '../../utils/adminShared'
@@ -26,7 +26,6 @@ export default function OverviewPanel({
 
   // System Health Metrics
   const lecturesWithVideoId = lectures.filter(l => l.videoId).length
-  const lecturesWithoutVideoId = lectures.length - lecturesWithVideoId
   const coursesWithLectures = courses.filter(c => 
     lectures.some(l => l.courseId === c.id || l.subjectAr === c.nameAr || l.subjectEn === c.nameEn)
   ).length

@@ -41,10 +41,10 @@ export default function Home() {
  const [error, setError] = useState(null)
  const [retry, setRetry] = useState(0)
 
- const viewed = userData?.viewed ?? []
+ const viewed = useMemo(() => userData?.viewed ?? [], [userData?.viewed])
  const favorites = userData?.favorites ?? []
  const userStats = userData?.stats ?? { viewed: [], lastVisit: null }
- const streak = useMemo(() => currentStreak(user?.studentId), [user, viewed])
+ const streak = useMemo(() => currentStreak(user?.studentId), [user?.studentId])
 
  useEffect(() => {
   let mounted = true
@@ -177,6 +177,54 @@ export default function Home() {
         >
          {t('inline.home.profile')} <FiChevronLeft size={16} className={isArabic ? '' : 'rotate-180'} />
         </Link>
+       </div>
+      </div>
+     </div>
+    </motion.section>
+   )}
+
+   {/* Onboarding Guide for New Students (Zero watched lectures) */}
+   {!isAdmin && continueWatching.length === 0 && (
+    <motion.section
+     initial={prefersReduced ? {} : { opacity: 0, y: 20 }}
+     whileInView={prefersReduced ? {} : { opacity: 1, y: 0 }}
+     viewport={{ once: true }}
+     transition={prefersReduced ? {} : revealItem.transition}
+     className="py-10 bg-spatial-page"
+    >
+     <div className="container-page">
+      <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 relative overflow-hidden bg-gradient-to-br from-royal-500/5 via-cyan-500/5 to-transparent">
+       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="max-w-2xl">
+         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-royal-500/10 text-royal-600 dark:text-cyan-400 text-xs font-semibold mb-3">
+          <FiZap size={14} />
+          {isArabic ? 'ابدأ رحلتك التعليمية' : 'Start Your Academic Journey'}
+         </div>
+         <h2 className="text-2xl md:text-3xl font-extrabold text-ink mb-2">
+          {isArabic ? 'مرحباً بك في منصتك الأكاديمية' : 'Welcome to Your IT Academic Hub'}
+         </h2>
+         <p className="text-sm md:text-base text-slate-600 dark:text-white/70 leading-relaxed">
+          {isArabic
+           ? 'تصفح محاضرات الفصل الحالي، حمل الملخصات الرسمية، وتتبع تقدمك خطوة بخطوة مع كل محاضرة تشاهدها.'
+           : 'Explore syllabus lectures, download verified summaries, and track your completion progress with each watched lecture.'}
+         </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+         <Link
+          to="/lectures"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl btn-primary font-bold text-sm min-h-[44px] shadow-lg shadow-royal-600/20"
+         >
+          <FiPlay size={16} />
+          <span>{isArabic ? 'تصفح المحاضرات' : 'Browse Lectures'}</span>
+         </Link>
+         <Link
+          to="/roadmap"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl btn-secondary font-bold text-sm min-h-[44px]"
+         >
+          <FiMap size={16} />
+          <span>{isArabic ? 'الخطة الشجرية' : 'Course Roadmap'}</span>
+         </Link>
+        </div>
        </div>
       </div>
      </div>
