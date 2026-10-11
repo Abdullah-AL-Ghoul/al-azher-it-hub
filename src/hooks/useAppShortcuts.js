@@ -8,6 +8,8 @@ const GOTO = {
   s: '/sources',
   a: '/additions',
   r: '/roadmap',
+  f: '/focus',
+  c: '/cheatsheets',
   p: '/profile',
 }
 const SEQ_WINDOW_MS = 900

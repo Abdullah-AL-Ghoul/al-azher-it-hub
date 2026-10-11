@@ -7,14 +7,14 @@ import { getLectures, getSources, getAdditions } from '../services'
 import { pageContainer, pageItem, pageContainerReduced, revealItem } from '../utils/motionTokens'
 import { lectureVideoId, } from '../utils/helpers'
 import HeroSection from '../components/HeroSection'
-import { FiFileText, FiGrid, FiArrowLeft, FiEye, FiHeart, FiClock, FiMap, FiLink, FiUser, FiMessageCircle, FiVideo, FiChevronLeft, FiPlay, FiBookOpen, FiSend, FiUsers, FiZap, FiCalendar } from 'react-icons/fi'
+import { FiFileText, FiGrid, FiArrowLeft, FiEye, FiHeart, FiClock, FiMap, FiLink, FiUser, FiMessageCircle, FiVideo, FiChevronLeft, FiPlay, FiBookOpen, FiSend, FiUsers, FiZap, FiCalendar, FiHeadphones, FiLayers, FiTerminal } from 'react-icons/fi'
 import LectureThumbnail from '../components/shared/LectureThumbnail'
 import ErrorState from '../components/feedback/ErrorState'
 import { useUserData } from '../context/UserDataContext'
 import { currentStreak } from '../utils/achievements'
 import Skeleton from '../components/shared/Skeleton'
 import TodayScheduleWidget from '../components/home/TodayScheduleWidget'
-import { ACADEMIC_PLANS, getAcademicPlan } from '../data/academicCurriculum'
+import { getAcademicPlan } from '../data/academicCurriculum'
 
 const quickLinks = [
  { to: '/lectures', icon: FiFileText, color: 'from-slate-800 to-navy-700', bgLight: 'bg-slate-100 dark:bg-slate-800/50', key: 'lectures', solidColor: '#0f2744' },
@@ -320,6 +320,123 @@ export default function Home() {
      </div>
     </motion.section>
    )}
+
+   {/* Smart Productivity & Study Hub */}
+   <motion.section
+    initial={prefersReduced ? {} : { opacity: 0, y: 16 }}
+    whileInView={prefersReduced ? {} : { opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={prefersReduced ? {} : revealItem.transition}
+    className="py-6 bg-spatial-page"
+   >
+    <div className="container-page">
+     <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+       <FiZap size={20} className="text-royal-500 dark:text-cyan-400" />
+       <h2 className="text-xl md:text-2xl font-bold text-ink">
+        {isArabic ? 'أدوات الإنتاجية والدراسة الذكية' : 'Smart Study & Productivity Tools'}
+       </h2>
+      </div>
+      <span className="text-xs text-slate-500 dark:text-white/40 hidden sm:inline">
+       {isArabic ? 'صممت لرفع كفاءة طالب تكنولوجيا المعلومات' : 'Crafted for IT student productivity'}
+      </span>
+     </div>
+
+     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 1. Focus Room */}
+      <Link
+       to="/focus"
+       className="glass rounded-2xl p-5 border border-white/10 hover:border-royal-500/30 transition group flex flex-col justify-between hover:scale-[1.01]"
+      >
+       <div>
+        <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold mb-3 group-hover:scale-110 transition-transform">
+         <FiHeadphones size={20} />
+        </div>
+        <h3 className="text-sm font-extrabold text-ink mb-1 group-hover:text-accent transition-colors">
+         {isArabic ? 'غرفة التركيز وبومودورو' : 'Focus & Pomodoro Room'}
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-white/60 leading-relaxed">
+         {isArabic
+          ? 'مؤقت بومودورو ذكي مع أصوات الطبيعة والمكتبة دون تشتيت.'
+          : 'Customizable 25/5 intervals with ambient soundscapes.'}
+        </p>
+       </div>
+       <span className="text-[11px] font-bold text-violet-600 dark:text-violet-400 mt-4 block">
+        {isArabic ? 'ابدأ جلسة تركيز ←' : 'Start Focus Sprint →'}
+       </span>
+      </Link>
+
+      {/* 2. Prerequisite DAG Tree */}
+      <Link
+       to="/roadmap"
+       className="glass rounded-2xl p-5 border border-white/10 hover:border-royal-500/30 transition group flex flex-col justify-between hover:scale-[1.01]"
+      >
+       <div>
+        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold mb-3 group-hover:scale-110 transition-transform">
+         <FiMap size={20} />
+        </div>
+        <h3 className="text-sm font-extrabold text-ink mb-1 group-hover:text-accent transition-colors">
+         {isArabic ? 'شجرة المتطلبات التفاعلية (DAG)' : 'Prerequisite DAG Tree'}
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-white/60 leading-relaxed">
+         {isArabic
+          ? 'تتبع سلسلة المواد السابقة وما تفتحه مستقبلاً حتى التخرج.'
+          : 'Visual interactive course dependency & prerequisite lineage.'}
+        </p>
+       </div>
+       <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-4 block">
+        {isArabic ? 'تصفح الشجرة التفاعلية ←' : 'Explore Tree →'}
+       </span>
+      </Link>
+
+      {/* 3. Flashcards */}
+      <Link
+       to="/flashcards"
+       className="glass rounded-2xl p-5 border border-white/10 hover:border-royal-500/30 transition group flex flex-col justify-between hover:scale-[1.01]"
+      >
+       <div>
+        <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold mb-3 group-hover:scale-110 transition-transform">
+         <FiLayers size={20} />
+        </div>
+        <h3 className="text-sm font-extrabold text-ink mb-1 group-hover:text-accent transition-colors">
+         {isArabic ? 'بطاقات المراجعة التكرارية' : 'Leitner Exam Flashcards'}
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-white/60 leading-relaxed">
+         {isArabic
+          ? 'مراجعة ثلاثية الأبعاد لمفاهيم الشبكات وهياكل البيانات.'
+          : '3D flip cards with spaced repetition for exam prep.'}
+        </p>
+       </div>
+       <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-4 block">
+        {isArabic ? 'ابدأ المراجعة السريعة ←' : 'Start Review →'}
+       </span>
+      </Link>
+
+      {/* 4. Cheatsheets */}
+      <Link
+       to="/cheatsheets"
+       className="glass rounded-2xl p-5 border border-white/10 hover:border-royal-500/30 transition group flex flex-col justify-between hover:scale-[1.01]"
+      >
+       <div>
+        <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold mb-3 group-hover:scale-110 transition-transform">
+         <FiTerminal size={20} />
+        </div>
+        <h3 className="text-sm font-extrabold text-ink mb-1 group-hover:text-accent transition-colors">
+         {isArabic ? 'خزينة الأكواد والأوامر' : 'IT Syntax & Cheatsheets'}
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-white/60 leading-relaxed">
+         {isArabic
+          ? 'أوامر Git و Linux و SQL وجدول تعقيد Big-O بنقرة نسخ.'
+          : 'Quick copy references for Git, Linux CLI, SQL, and DSA.'}
+        </p>
+       </div>
+       <span className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 mt-4 block">
+        {isArabic ? 'فتح خزينة الأكواد ←' : 'Browse Vault →'}
+       </span>
+      </Link>
+     </div>
+    </div>
+   </motion.section>
 
    {/* Onboarding Guide for New Students (Zero watched lectures) */}
    {!isAdmin && continueWatching.length === 0 && (

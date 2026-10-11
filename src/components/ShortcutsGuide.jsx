@@ -32,6 +32,8 @@ export default function ShortcutsGuide({ isOpen, onClose }) {
         <Row keys={['g', 's']} desc={s('nav-sources')} />
         <Row keys={['g', 'a']} desc={s('nav-additions')} />
         <Row keys={['g', 'r']} desc={s('nav-roadmap')} />
+        <Row keys={['g', 'f']} desc={s('nav-focus') || 'غرفة التركيز (Focus Room)'} />
+        <Row keys={['g', 'c']} desc={s('nav-cheatsheets') || 'خزينة الأكواد (Cheatsheets)'} />
         <Row keys={['g', 'p']} desc={s('nav-profile')} />
 
         <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-white/40 mt-5 mb-1">{s('general')}</h3>

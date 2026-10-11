@@ -18,6 +18,9 @@ const AdminDashboard = lazyWithRecovery(() => import('../pages/AdminDashboard'))
 const Profile = lazyWithRecovery(() => import('../pages/Profile'))
 const CourseRoadmap = lazyWithRecovery(() => import('../pages/CourseRoadmap'))
 const Notifications = lazyWithRecovery(() => import('../pages/Notifications'))
+const FocusRoom = lazyWithRecovery(() => import('../pages/FocusRoom'))
+const Cheatsheets = lazyWithRecovery(() => import('../pages/Cheatsheets'))
+const Flashcards = lazyWithRecovery(() => import('../pages/Flashcards'))
 const NotFound = lazyWithRecovery(() => import('../pages/NotFound'))
 
 /**
@@ -50,6 +53,9 @@ export const APP_ROUTES = [
   { path: '/additions', Component: Additions, protected: true },
   { path: '/contact', Component: Contact, protected: true },
   { path: '/roadmap', Component: CourseRoadmap, protected: true },
+  { path: '/focus', Component: FocusRoom, protected: true },
+  { path: '/cheatsheets', Component: Cheatsheets, protected: true },
+  { path: '/flashcards', Component: Flashcards, protected: true },
   { path: '/profile', Component: Profile, protected: true },
   { path: '/notifications', Component: Notifications, protected: true },
 

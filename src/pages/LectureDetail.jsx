@@ -73,7 +73,7 @@ export default function LectureDetail() {
  const toggleTheaterMode = useCallback(() => {
   setTheaterMode(prev => {
    const next = !prev
-   try { localStorage.setItem('al_azher_theater_mode', String(next)) } catch {}
+   try { localStorage.setItem('al_azher_theater_mode', String(next)) } catch (_e) { /* ignore */ }
    return next
   })
  }, [])
@@ -196,6 +196,35 @@ export default function LectureDetail() {
    toast.success(isArabic ? `انتقال إلى ${fmtTime(timeSec)}` : `Jumped to ${fmtTime(timeSec)}`)
   }
  }, [isArabic])
+
+ const exportNotesAsMarkdown = useCallback(() => {
+  if (!lecture) return
+  const title = isArabic ? lecture.titleAr : lecture.titleEn
+  let md = `# ${title}\n`
+  md += `**Al-Azhar IT Hub — Study Notes**\n`
+  md += `*Date: ${new Date().toLocaleDateString(isArabic ? 'ar-EG' : 'en-US')}*\n\n`
+  md += `## ⏱️ Timestamped Key Points (الملاحظات الزمنية)\n`
+  if (timestampNotes.length > 0) {
+   timestampNotes.forEach((tn) => {
+    md += `- **[${fmtTime(tn.time)}]**: ${tn.text}\n`
+   })
+  } else {
+   md += `*No timestamped notes recorded.*\n`
+  }
+  md += `\n## 📝 Personal Notes (الملاحظات الشخصية)\n`
+  md += note ? `${note}\n` : `*No general notes recorded.*\n`
+
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `lecture-notes-${lecture.id}.md`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  toast.success(isArabic ? 'تم تصدير ملاحظات المحاضرة بصيغة Markdown!' : 'Notes exported to Markdown!')
+ }, [lecture, isArabic, timestampNotes, note])
 
  
  useEffect(() => {
@@ -582,9 +611,20 @@ export default function LectureDetail() {
             {isArabic ? 'الملاحظات الزمنية' : 'Timestamped Notes'}
            </h2>
           </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-royal-500/10 dark:bg-cyan-500/10 text-accent dark:text-cyan-400 font-semibold tabular-nums">
-           {timestampNotes.length}
-          </span>
+          <div className="flex items-center gap-2">
+           <button
+            type="button"
+            onClick={exportNotesAsMarkdown}
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-royal-500/10 text-slate-500 hover:text-accent dark:hover:text-cyan-400 text-[10px] font-semibold transition"
+            title={isArabic ? 'تصدير الملاحظات كملف Markdown' : 'Export notes as Markdown'}
+           >
+            <FiDownload size={11} />
+            <span>{isArabic ? 'تصدير' : 'Export'}</span>
+           </button>
+           <span className="text-[10px] px-2 py-0.5 rounded-full bg-royal-500/10 dark:bg-cyan-500/10 text-accent dark:text-cyan-400 font-semibold tabular-nums">
+            {timestampNotes.length}
+           </span>
+          </div>
          </div>
          <p className="text-[11px] text-slate-500 dark:text-white/50 mb-3">
           {isArabic

@@ -16,10 +16,8 @@ import {
   FiX, 
   FiLink2,
   FiSearch,
-  FiFilter,
-  FiCompass,
-  FiZap,
-  FiCheckCircle
+  FiGrid,
+  FiList
 } from 'react-icons/fi'
 import ErrorState from '../components/feedback/ErrorState'
 import ConfirmDialog from '../components/shared/ConfirmDialog'
@@ -27,6 +25,7 @@ import Lazy3DScene from '../components/three/Lazy3DScene'
 import toast from 'react-hot-toast'
 import Skeleton from '../components/shared/Skeleton'
 import { ACADEMIC_PLANS, getAcademicPlan } from '../data/academicCurriculum'
+import InteractivePrerequisiteTree from '../components/roadmap/InteractivePrerequisiteTree'
 import { FiChevronDown } from 'react-icons/fi'
 
 const containerVariants = pageContainer
@@ -95,6 +94,7 @@ export default function CourseRoadmap() {
   const [selectedCourseKey, setSelectedCourseKey] = useState(null)
   const [activeCourseHover, setActiveCourseHover] = useState(null)
   const [selectedTrack, setSelectedTrack] = useState('all')
+  const [viewMode, setViewMode] = useState('tree')
   const [searchQuery, setSearchQuery] = useState('')
   const [error, setError] = useState(null)
   const prefersReduced = useReducedMotion()
@@ -462,6 +462,34 @@ export default function CourseRoadmap() {
                 </button>
               )}
             </div>
+
+            {/* View Mode Switcher */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('tree')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  viewMode === 'tree'
+                    ? 'bg-royal-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-white/70 hover:text-ink'
+                }`}
+              >
+                <FiGrid size={13} />
+                <span>{isArabic ? 'شجرة المتطلبات (DAG)' : 'DAG Tree'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  viewMode === 'list'
+                    ? 'bg-royal-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-white/70 hover:text-ink'
+                }`}
+              >
+                <FiList size={13} />
+                <span>{isArabic ? 'الفصول الدراسية' : 'Semester List'}</span>
+              </button>
+            </div>
           </div>
 
           {/* Interactive Legend & Instruction */}
@@ -598,6 +626,14 @@ export default function CourseRoadmap() {
               {isArabic ? 'إعادة ضبط الفلاتر' : 'Reset filters'}
             </button>
           </div>
+        ) : viewMode === 'tree' ? (
+          <InteractivePrerequisiteTree
+            courses={displayedCourses}
+            activePlan={activePlan}
+            isArabic={isArabic}
+            selectedCourseKey={selectedCourseKey}
+            onSelectCourse={setSelectedCourseKey}
+          />
         ) : (
           <div className="space-y-8">
             {years.map(year => {
