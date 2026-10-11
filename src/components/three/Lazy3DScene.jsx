@@ -16,8 +16,10 @@ function supportsWebGL() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
     if (window.matchMedia('(pointer: coarse)').matches) return false
     if (navigator.deviceMemory && navigator.deviceMemory < 4) return false
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) return false
     const canvas = document.createElement('canvas')
-    return !!(window.WebGLRenderingContext && (canvas.getContext('webgl2') || canvas.getContext('webgl')))
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
+    return !!(window.WebGLRenderingContext && gl)
   } catch (_e) {
     return false
   }

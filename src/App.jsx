@@ -105,8 +105,13 @@ function AppContent() {
     activateSearch(true)
    }
   }
+  const onCustomOpen = () => activateSearch(true)
   window.addEventListener('keydown', onKey)
-  return () => window.removeEventListener('keydown', onKey)
+  window.addEventListener('al_azher_open_search', onCustomOpen)
+  return () => {
+   window.removeEventListener('keydown', onKey)
+   window.removeEventListener('al_azher_open_search', onCustomOpen)
+  }
  }, [activateSearch])
 
  useSeo(location.pathname, lang)

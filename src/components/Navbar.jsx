@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useMemo, memo } from 'react'
+import { useState, useRef, useEffect, useMemo, memo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
@@ -9,7 +9,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useScrollLock } from '../hooks/useScrollLock'
 import { useNotifications } from '../hooks/useNotifications'
 import { HiMenu, HiX } from 'react-icons/hi'
-import { FiSun, FiMoon, FiMonitor, FiUser, FiLogOut, FiShield, FiBell, FiX, FiBookOpen, FiFolder, FiFileText, FiLayers, FiSettings } from 'react-icons/fi'
+import { FiSun, FiMoon, FiMonitor, FiUser, FiLogOut, FiShield, FiBell, FiX, FiBookOpen, FiFolder, FiFileText, FiLayers, FiSettings, FiSearch } from 'react-icons/fi'
 import SiteLogo from './shared/SiteLogo'
 import ConfirmDialog from './shared/ConfirmDialog'
 
@@ -153,6 +153,32 @@ export default memo(function Navbar() {
               <div className="w-px h-5 bg-slate-200 dark:bg-white/10 mx-1" />
 
               <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('al_azher_open_search'))}
+                className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-white/50 hover:text-ink hover:border-royal-400/50 hover:bg-white/90 dark:hover:bg-white/10 transition-all duration-200 group cursor-pointer"
+                title={lang === 'ar' ? 'البحث السريع في الخطط والمواد والامتحانات (Ctrl+K)' : 'Quick Search (Ctrl+K)'}
+                aria-label={t('nav.search')}
+              >
+                <FiSearch size={13} className="text-slate-400 dark:text-white/40 group-hover:text-accent transition-colors" />
+                <span className="text-slate-600 dark:text-white/60 text-xs">
+                  {lang === 'ar' ? 'بحث سريع...' : 'Search...'}
+                </span>
+                <kbd className="ms-1 px-1.5 py-0.5 text-[10px] font-mono rounded bg-slate-200/70 dark:bg-white/10 text-slate-500 dark:text-white/40 border border-slate-300/40 dark:border-white/10">
+                  Ctrl K
+                </kbd>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('al_azher_open_search'))}
+                className={`xl:hidden ${iconBtn}`}
+                title={lang === 'ar' ? 'بحث (Ctrl+K)' : 'Search (Ctrl+K)'}
+                aria-label={t('nav.search')}
+              >
+                <FiSearch size={16} />
+              </button>
+
+              <button
                 onClick={toggleTheme}
                 className={iconBtn}
                 title={theme === 'light' ? t('theme.dark') : theme === 'dark' ? t('theme.amoled') : t('theme.light')}
@@ -279,8 +305,17 @@ export default memo(function Navbar() {
             </div>
 
             {/* Mobile right section */}
-            <div className="flex items-center gap-2 lg:hidden">
-              {user && <span className="text-sm font-medium text-ink">{user.name}</span>}
+            <div className="flex items-center gap-1 sm:gap-2 lg:hidden">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('al_azher_open_search'))}
+                className={iconBtn}
+                title={lang === 'ar' ? 'بحث سريع' : 'Search'}
+                aria-label={t('nav.search')}
+              >
+                <FiSearch size={18} />
+              </button>
+              {user && <span className="text-xs sm:text-sm font-medium text-ink max-w-[85px] truncate">{user.name}</span>}
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors ${iconBtn}`}
@@ -309,6 +344,17 @@ export default memo(function Navbar() {
               className="lg:hidden modal-spatial border-t border-line max-h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain"
             >
               <div className="px-4 py-3 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => { setIsOpen(false); window.dispatchEvent(new CustomEvent('al_azher_open_search')) }}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-medium bg-slate-100/90 dark:bg-white/5 text-slate-700 dark:text-white/80 hover:text-accent border border-slate-200/80 dark:border-white/10 mb-2 transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    <FiSearch size={15} className="text-accent" />
+                    <span>{lang === 'ar' ? 'بحث في الخطط والمواد والامتحانات...' : 'Search plans, courses, exams...'}</span>
+                  </span>
+                  <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-white/10 text-slate-500 border border-slate-200 dark:border-white/10">Ctrl K</kbd>
+                </button>
                 {links.map(link => (
                   <Link
                     key={link.to}
