@@ -209,8 +209,8 @@ export default function Lectures() {
      </motion.div>
     )}
 
-    {/* Filters (sticky) */}
-    <div className="sticky top-20 z-30 bg-spatial-page -mx-4 px-4 py-4 -mt-4 mb-4 border-b border-line">
+    {/* Filters */}
+    <div className="mb-8">
      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <FilterBar
        subjects={subjects}
