@@ -13,6 +13,7 @@ import ErrorState from '../components/feedback/ErrorState'
 import { useUserData } from '../context/UserDataContext'
 import { currentStreak } from '../utils/achievements'
 import Skeleton from '../components/shared/Skeleton'
+import { ACADEMIC_CURRICULUM } from '../data/academicCurriculum'
 
 const quickLinks = [
  { to: '/lectures', icon: FiFileText, color: 'from-slate-800 to-navy-700', bgLight: 'bg-slate-100 dark:bg-slate-800/50', key: 'lectures', solidColor: '#0f2744' },
@@ -45,6 +46,51 @@ export default function Home() {
  const favorites = userData?.favorites ?? []
  const userStats = userData?.stats ?? { viewed: [], lastVisit: null }
  const streak = useMemo(() => currentStreak(user?.studentId), [user?.studentId])
+
+ const degreeProgress = useMemo(() => {
+  try {
+   const raw = localStorage.getItem('al_azher_curriculum_progress')
+   if (!raw) return { count: 0, hours: 0, totalHours: 136, pct: 0 }
+   const progress = JSON.parse(raw)
+   let passedHours = 0
+   let count = 0
+   let totalHours = 0
+   ACADEMIC_CURRICULUM.forEach((yr) => {
+    yr.semesters.forEach((sem) => {
+     sem.courses.forEach((c) => {
+      totalHours += (c.hours || 0)
+      if (progress[c.id] === 'passed') {
+       passedHours += (c.hours || 0)
+       count++
+      }
+     })
+    })
+   })
+   const pct = totalHours > 0 ? Math.min(100, Math.round((passedHours / totalHours) * 100)) : 0
+   return { count, hours: passedHours, totalHours: totalHours || 136, pct }
+  } catch {
+   return { count: 0, hours: 0, totalHours: 136, pct: 0 }
+  }
+ }, [])
+
+ const savedGpa = useMemo(() => {
+  try {
+   const raw = localStorage.getItem('al_azher_saved_gpa_calc')
+   if (!raw) return null
+   const courses = JSON.parse(raw)
+   if (!Array.isArray(courses) || courses.length === 0) return null
+   let totalHours = 0
+   let totalWeighted = 0
+   courses.forEach((c) => {
+    const h = Number(c.hours) || 0
+    totalHours += h
+    totalWeighted += (Number(c.grade) || 0) * h
+   })
+   return totalHours > 0 ? (totalWeighted / totalHours).toFixed(1) : null
+  } catch {
+   return null
+  }
+ }, [])
 
  useEffect(() => {
   let mounted = true
@@ -176,6 +222,79 @@ export default function Home() {
          className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl btn-spatial text-sm font-medium"
         >
          {t('inline.home.profile')} <FiChevronLeft size={16} className={isArabic ? '' : 'rotate-180'} />
+        </Link>
+       </div>
+
+       {/* Quick Academic Standing & Shortcuts */}
+       <div className="mt-5 pt-5 border-t border-black/5 dark:border-white/10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Degree Progress */}
+        <Link to="/study-plan" className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line hover:border-royal-500/30 transition group flex flex-col justify-between">
+         <div>
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-white/50 mb-1.5">
+           <span className="font-medium">{isArabic ? 'إنجاز الخطة الأكاديمية' : 'Curriculum Progress'}</span>
+           <span className="font-bold text-royal-600 dark:text-cyan-400 tabular-nums">{degreeProgress.pct}%</span>
+          </div>
+          <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+           <div className="h-full bg-gradient-to-r from-royal-500 to-cyan-400 rounded-full transition-all duration-500" style={{ width: `${degreeProgress.pct}%` }} />
+          </div>
+         </div>
+         <span className="text-[11px] text-slate-500 dark:text-white/40 mt-2 block">
+          {degreeProgress.hours} / {degreeProgress.totalHours} {isArabic ? 'ساعة مجتازة' : 'passed hours'}
+         </span>
+        </Link>
+
+        {/* GPA Calculator */}
+        <Link to="/study-plan" className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line hover:border-royal-500/30 transition group flex flex-col justify-between">
+         <div>
+          <span className="text-xs text-slate-500 dark:text-white/50 block font-medium">
+           {isArabic ? 'المعدل التقديري المسجل' : 'Estimated GPA'}
+          </span>
+          <div className="flex items-baseline gap-2 mt-1">
+           <span className="text-lg font-bold text-ink tabular-nums">
+            {savedGpa ? `${savedGpa}%` : (isArabic ? 'احسب الآن' : 'Calculate')}
+           </span>
+           {savedGpa && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-royal-500/10 text-royal-600 dark:text-cyan-400">
+             {savedGpa >= 85 ? (isArabic ? 'ممتاز' : 'Excellent') : (isArabic ? 'جيد جداً' : 'Very Good')}
+            </span>
+           )}
+          </div>
+         </div>
+         <span className="text-[11px] text-royal-600 dark:text-cyan-400 group-hover:underline mt-2 block">
+          {isArabic ? 'حاسبة المعدل التفاعلية ←' : 'Interactive GPA Calculator →'}
+         </span>
+        </Link>
+
+        {/* Past Exams Archive Shortcut */}
+        <Link to="/sources" className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line hover:border-royal-500/30 transition group flex flex-col justify-between">
+         <div>
+          <div className="flex items-center justify-between">
+           <span className="text-xs text-slate-500 dark:text-white/50 font-medium">{isArabic ? 'أرشيف الامتحانات السابقة' : 'Past Exams Archive'}</span>
+           <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-amber-500/10 text-amber-600">{isArabic ? 'نماذج وحلول' : 'Exams'}</span>
+          </div>
+          <p className="text-xs font-semibold text-ink mt-1">
+           {isArabic ? 'امتحانات نصفية ونهائية سابقة' : 'Midterm & Final Papers'}
+          </p>
+         </div>
+         <span className="text-[11px] text-amber-600 dark:text-amber-400 group-hover:underline mt-2 block">
+          {isArabic ? 'تصفح النماذج المصنفة ←' : 'Browse exam archives →'}
+         </span>
+        </Link>
+
+        {/* Course Roadmap Shortcut */}
+        <Link to="/roadmap" className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line hover:border-royal-500/30 transition group flex flex-col justify-between">
+         <div>
+          <div className="flex items-center justify-between">
+           <span className="text-xs text-slate-500 dark:text-white/50 font-medium">{isArabic ? 'خريطة المتطلبات الشجرية' : 'Curriculum Roadmap'}</span>
+           <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/10 text-emerald-600">{isArabic ? 'تفاعلية' : 'Interactive'}</span>
+          </div>
+          <p className="text-xs font-semibold text-ink mt-1">
+           {isArabic ? 'مسارات التخصص والشُعب' : 'Major Tracks & Pre-reqs'}
+          </p>
+         </div>
+         <span className="text-[11px] text-emerald-600 dark:text-emerald-400 group-hover:underline mt-2 block">
+          {isArabic ? 'استكشف مسارك الأكاديمي ←' : 'Explore tree roadmap →'}
+         </span>
         </Link>
        </div>
       </div>
