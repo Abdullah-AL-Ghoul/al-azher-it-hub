@@ -7,18 +7,20 @@ import { getLectures, getSources, getAdditions } from '../services'
 import { pageContainer, pageItem, pageContainerReduced, revealItem } from '../utils/motionTokens'
 import { lectureVideoId, } from '../utils/helpers'
 import HeroSection from '../components/HeroSection'
-import { FiFileText, FiGrid, FiArrowLeft, FiEye, FiHeart, FiClock, FiMap, FiLink, FiUser, FiMessageCircle, FiVideo, FiChevronLeft, FiPlay, FiBookOpen, FiSend, FiUsers, FiZap } from 'react-icons/fi'
+import { FiFileText, FiGrid, FiArrowLeft, FiEye, FiHeart, FiClock, FiMap, FiLink, FiUser, FiMessageCircle, FiVideo, FiChevronLeft, FiPlay, FiBookOpen, FiSend, FiUsers, FiZap, FiCalendar } from 'react-icons/fi'
 import LectureThumbnail from '../components/shared/LectureThumbnail'
 import ErrorState from '../components/feedback/ErrorState'
 import { useUserData } from '../context/UserDataContext'
 import { currentStreak } from '../utils/achievements'
 import Skeleton from '../components/shared/Skeleton'
+import TodayScheduleWidget from '../components/home/TodayScheduleWidget'
 import { ACADEMIC_PLANS, getAcademicPlan } from '../data/academicCurriculum'
 
 const quickLinks = [
  { to: '/lectures', icon: FiFileText, color: 'from-slate-800 to-navy-700', bgLight: 'bg-slate-100 dark:bg-slate-800/50', key: 'lectures', solidColor: '#0f2744' },
  { to: '/sources', icon: FiGrid, color: 'from-amber-600 to-amber-700', bgLight: 'bg-amber-50 dark:bg-amber-950/30', key: 'sources', solidColor: '#d97706' },
  { to: '/study-plan', icon: FiClock, color: 'from-navy-700 to-navy-600', bgLight: 'bg-slate-100 dark:bg-slate-800/40', key: 'studyPlan', solidColor: '#1e3a5f' },
+ { to: '/study-plan?tab=schedule', icon: FiCalendar, color: 'from-teal-700 to-teal-600', bgLight: 'bg-teal-50 dark:bg-teal-950/30', key: 'schedule', solidColor: '#0f766e' },
  { to: '/roadmap', icon: FiMap, color: 'from-sky-700 to-sky-600', bgLight: 'bg-sky-50 dark:bg-sky-950/30', key: 'roadmap', solidColor: '#0284c7' },
  { to: '/additions', icon: FiHeart, color: 'from-emerald-600 to-emerald-700', bgLight: 'bg-emerald-50 dark:bg-emerald-950/30', key: 'additions', solidColor: '#059669' },
 ]
@@ -300,6 +302,21 @@ export default function Home() {
         </Link>
        </div>
       </div>
+     </div>
+    </motion.section>
+   )}
+
+   {/* Student Today's Schedule Live Widget */}
+   {!isAdmin && (
+    <motion.section
+     initial={prefersReduced ? {} : { opacity: 0, y: 16 }}
+     whileInView={prefersReduced ? {} : { opacity: 1, y: 0 }}
+     viewport={{ once: true }}
+     transition={prefersReduced ? {} : revealItem.transition}
+     className="py-4 bg-spatial-page"
+    >
+     <div className="container-page">
+      <TodayScheduleWidget isArabic={isArabic} t={t} />
      </div>
     </motion.section>
    )}
