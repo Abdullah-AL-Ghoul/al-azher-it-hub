@@ -14,6 +14,7 @@ import PageLoader from './components/PageLoader'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import BackToTop from './components/BackToTop'
+import MobileBottomNav from './components/MobileBottomNav'
 import WelcomeModal from './components/WelcomeModal'
 import ErrorBoundary from './components/ErrorBoundary'
 import SpatialBackground from './components/spatial/SpatialBackground'
@@ -188,7 +189,7 @@ function AppContent() {
      <Navbar />
     </ErrorBoundary>
    )}
-   <main id="main-content" className="flex-1" tabIndex={-1}>
+   <main id="main-content" className="flex-1 pb-16 lg:pb-0" tabIndex={-1}>
      <ErrorBoundary lang={lang}>
       <Suspense fallback={<PageLoader />}>
        <AppRoutes />
@@ -197,6 +198,7 @@ function AppContent() {
     </main>
     {!hideLayout && <Footer />}
     {!hideLayout && <BackToTop />}
+    {!hideLayout && <MobileBottomNav />}
      {!hideLayout && (
       <ErrorBoundary lang={lang} fallback={null}>
        <WelcomeModal />

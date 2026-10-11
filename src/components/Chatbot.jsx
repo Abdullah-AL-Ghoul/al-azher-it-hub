@@ -428,7 +428,7 @@ export default function Chatbot() {
     <motion.button
      aria-label={t('chatbot.assistantLabel')}
      aria-expanded={open}
-     className={`fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-50 w-14 h-14 bg-gradient-to-br from-academic-primary to-royal-600 text-white rounded-full shadow-lg shadow-academic-primary/30 flex items-center justify-center end-6 border border-white/10`}
+     className={`fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] lg:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-40 w-14 h-14 bg-gradient-to-br from-academic-primary to-royal-600 text-white rounded-full shadow-lg shadow-academic-primary/30 flex items-center justify-center end-4 lg:end-6 border border-white/10`}
      onClick={() => setOpen(!open)}
      whileHover={prefersReduced ? {} : { boxShadow: '0 10px 36px rgba(15, 39, 68, 0.5)', scale: 1.08 }}
      whileTap={prefersReduced ? {} : { scale: 0.95 }}
@@ -448,7 +448,7 @@ export default function Chatbot() {
        {...modalContent}
        aria-label={t('chatbot.assistantLabel')}
        aria-modal="true"
-       className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] z-50 w-[calc(100vw-48px)] sm:w-96 h-[75vh] sm:h-[520px] modal-spatial rounded-2xl flex flex-col overflow-hidden end-6 border border-slate-200/50 dark:border-white/10 shadow-2xl`}
+       className={`fixed bottom-[calc(9.5rem+env(safe-area-inset-bottom))] lg:bottom-[calc(6rem+env(safe-area-inset-bottom))] z-50 w-[calc(100vw-32px)] sm:w-96 h-[72vh] sm:h-[520px] modal-spatial rounded-2xl flex flex-col overflow-hidden end-4 lg:end-6 border border-slate-200/50 dark:border-white/10 shadow-2xl`}
        role="dialog"
       >
       <div className="bg-gradient-to-r from-academic-primary via-royal-700 to-royal-800 px-4 py-3.5 flex items-center gap-3 border-b border-white/10">

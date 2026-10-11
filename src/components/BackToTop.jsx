@@ -33,7 +33,7 @@ const { t } = useLanguage()
      exit={{ opacity: 0, scale: 0.5 }}
      onClick={scrollToTop}
      aria-label={t('common.backToTop')}
-      className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-50 w-12 h-12 rounded-full bg-navy-800 border border-white/20 shadow-xl flex items-center justify-center hover:bg-navy-700 transition-colors duration-300 end-6"
+      className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] lg:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-40 w-12 h-12 rounded-full bg-navy-800 border border-white/20 shadow-xl flex items-center justify-center hover:bg-navy-700 transition-colors duration-300 end-4 lg:end-24"
     >
     <svg className="absolute inset-0 w-full h-full -rotate-90" aria-hidden="true">
      <circle cx="24" cy="24" r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
