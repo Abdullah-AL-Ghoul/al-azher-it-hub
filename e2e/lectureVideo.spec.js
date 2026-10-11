@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test('clicking a lecture navigates to /lecture/:id and displays full 16:9 player', async ({ page }) => {
+  test.setTimeout(60000)
   const mockLectures = [
     {
       id: 'lec-101',

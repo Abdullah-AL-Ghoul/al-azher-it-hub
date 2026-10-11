@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
@@ -10,11 +10,12 @@ import {
 } from '../services'
 import { currentStreak, computeAchievements } from '../utils/achievements'
 import { pageContainer, pageItem } from '../utils/motionTokens'
-import { FiUser, FiEdit2, FiSave, FiX, FiLinkedin, FiPhone, FiGlobe, FiBookOpen, FiHeart, FiEye, FiArrowLeft, FiLink, FiLock, FiActivity, FiPlay, FiAward, FiCalendar, FiCheckCircle } from 'react-icons/fi'
+import { FiUser, FiEdit2, FiSave, FiX, FiLinkedin, FiPhone, FiGlobe, FiBookOpen, FiHeart, FiEye, FiArrowLeft, FiLink, FiLock, FiActivity, FiPlay, FiAward, FiCalendar, FiCheckCircle, FiPrinter, FiExternalLink, FiCheckSquare } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import motivationalQuotes from '../data/quotes'
 import ErrorState from '../components/feedback/ErrorState'
 import Skeleton from '../components/shared/Skeleton'
+import { ACADEMIC_CURRICULUM } from '../data/academicCurriculum'
 
 const containerVariants = pageContainer
 const itemVariants = pageItem
@@ -38,6 +39,18 @@ function safeProfileUrl(value) {
   const v = (value || '').trim()
   if (!v) return ''
   return /^https?:\/\/.+/i.test(v) ? v.slice(0, 500) : ''
+}
+
+function getGpaStandingAr(pct) {
+  if (pct >= 90) return 'ممتاز مرتفع (A+)'
+  if (pct >= 85) return 'ممتاز (A)'
+  if (pct >= 80) return 'جيد جداً مرتفع (B+)'
+  if (pct >= 75) return 'جيد جداً (B)'
+  if (pct >= 70) return 'جيد مرتفع (C+)'
+  if (pct >= 65) return 'جيد (C)'
+  if (pct >= 60) return 'مقبول مرتفع (D+)'
+  if (pct >= 50) return 'مقبول (D)'
+  return 'راسب (F)'
 }
 
 export default function Profile() {
@@ -65,6 +78,78 @@ export default function Profile() {
  const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' })
  const [pwSaving, setPwSaving] = useState(false)
  const [logDates, setLogDates] = useState([])
+ const [showPrintReport, setShowPrintReport] = useState(false)
+
+ const allCurriculumCourses = useMemo(() => {
+  const list = []
+  ACADEMIC_CURRICULUM.forEach((yr) => {
+   yr.semesters.forEach((sem) => {
+    sem.courses.forEach((c) => {
+     list.push({ ...c, year: yr.year, semester: sem.semester })
+    })
+   })
+  })
+  return list
+ }, [])
+
+ const totalCurriculumHours = useMemo(() => {
+  return allCurriculumCourses.reduce((sum, c) => sum + (c.hours || 0), 0)
+ }, [allCurriculumCourses])
+
+ const curriculumProgressState = useMemo(() => {
+  try {
+   const raw = localStorage.getItem('al_azher_curriculum_progress')
+   if (raw) return JSON.parse(raw)
+  } catch {}
+  return {}
+ }, [])
+
+ const passedCourses = useMemo(() => {
+  return allCurriculumCourses.filter((c) => curriculumProgressState[c.id] === 'passed')
+ }, [allCurriculumCourses, curriculumProgressState])
+
+ const passedHours = useMemo(() => {
+  return passedCourses.reduce((sum, c) => sum + (c.hours || 0), 0)
+ }, [passedCourses])
+
+ const progressPct = totalCurriculumHours > 0
+  ? Math.min(100, Math.round((passedHours / totalCurriculumHours) * 100))
+  : 0
+
+ const academicLevelText = useMemo(() => {
+  if (passedHours < 34) return isArabic ? 'السنة الأولى (مستجد)' : 'First Year'
+  if (passedHours < 68) return isArabic ? 'السنة الثانية' : 'Second Year'
+  if (passedHours < 102) return isArabic ? 'السنة الثالثة' : 'Third Year'
+  return isArabic ? 'السنة الرابعة (سنة التخرج)' : 'Fourth Year (Graduating)'
+ }, [passedHours, isArabic])
+
+ const savedGpaData = useMemo(() => {
+  try {
+   const raw = localStorage.getItem('al_azher_saved_gpa_calc')
+   if (raw) {
+    const courses = JSON.parse(raw)
+    if (Array.isArray(courses) && courses.length > 0) {
+     let totalHours = 0
+     let totalWeighted = 0
+     courses.forEach((c) => {
+      const h = Number(c.hours) || 0
+      totalHours += h
+      totalWeighted += (Number(c.grade) || 0) * h
+     })
+     const gpaPct = totalHours > 0 ? (totalWeighted / totalHours).toFixed(1) : null
+     const numGpa = parseFloat(gpaPct)
+     return {
+      count: courses.length,
+      totalHours,
+      gpaPct,
+      standingAr: getGpaStandingAr(numGpa),
+      courses,
+     }
+    }
+   }
+  } catch {}
+  return null
+ }, [])
 
  const retryLoad = () => {
   setError(null)
@@ -366,6 +451,143 @@ export default function Profile() {
      </div>
     </motion.div>
 
+    {/* Academic Progress & Record Card */}
+    <motion.div variants={itemVariants} className="glass rounded-xl p-6 border border-royal-500/20 relative overflow-hidden">
+     <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div>
+       <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+        <FiBookOpen size={18} className="text-royal-500 dark:text-cyan-400" />
+        {isArabic ? 'السجل الأكاديمي والتقدم التخصصي' : 'Academic Record & Curriculum Progress'}
+       </h2>
+       <p className="text-xs text-slate-500 dark:text-white/50 mt-0.5">
+        {isArabic ? 'مزامنة مباشرة مع الخطة التخصصية (136 ساعة معتمدة) وحاسبة المعدل' : 'Synced live with curriculum plan (136 credit hours) & GPA calculator'}
+       </p>
+      </div>
+      <div className="flex items-center gap-2">
+       <button
+        onClick={() => setShowPrintReport(true)}
+        className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-royal-500/10 hover:bg-royal-500/20 text-royal-600 dark:text-cyan-400 border border-royal-500/30 transition-colors"
+       >
+        <FiPrinter size={14} />
+        {isArabic ? 'تصدير / طباعة السجل' : 'Export / Print Record'}
+       </button>
+       <button
+        onClick={() => navigate('/study-plan')}
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg glass text-slate-600 dark:text-white/70 hover:text-ink transition-colors"
+       >
+        <FiExternalLink size={13} />
+        {isArabic ? 'الخطة التخصصية' : 'Study Plan'}
+       </button>
+      </div>
+     </div>
+
+     {/* Progress Metrics Grid */}
+     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+      {/* Degree Completion Gauge */}
+      <div className="p-4 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line">
+       <span className="text-xs text-slate-500 dark:text-white/50 block mb-1">
+        {isArabic ? 'نسبة إنجاز الخطة التخصصية' : 'Curriculum Completion'}
+       </span>
+       <div className="flex items-baseline gap-2">
+        <span className="text-2xl font-extrabold text-ink tabular-nums">{progressPct}%</span>
+        <span className="text-xs text-slate-400">
+         ({passedHours} / {totalCurriculumHours} {isArabic ? 'ساعة' : 'hrs'})
+        </span>
+       </div>
+       <div className="mt-2.5 h-2 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+        <motion.div
+         initial={prefersReduced ? {} : { width: 0 }}
+         animate={{ width: `${progressPct}%` }}
+         transition={{ duration: 0.8, ease: 'easeOut' }}
+         className="h-full bg-gradient-to-r from-royal-500 via-cyan-400 to-emerald-400 rounded-full"
+        />
+       </div>
+       <p className="text-[11px] text-slate-500 dark:text-white/40 mt-1.5">
+        {passedCourses.length} {isArabic ? 'مساق تم اجتيازه بنجاح' : 'courses completed'}
+       </p>
+      </div>
+
+      {/* Current Standing / Year */}
+      <div className="p-4 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line">
+       <span className="text-xs text-slate-500 dark:text-white/50 block mb-1">
+        {isArabic ? 'المرحلة الدراسية التقديرية' : 'Estimated Academic Level'}
+       </span>
+       <p className="text-base font-bold text-ink flex items-center gap-1.5 mt-1">
+        <FiAward className="text-amber-500 shrink-0" />
+        <span>{academicLevelText}</span>
+       </p>
+       <p className="text-[11px] text-slate-500 dark:text-white/40 mt-2">
+        {totalCurriculumHours - passedHours} {isArabic ? 'ساعة متبقية لمتطلبات التخرج' : 'hours remaining for graduation'}
+       </p>
+      </div>
+
+      {/* Saved GPA Calculator Standing */}
+      <div className="p-4 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line">
+       <span className="text-xs text-slate-500 dark:text-white/50 block mb-1">
+        {isArabic ? 'المعدل التقديري المسجل' : 'Saved Estimated GPA'}
+       </span>
+       {savedGpaData ? (
+        <>
+         <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-extrabold text-ink tabular-nums">
+           {savedGpaData.gpaPct}%
+          </span>
+          <span className="text-xs px-2 py-0.5 rounded font-bold bg-royal-500/10 text-royal-600 dark:text-cyan-400">
+           {savedGpaData.standingAr}
+          </span>
+         </div>
+         <p className="text-[11px] text-slate-500 dark:text-white/40 mt-1.5">
+          {isArabic ? `مبني على ${savedGpaData.totalHours} ساعة مسجلة في الحاسبة` : `Based on ${savedGpaData.totalHours} saved hours`}
+         </p>
+        </>
+       ) : (
+        <div>
+         <p className="text-sm font-semibold text-slate-600 dark:text-white/70">
+          {isArabic ? 'لم يتم الحساب بعد' : 'Not calculated yet'}
+         </p>
+         <button
+          onClick={() => navigate('/study-plan')}
+          className="text-[11px] text-cyan-500 dark:text-cyan-400 hover:underline mt-1.5 inline-block"
+         >
+          {isArabic ? 'احسب معدلك الفصلي والتراكمي الآن ←' : 'Calculate your GPA now →'}
+         </button>
+        </div>
+       )}
+      </div>
+     </div>
+
+     {/* Passed courses chips */}
+     {passedCourses.length > 0 ? (
+      <div className="pt-3 border-t border-line">
+       <span className="text-xs font-semibold text-slate-600 dark:text-white/60 block mb-2">
+        {isArabic ? 'المساقات المجتازة المسجلة:' : 'Recorded Passed Courses:'}
+       </span>
+       <div className="flex flex-wrap gap-1.5">
+        {passedCourses.slice(0, 8).map((c) => (
+         <span key={c.id} className="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-medium">
+          ✓ {isArabic ? c.nameAr : c.nameEn} ({c.code})
+         </span>
+        ))}
+        {passedCourses.length > 8 && (
+         <span className="text-xs px-2 py-1 rounded-lg bg-black/5 dark:bg-white/5 text-slate-500 dark:text-white/50">
+          +{passedCourses.length - 8} {isArabic ? 'مساقات أخرى' : 'more'}
+         </span>
+        )}
+       </div>
+      </div>
+     ) : (
+      <div className="pt-3 border-t border-line text-xs text-slate-500 dark:text-white/50 flex items-center justify-between">
+       <span>{isArabic ? 'لم تقم بتحديد مساقاتك المجتازة بعد في الخطة.' : 'You have not marked passed courses in study plan yet.'}</span>
+       <button
+        onClick={() => navigate('/study-plan')}
+        className="text-royal-600 dark:text-cyan-400 font-semibold hover:underline"
+       >
+        {isArabic ? 'فتح الخطة التخصصية وتحديد المساقات ←' : 'Open Study Plan →'}
+       </button>
+      </div>
+     )}
+    </motion.div>
+
     {/* Activity heatmap */}
     <motion.div variants={itemVariants} className="glass rounded-xl p-6">
      <div className="flex items-center justify-between mb-4">
@@ -519,7 +741,7 @@ export default function Profile() {
      )}
     </motion.div>
 
-    {/* Back button */}
+     {/* Back button */}
     <motion.div variants={itemVariants} className="text-center">
       <button onClick={() => navigate('/home')} className="inline-flex items-center gap-2 min-h-[44px] px-3 py-2 text-accent hover:text-royal-600 dark:hover:text-cyan-300 font-medium text-sm transition-colors">
       <FiArrowLeft size={16} className={isArabic ? 'rotate-180' : ''} />
@@ -527,6 +749,138 @@ export default function Profile() {
      </button>
     </motion.div>
    </div>
+
+   {/* Printable Academic Report Modal */}
+   {showPrintReport && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm print:p-0 print:bg-white print:fixed print:inset-0">
+     <div className="bg-white dark:bg-slate-900 border border-line rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl print:border-none print:shadow-none print:max-w-none print:max-h-none print:p-6 print:text-black print:bg-white print:overflow-visible">
+      {/* Modal Actions - Hidden when printing */}
+      <div className="flex items-center justify-between pb-4 border-b border-line mb-6 print:hidden">
+       <h3 className="font-bold text-lg text-ink flex items-center gap-2">
+        <FiPrinter className="text-royal-500" />
+        {isArabic ? 'تقرير السجل الأكاديمي الرسمي' : 'Official Academic Record Report'}
+       </h3>
+       <div className="flex items-center gap-2">
+        <button
+         onClick={() => window.print()}
+         className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-royal-600 text-white font-semibold text-sm hover:bg-royal-700 shadow-md shadow-royal-600/20 transition"
+        >
+         <FiPrinter size={15} />
+         {isArabic ? 'طباعة / حفظ كـ PDF' : 'Print / Save as PDF'}
+        </button>
+        <button
+         onClick={() => setShowPrintReport(false)}
+         className="p-2 rounded-xl text-slate-500 hover:text-ink hover:bg-black/5 dark:hover:bg-white/5 transition"
+        >
+         <FiX size={18} />
+        </button>
+       </div>
+      </div>
+
+      {/* Official Printable Content */}
+      <div className="space-y-6 text-start">
+       {/* University & College Header */}
+       <div className="text-center border-b pb-4 border-slate-200 dark:border-white/10 print:border-slate-300">
+        <h2 className="text-2xl font-extrabold text-royal-600 dark:text-cyan-400 print:text-blue-900">
+         {isArabic ? 'جامعة الأزهر - غزة' : 'Al-Azhar University - Gaza'}
+        </h2>
+        <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 print:text-slate-800 mt-0.5">
+         {isArabic ? 'كلية تكنولوجيا المعلومات والاتصالات' : 'Faculty of Information Technology'}
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 print:text-slate-600 mt-1">
+         {isArabic ? 'ملخص السجل الأكاديمي ومسار الخطة الدراسية للطالب' : 'Student Academic Plan & Record Summary'}
+        </p>
+       </div>
+
+       {/* Student Profile Card */}
+       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-white/5 print:bg-slate-50 border border-slate-200 dark:border-white/10 print:border-slate-300 text-xs">
+        <div>
+         <span className="text-slate-500 dark:text-white/50 print:text-slate-600 block">{isArabic ? 'اسم الطالب:' : 'Student Name:'}</span>
+         <span className="font-bold text-ink print:text-black text-sm">{user.name || '—'}</span>
+        </div>
+        <div>
+         <span className="text-slate-500 dark:text-white/50 print:text-slate-600 block">{isArabic ? 'الرقم الجامعي:' : 'Student ID:'}</span>
+         <span className="font-mono font-bold text-ink print:text-black text-sm">{user.studentId}</span>
+        </div>
+        <div>
+         <span className="text-slate-500 dark:text-white/50 print:text-slate-600 block">{isArabic ? 'التخصص:' : 'Major:'}</span>
+         <span className="font-bold text-ink print:text-black">{profileData.major || (isArabic ? 'تكنولوجيا المعلومات' : 'Information Technology')}</span>
+        </div>
+        <div>
+         <span className="text-slate-500 dark:text-white/50 print:text-slate-600 block">{isArabic ? 'الساعات المنجزة:' : 'Passed Hours:'}</span>
+         <span className="font-bold text-emerald-600 print:text-emerald-700">{passedHours} / {totalCurriculumHours} {isArabic ? 'ساعة' : 'hrs'}</span>
+        </div>
+        <div>
+         <span className="text-slate-500 dark:text-white/50 print:text-slate-600 block">{isArabic ? 'نسبة الإنجاز:' : 'Progress:'}</span>
+         <span className="font-bold text-royal-600 print:text-blue-800">{progressPct}%</span>
+        </div>
+        <div>
+         <span className="text-slate-500 dark:text-white/50 print:text-slate-600 block">{isArabic ? 'المرحلة الدراسية:' : 'Standing:'}</span>
+         <span className="font-medium text-slate-700 dark:text-white/80 print:text-black">{academicLevelText}</span>
+        </div>
+       </div>
+
+       {/* Completed Courses Table */}
+       <div>
+        <h4 className="font-bold text-sm text-ink print:text-black mb-2 flex items-center gap-1.5">
+         <FiCheckSquare className="text-emerald-500" />
+         {isArabic ? 'المساقات المجتازة من الخطة الأكاديمية (136 ساعة):' : 'Completed Curriculum Courses:'}
+        </h4>
+        {passedCourses.length === 0 ? (
+         <p className="text-xs text-slate-500 italic p-4 text-center border border-dashed rounded-xl">
+          {isArabic ? 'لم يتم تحديد مساقات مجتازة في الخطة بعد.' : 'No completed courses recorded yet.'}
+         </p>
+        ) : (
+         <div className="border border-slate-200 dark:border-white/10 print:border-slate-300 rounded-xl overflow-hidden">
+          <table className="w-full text-xs text-start">
+           <thead className="bg-slate-100 dark:bg-white/5 print:bg-slate-100 text-slate-600 dark:text-white/70 print:text-slate-800">
+            <tr>
+             <th className="p-2.5 text-start font-semibold">#</th>
+             <th className="p-2.5 text-start font-semibold">{isArabic ? 'رمز المساق' : 'Code'}</th>
+             <th className="p-2.5 text-start font-semibold">{isArabic ? 'اسم المساق' : 'Course Title'}</th>
+             <th className="p-2.5 text-start font-semibold">{isArabic ? 'الساعات' : 'Hours'}</th>
+             <th className="p-2.5 text-start font-semibold">{isArabic ? 'المستوى' : 'Level'}</th>
+            </tr>
+           </thead>
+           <tbody className="divide-y divide-slate-200 dark:divide-white/10 print:divide-slate-200">
+            {passedCourses.map((c, idx) => (
+             <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-white/5">
+              <td className="p-2 text-slate-500">{idx + 1}</td>
+              <td className="p-2 font-mono font-bold text-royal-600 dark:text-cyan-400 print:text-blue-900">{c.code}</td>
+              <td className="p-2 font-medium text-ink print:text-black">{isArabic ? c.nameAr : c.nameEn}</td>
+              <td className="p-2 text-slate-600 dark:text-white/70 print:text-black">{c.hours}</td>
+              <td className="p-2 text-slate-500 print:text-slate-600">{isArabic ? `س${c.year} - ف${c.semester}` : `Y${c.year} - S${c.semester}`}</td>
+             </tr>
+            ))}
+           </tbody>
+          </table>
+         </div>
+        )}
+       </div>
+
+       {/* Saved GPA Section if available */}
+       {savedGpaData && (
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-white/10 print:border-slate-300 bg-slate-50 dark:bg-white/5 print:bg-slate-50">
+         <h5 className="font-bold text-xs text-ink print:text-black mb-1.5">
+          {isArabic ? 'بيانات المعدل الفصلي التقديري المسجل:' : 'Saved Estimated Semester GPA:'}
+         </h5>
+         <div className="flex items-center gap-6 text-xs print:text-black">
+          <span>{isArabic ? 'المعدل التقديري:' : 'GPA:'} <strong className="text-royal-600 dark:text-cyan-400 print:text-blue-900 text-sm">{savedGpaData.gpaPct}%</strong></span>
+          <span>{isArabic ? 'التقدير الأكاديمي:' : 'Standing:'} <strong>{savedGpaData.standingAr}</strong></span>
+          <span>{isArabic ? 'الساعات المحتسبة:' : 'Hours:'} <strong>{savedGpaData.totalHours} {isArabic ? 'ساعة' : 'hrs'}</strong></span>
+         </div>
+        </div>
+       )}
+
+       {/* Footer Stamp / Note */}
+       <div className="pt-4 border-t border-slate-200 dark:border-white/10 print:border-slate-300 flex justify-between items-center text-[11px] text-slate-400 print:text-slate-500">
+        <span>{isArabic ? 'بوابة ملتقى كلية تكنولوجيا المعلومات - جامعة الأزهر' : 'Al-Azhar IT Hub Platform'}</span>
+        <span>{isArabic ? 'وثيقة دراسية إرشادية شخصية' : 'Personal Academic Guidance Record'}</span>
+       </div>
+      </div>
+     </div>
+    </div>
+   )}
   </motion.div>
  )
 }
