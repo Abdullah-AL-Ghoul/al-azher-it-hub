@@ -1,9 +1,9 @@
-﻿import { memo } from 'react'
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { pageContainer, pageItem } from '../utils/motionTokens'
- import { FiArrowUpRight, FiLinkedin, FiMail, FiPhone, FiMapPin } from 'react-icons/fi'
+import { FiArrowUpRight, FiLinkedin, FiMail, FiPhone, FiMapPin, FiGithub, FiGlobe } from 'react-icons/fi'
 import { FaWhatsapp } from 'react-icons/fa'
 import SiteLogo from './shared/SiteLogo'
 
@@ -74,6 +74,16 @@ export default memo(function Footer() {
       </Link>
       {/* Social Icons */}
       <div className="flex items-center gap-3">
+        <a href="https://github.com/Abdullah-AL-Ghoul" target="_blank" rel="noopener noreferrer"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-slate-800/20 border border-black/8 dark:border-white/10 hover:border-slate-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-300"
+          aria-label="GitHub">
+         <FiGithub size={18} />
+        </a>
+        <a href="https://abdullah-portfolio26.vercel.app/" target="_blank" rel="noopener noreferrer"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/20 border border-black/8 dark:border-white/10 hover:border-royal-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-royal-500 dark:hover:text-cyan-400 transition-colors duration-300"
+          aria-label="Portfolio">
+         <FiGlobe size={18} />
+        </a>
         <a href="https://www.linkedin.com/in/abdullah-al-ghoul-a254763a6/" target="_blank" rel="noopener noreferrer"
          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/5 dark:bg-white/5 hover:bg-royal-500/20 border border-black/8 dark:border-white/10 hover:border-royal-500/30 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-royal-500 dark:hover:text-royal-400 transition-colors duration-300"
          aria-label={t('inline.footer.linkedin')}>
