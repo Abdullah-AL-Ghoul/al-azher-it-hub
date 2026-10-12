@@ -1,29 +1,28 @@
-import { useRef } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { 
   FiDownloadCloud, 
-  FiUploadCloud, 
   FiHardDrive, 
   FiShield, 
   FiX, 
   FiWifi, 
-  FiWifiOff
+  FiWifiOff,
+  FiCheckCircle
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 
 export default function OfflineStudyPackModal({ isOpen, onClose }) {
   const { lang } = useLanguage()
   const isArabic = lang === 'ar'
-  const fileInputRef = useRef(null)
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
 
-  // Export all student local data to JSON
+  // Export student study data to local JSON file (Read-Only safe export)
   const handleExport = () => {
     try {
       const exportData = {
         exportedAt: new Date().toISOString(),
         version: '1.0.0',
         platform: 'Al-Azhar IT Hub',
+        exportType: 'ReadOnly-Study-Summary',
         activeMajor: localStorage.getItem('al_azher_active_major_plan') || 'cse-2025',
         weeklySchedule: localStorage.getItem('al_azher_weekly_schedule'),
         gpaCalculator: localStorage.getItem('al_azher_saved_gpa_calc'),
@@ -51,7 +50,7 @@ export default function OfflineStudyPackModal({ isOpen, onClose }) {
       const a = document.createElement('a')
       const dateStr = new Date().toISOString().slice(0, 10)
       a.href = url
-      a.download = `al-azher-it-hub-study-pack-${dateStr}.json`
+      a.download = `al-azher-study-summary-${dateStr}.json`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -59,64 +58,12 @@ export default function OfflineStudyPackModal({ isOpen, onClose }) {
 
       toast.success(
         isArabic
-          ? 'تم تصدير حزمة الدراسة المحلية بنجاح! يمكنك الاحتفاظ بها واسترجاعها في أي وقت.'
-          : 'Study pack exported successfully!'
+          ? 'تم تنزيل ملخص الدراسة بنجاح! الملف مخصص للمراجعة والقراءة بدون إنترنت.'
+          : 'Study summary exported successfully!'
       )
-    } catch (e) {
-      toast.error(isArabic ? 'حدث خطأ أثناء التصدير' : 'Failed to export study pack')
+    } catch {
+      toast.error(isArabic ? 'حدث خطأ أثناء تنزيل الملخص' : 'Failed to export study summary')
     }
-  }
-
-  // Import and restore from JSON
-  const handleImport = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      try {
-        const parsed = JSON.parse(event.target.result)
-        if (!parsed.platform || !parsed.version) {
-          throw new Error('Invalid format')
-        }
-
-        if (parsed.activeMajor) localStorage.setItem('al_azher_active_major_plan', parsed.activeMajor)
-        if (parsed.weeklySchedule) localStorage.setItem('al_azher_weekly_schedule', parsed.weeklySchedule)
-        if (parsed.gpaCalculator) localStorage.setItem('al_azher_saved_gpa_calc', parsed.gpaCalculator)
-        if (parsed.flashcardsMastery) localStorage.setItem('al_azher_flashcards_mastery', parsed.flashcardsMastery)
-        if (parsed.customFlashcards) localStorage.setItem('al_azher_custom_flashcards', parsed.customFlashcards)
-        if (parsed.focusTasks) localStorage.setItem('al_azher_focus_tasks', parsed.focusTasks)
-
-        if (parsed.curriculumProgress) {
-          Object.entries(parsed.curriculumProgress).forEach(([k, v]) => {
-            if (v) localStorage.setItem(k, v)
-          })
-        }
-
-        if (parsed.lectureNotes) {
-          Object.entries(parsed.lectureNotes).forEach(([k, v]) => {
-            if (v) localStorage.setItem(k, v)
-          })
-        }
-
-        toast.success(
-          isArabic
-            ? 'تم استرجاع بياناتك وملاحظاتك بنجاح! سيتم تحديث الصفحة لتطبيقها.'
-            : 'Study pack restored successfully! Reloading...'
-        )
-
-        setTimeout(() => {
-          window.location.reload()
-        }, 1200)
-      } catch (err) {
-        toast.error(
-          isArabic
-            ? 'الملف غير صالح أو تالف. يرجى اختيار ملف حزمة صحيح (.json)'
-            : 'Invalid or corrupt study pack file'
-        )
-      }
-    }
-    reader.readAsText(file)
   }
 
   if (!isOpen) return null
@@ -133,10 +80,10 @@ export default function OfflineStudyPackModal({ isOpen, onClose }) {
             </div>
             <div>
               <h3 className="text-base font-extrabold text-ink">
-                {isArabic ? 'حزمة الدراسة أوفلاين والنسخ الاحتياطي' : 'Offline Study Pack & Backup'}
+                {isArabic ? 'ملخص المذاكرة والعمل بدون إنترنت (PWA)' : 'Offline Study Summary & PWA'}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-white/50">
-                {isArabic ? 'احفظ بياناتك وملاحظاتك محلياً واسترجعها بدون إنترنت' : 'Export and restore your data locally'}
+                {isArabic ? 'تصدير آمن للقراءة فقط لمراجعة ملاحظاتك وجدولك بدون إنترنت' : 'Secure read-only export of your study notes and schedule'}
               </p>
             </div>
           </div>
@@ -144,7 +91,8 @@ export default function OfflineStudyPackModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-ink transition"
+            className="p-1 text-slate-400 hover:text-ink transition cursor-pointer"
+            aria-label={isArabic ? 'إغلاق' : 'Close'}
           >
             <FiX size={18} />
           </button>
@@ -168,49 +116,34 @@ export default function OfflineStudyPackModal({ isOpen, onClose }) {
           <span className="text-[11px] text-slate-400 font-mono">PWA Cache Ready</span>
         </div>
 
-        {/* Action Buttons: Export & Import */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        {/* Action Button: Safe Read-Only Export */}
+        <div className="space-y-3">
           <button
             type="button"
             onClick={handleExport}
-            className="p-4 rounded-2xl border border-royal-500/20 bg-royal-500/10 hover:bg-royal-500/15 text-accent dark:text-cyan-400 flex flex-col items-center justify-center gap-2 transition text-center group"
+            className="w-full p-4 rounded-2xl border border-royal-500/20 bg-royal-500/10 hover:bg-royal-500/15 text-accent dark:text-cyan-400 flex items-center justify-center gap-3 transition text-center group cursor-pointer"
           >
-            <FiDownloadCloud size={24} className="group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold">{isArabic ? 'تحميل الحزمة (تصدير)' : 'Download Study Pack'}</span>
-            <span className="text-[10px] text-slate-500 dark:text-white/60">
-              {isArabic ? 'جدولك، ملاحظاتك، وسجل معدلك' : 'Schedule, notes, & GPA records'}
-            </span>
+            <FiDownloadCloud size={24} className="group-hover:scale-110 transition-transform shrink-0" />
+            <div className="text-right">
+              <span className="text-xs font-bold block">{isArabic ? 'تنزيل ملخص المذاكرة (تصدير آمن)' : 'Download Study Summary'}</span>
+              <span className="text-[10px] text-slate-500 dark:text-white/60 block">
+                {isArabic ? 'جدولك، ملاحظاتك، وسجل معدلك للقراءة دون اتصال' : 'Schedule, notes, & GPA records for offline reading'}
+              </span>
+            </div>
           </button>
-
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="p-4 rounded-2xl border border-white/10 glass hover:bg-black/5 dark:hover:bg-white/5 text-ink flex flex-col items-center justify-center gap-2 transition text-center group"
-          >
-            <FiUploadCloud size={24} className="group-hover:scale-110 transition-transform text-slate-400" />
-            <span className="text-xs font-bold">{isArabic ? 'استرجاع حزمة سابقة' : 'Restore from Backup'}</span>
-            <span className="text-[10px] text-slate-500 dark:text-white/60">
-              {isArabic ? 'رفع ملف .json محفوظ مسبقاً' : 'Upload previous .json file'}
-            </span>
-          </button>
-
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImport}
-            accept=".json"
-            className="hidden"
-          />
         </div>
 
-        {/* Security / Privacy reassurance */}
-        <div className="flex items-start gap-2.5 text-[11px] text-slate-500 dark:text-white/60 pt-2">
-          <FiShield className="text-emerald-500 shrink-0 mt-0.5" size={14} />
-          <span>
+        {/* Security Reassurance / Zero Uploads Policy */}
+        <div className="p-3.5 rounded-2xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 space-y-1.5">
+          <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+            <FiShield size={15} />
+            <span>{isArabic ? 'حماية فائقة لقاعدة البيانات' : 'Strict Database Protection'}</span>
+          </div>
+          <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
             {isArabic
-              ? 'الخصوصية التامة: يتم تخزين كافة الملاحظات وجداول المواد محلياً على جهازك ولا تتم مشاركتها مع أي جهة خارجية.'
-              : '100% Local & Private: All study data is safely saved on your device.'}
-          </span>
+              ? 'التصدير للقراءة فقط محلياً على جهازك. تم إيقاف رفع أو استيراد أي ملفات خارجية منعاً لأي ثغرات أو محاولات حقن لقاعدة البيانات، وضماناً لسلامة حسابات الطلبة.'
+              : 'Export is strictly read-only on your local device. External file uploads and imports are completely disabled to guarantee database integrity and student account safety.'}
+          </p>
         </div>
 
       </div>

@@ -9,10 +9,9 @@ import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useScrollLock } from '../hooks/useScrollLock'
 import { useNotifications } from '../hooks/useNotifications'
 import { HiMenu, HiX } from 'react-icons/hi'
-import { FiSun, FiMoon, FiMonitor, FiUser, FiLogOut, FiShield, FiBell, FiX, FiBookOpen, FiFolder, FiFileText, FiLayers, FiSettings, FiSearch, FiHardDrive } from 'react-icons/fi'
+import { FiSun, FiMoon, FiMonitor, FiUser, FiLogOut, FiShield, FiBell, FiX, FiBookOpen, FiFolder, FiFileText, FiLayers, FiSettings, FiSearch } from 'react-icons/fi'
 import SiteLogo from './shared/SiteLogo'
 import ConfirmDialog from './shared/ConfirmDialog'
-import OfflineStudyPackModal from './shared/OfflineStudyPackModal'
 
 const iconMap = { FiBookOpen, FiFolder, FiFileText, FiLayers, FiUser, FiSettings }
 
@@ -47,7 +46,6 @@ export default memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
-  const [showOfflineModal, setShowOfflineModal] = useState(false)
   const notifTrapRef = useFocusTrap(showNotifications)
   const mobileTrapRef = useFocusTrap(isOpen)
   const notifAreaRef = useRef(null)
@@ -188,16 +186,6 @@ export default memo(function Navbar() {
                 aria-label={theme === 'light' ? t('theme.dark') : theme === 'dark' ? t('theme.amoled') : t('theme.light')}
               >
                 {theme === 'light' ? <FiMoon size={16} /> : theme === 'dark' ? <FiMonitor size={16} /> : <FiSun size={16} />}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowOfflineModal(true)}
-                className={iconBtn}
-                title={lang === 'ar' ? 'حزمة الدراسة أوفلاين والنسخ الاحتياطي' : 'Offline Study Pack & Backup'}
-                aria-label="Offline Study Pack"
-              >
-                <FiHardDrive size={16} />
               </button>
 
               {user && (
@@ -463,11 +451,6 @@ export default memo(function Navbar() {
         confirmText={t('nav.logout')}
         cancelText={t('common.cancel')}
         variant="danger"
-      />
-
-      <OfflineStudyPackModal
-        isOpen={showOfflineModal}
-        onClose={() => setShowOfflineModal(false)}
       />
     </>
   )

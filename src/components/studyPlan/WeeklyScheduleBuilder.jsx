@@ -14,9 +14,7 @@ import {
   FiBookOpen,
   FiX,
   FiEdit2,
-  FiDownload,
   FiShare2,
-  FiUpload,
   FiCopy,
   FiCheck,
   FiFileText
@@ -24,9 +22,7 @@ import {
 import { toast } from 'react-hot-toast'
 import {
   downloadIcsSchedule,
-  formatScheduleShareText,
-  exportScheduleJson,
-  validateAndParseScheduleJson
+  formatScheduleShareText
 } from '../../utils/calendarExport'
 
 const DAYS = [
@@ -253,10 +249,6 @@ export default function WeeklyScheduleBuilder({ activePlan, isArabic, t }) {
     }
   }
 
-  // Backup & Import Modal State
-  const [backupModalOpen, setBackupModalOpen] = useState(false)
-  const [importJsonText, setImportJsonText] = useState('')
-
   // Share text copy
   const handleCopyShareText = async () => {
     try {
@@ -290,56 +282,6 @@ export default function WeeklyScheduleBuilder({ activePlan, isArabic, t }) {
     } catch {
       toast.error(isArabic ? 'حدث خطأ أثناء تنزيل ملف التقويم' : 'Failed to download calendar')
     }
-  }
-
-  // Export JSON backup
-  const handleExportJson = () => {
-    try {
-      exportScheduleJson(entries)
-      toast.success(isArabic ? 'تم تنزيل النسخة الاحتياطية (JSON) بنجاح' : 'JSON backup downloaded')
-    } catch {
-      toast.error(isArabic ? 'حدث خطأ أثناء حفظ الملف' : 'Export failed')
-    }
-  }
-
-  // Import JSON from textarea
-  const handleImportJson = () => {
-    if (!importJsonText.trim()) {
-      toast.error(isArabic ? 'يرجى لصق نص النسخة الاحتياطية أولاً' : 'Please paste backup text')
-      return
-    }
-    const result = validateAndParseScheduleJson(importJsonText)
-    if (!result.valid) {
-      toast.error(isArabic ? `فشل الاستيراد: ${result.error}` : `Import error: ${result.error}`)
-      return
-    }
-    setEntries(result.entries)
-    toast.success(isArabic ? `تم استيراد ${result.entries.length} محاضرة بنجاح!` : `Imported ${result.entries.length} lectures!`)
-    setBackupModalOpen(false)
-    setImportJsonText('')
-  }
-
-  // File upload for JSON backup
-  const handleFileUpload = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const content = event.target?.result
-      if (typeof content === 'string') {
-        const result = validateAndParseScheduleJson(content)
-        if (result.valid) {
-          setEntries(result.entries)
-          toast.success(isArabic ? `تم استيراد ${result.entries.length} محاضرة بنجاح!` : `Imported ${result.entries.length} lectures!`)
-          setBackupModalOpen(false)
-          setImportJsonText('')
-        } else {
-          toast.error(isArabic ? `الملف غير صالح: ${result.error}` : `Invalid file: ${result.error}`)
-        }
-      }
-    }
-    reader.readAsText(file)
-    e.target.value = ''
   }
 
   // Conflict detection: map of `${day}-${timeSlot}` -> count
@@ -438,16 +380,6 @@ export default function WeeklyScheduleBuilder({ activePlan, isArabic, t }) {
             >
               <FiShare2 size={14} className="text-emerald-500" />
               <span>{isArabic ? 'مشاركة / واتساب' : 'Share'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setBackupModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-white/80 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 transition cursor-pointer"
-              title={isArabic ? 'نسخ احتياطي واستيراد الجدول (JSON)' : 'Backup & Restore (JSON)'}
-            >
-              <FiUpload size={14} />
-              <span>{isArabic ? 'نسخ احتياطي / استيراد' : 'Backup / Sync'}</span>
             </button>
 
             <button
@@ -878,112 +810,6 @@ export default function WeeklyScheduleBuilder({ activePlan, isArabic, t }) {
           </div>
         )}
 
-        {/* Backup & Import Modal */}
-        {backupModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="glass rounded-3xl p-6 max-w-lg w-full border border-white/20 shadow-2xl bg-white dark:bg-slate-900 relative"
-            >
-              <div className="flex items-center justify-between pb-3 border-b border-line mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-royal-500/10 text-royal-600 dark:text-cyan-400 flex items-center justify-center">
-                    <FiUpload size={16} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-ink text-sm sm:text-base">
-                      {isArabic ? 'النسخ الاحتياطي واستيراد الجدول' : 'Timetable Backup & Restore'}
-                    </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-white/40">
-                      {isArabic ? 'حفظ أو نقل جدولك الدراسي بين أجهزتك المختلفة (JSON)' : 'Save or sync your timetable between your devices'}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setBackupModalOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition"
-                >
-                  <FiX size={18} />
-                </button>
-              </div>
-
-              {/* Two Options: Export or Import */}
-              <div className="space-y-4">
-                {/* 1. Export */}
-                <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-line">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h4 className="text-xs font-bold text-ink mb-0.5">
-                        {isArabic ? 'تصدير نسخة احتياطية' : 'Export Backup File'}
-                      </h4>
-                      <p className="text-[11px] text-slate-500 dark:text-white/50">
-                        {isArabic ? `تنزيل ملف JSON يحتوي على كافة محاضراتك الحالية (${entries.length} محاضرة)` : `Download JSON backup with all your current lectures (${entries.length})`}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleExportJson}
-                      className="px-3.5 py-1.5 rounded-xl bg-royal-600 hover:bg-royal-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shrink-0 transition"
-                    >
-                      <FiDownload size={13} />
-                      <span>{isArabic ? 'تحميل JSON' : 'Download'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 2. Import */}
-                <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-line space-y-3">
-                  <div>
-                    <h4 className="text-xs font-bold text-ink mb-0.5">
-                      {isArabic ? 'استيراد جدول محفوظ' : 'Restore from Backup'}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-white/50">
-                      {isArabic ? 'قم باختيار ملف JSON أو الصق محتواه بالأسفل لاستعادة جدولك' : 'Upload a JSON file or paste backup contents below'}
-                    </p>
-                  </div>
-
-                  {/* File input button */}
-                  <div>
-                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-white/80 text-xs font-semibold cursor-pointer border border-line transition">
-                      <FiUpload size={13} />
-                      <span>{isArabic ? 'اختيار ملف من الجهاز' : 'Choose File'}</span>
-                      <input
-                        type="file"
-                        accept=".json,application/json"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-
-                  {/* Or paste textarea */}
-                  <div>
-                    <textarea
-                      value={importJsonText}
-                      onChange={(e) => setImportJsonText(e.target.value)}
-                      rows={3}
-                      placeholder={isArabic ? 'أو الصق نص JSON هنا...' : 'Or paste JSON content here...'}
-                      className="w-full p-2.5 rounded-xl bg-white dark:bg-black/20 border border-line text-xs font-mono text-ink placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-royal-500"
-                    />
-                  </div>
-
-                  {importJsonText.trim() && (
-                    <button
-                      type="button"
-                      onClick={handleImportJson}
-                      className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-sm"
-                    >
-                      {isArabic ? 'استيراد وتحديث الجدول الآن' : 'Apply & Restore Schedule'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
       </AnimatePresence>
     </div>
   )
