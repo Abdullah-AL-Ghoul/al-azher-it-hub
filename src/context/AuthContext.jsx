@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { authenticateUser, registerUser, addStudentLog, getSessionUser, findOrCreateOAuthUser, signOut as supabaseSignOut, getAuthSession, observeAuthState } from '../services'
+import { authenticateUser, registerUser, resendConfirmationEmail, addStudentLog, getSessionUser, findOrCreateOAuthUser, signOut as supabaseSignOut, getAuthSession, observeAuthState } from '../services'
 import { RateLimitService } from '../services/rateLimitService'
 
 const STORAGE_KEY = 'al_azher_session'
@@ -287,15 +287,20 @@ export function AuthProvider({ children }) {
   }
  }, [user, logout])
 
-const value = useMemo(() => ({
+  const resendConfirmation = useCallback(async (email) => {
+    return await resendConfirmationEmail(email)
+  }, [])
+
+  const value = useMemo(() => ({
    user,
    loading,
    login,
    signup,
    logout,
    updateUser,
+   resendConfirmation,
    isAdmin: user?.role === 'admin'
-  }), [user, loading, login, signup, logout, updateUser])
+  }), [user, loading, login, signup, logout, updateUser, resendConfirmation])
 
  return (
   <AuthContext.Provider value={value}>

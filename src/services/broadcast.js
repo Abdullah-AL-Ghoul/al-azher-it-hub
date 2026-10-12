@@ -1,3 +1,5 @@
+import { getSupabase, authRpc, isSupabaseConfigured } from './supabase'
+
 const STORAGE_KEY = 'al_azher_broadcast_announcement'
 const DISMISSED_KEY = 'al_azher_dismissed_broadcasts'
 export const BROADCAST_EVENT = 'al_azher_broadcast_updated'
@@ -50,7 +52,7 @@ export const BROADCAST_TYPES = {
 }
 
 /**
- * Retrieves the currently configured broadcast
+ * Retrieves the currently configured broadcast from local storage
  */
 export function getBroadcast() {
   try {
@@ -65,7 +67,36 @@ export function getBroadcast() {
 }
 
 /**
- * Saves a broadcast and notifies all listeners across current and other tabs
+ * Fetches the latest global broadcast from Supabase settings table
+ */
+export async function fetchBroadcastRemote() {
+  try {
+    if (!isSupabaseConfigured()) return getBroadcast()
+    const { data, error } = await getSupabase()
+      .from('settings')
+      .select('value')
+      .eq('key', 'broadcast')
+      .maybeSingle()
+    if (error) return getBroadcast()
+    if (data?.value && typeof data.value === 'object') {
+      const remote = data.value
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(remote))
+      window.dispatchEvent(new CustomEvent(BROADCAST_EVENT, { detail: remote }))
+      return remote
+    } else if (data && data.value === null) {
+      localStorage.removeItem(STORAGE_KEY)
+      window.dispatchEvent(new CustomEvent(BROADCAST_EVENT, { detail: null }))
+      return null
+    }
+    return getBroadcast()
+  } catch {
+    return getBroadcast()
+  }
+}
+
+/**
+ * Saves a broadcast locally and dispatches update event.
+ * If active, removes from dismissed list so user sees it immediately.
  */
 export function saveBroadcast(broadcast) {
   try {
@@ -86,13 +117,54 @@ export function saveBroadcast(broadcast) {
       updatedBy: broadcast.updatedBy || 'Admin',
     }
 
+    if (payload.active) {
+      try {
+        const rawDismissed = localStorage.getItem(DISMISSED_KEY)
+        if (rawDismissed) {
+          const list = JSON.parse(rawDismissed)
+          if (Array.isArray(list) && list.includes(payload.id)) {
+            const filtered = list.filter((x) => x !== payload.id)
+            localStorage.setItem(DISMISSED_KEY, JSON.stringify(filtered))
+          }
+        }
+      } catch (_e) {
+        // ignore
+      }
+    }
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     window.dispatchEvent(new CustomEvent(BROADCAST_EVENT, { detail: payload }))
+
+    // Background sync to Supabase settings
+    try {
+      if (isSupabaseConfigured()) {
+        authRpc('admin_save_setting', { p_key: 'broadcast', p_value: payload }).catch(() => {})
+      }
+    } catch (_e) {
+      // ignore
+    }
+
     return payload
   } catch (err) {
     console.error('Failed to save broadcast:', err)
     return null
   }
+}
+
+/**
+ * Async save that guarantees Supabase settings synchronization
+ */
+export async function saveBroadcastRemote(broadcast) {
+  const payload = saveBroadcast(broadcast)
+  if (!payload) return null
+  try {
+    if (isSupabaseConfigured()) {
+      await authRpc('admin_save_setting', { p_key: 'broadcast', p_value: payload })
+    }
+  } catch (err) {
+    console.warn('Failed to sync broadcast to Supabase:', err)
+  }
+  return payload
 }
 
 /**
@@ -105,12 +177,15 @@ export function toggleBroadcastActive(active) {
 }
 
 /**
- * Completely clears the broadcast
+ * Completely clears the broadcast locally and on Supabase
  */
 export function clearBroadcast() {
   try {
     localStorage.removeItem(STORAGE_KEY)
     window.dispatchEvent(new CustomEvent(BROADCAST_EVENT, { detail: null }))
+    if (isSupabaseConfigured()) {
+      authRpc('admin_save_setting', { p_key: 'broadcast', p_value: null }).catch(() => {})
+    }
   } catch (err) {
     console.error('Failed to clear broadcast:', err)
   }

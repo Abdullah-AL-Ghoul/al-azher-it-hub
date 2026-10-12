@@ -479,6 +479,18 @@ export async function sendPasswordResetEmail(email) {
   if (error) throw error
 }
 
+export async function resendConfirmationEmail(email) {
+  const { error } = await getSupabase().auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/login`,
+    },
+  })
+  if (error) throw error
+  return { ok: true }
+}
+
 export async function verifyStudent(studentId) {
   // Only exposes existence — name/email are never revealed to unauthenticated
   // callers (the old version leaked the registered email for any studentId).

@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { FiUser, FiHash, FiLock, FiCheckCircle, FiBookOpen, FiMail, FiShield } from 'react-icons/fi'
+import { FiUser, FiHash, FiLock, FiCheckCircle, FiBookOpen, FiMail, FiShield, FiRefreshCw, FiCheck } from 'react-icons/fi'
+import toast from 'react-hot-toast'
 import SpatialInput from '../components/spatial/SpatialInput'
 import AuthLayout from '../components/auth/AuthLayout'
 import AuthLogo from '../components/auth/AuthLogo'
@@ -91,9 +92,16 @@ function PasswordStrength({ password, isArabic }) {
   )
 }
 
+const POPULAR_MAJORS = [
+  { ar: 'هندسة البرمجيات', en: 'Software Engineering' },
+  { ar: 'علوم الحاسوب', en: 'Computer Science' },
+  { ar: 'نظم المعلومات الحاسوبية', en: 'Information Systems' },
+  { ar: 'الوسائط وتطوير الويب', en: 'Multimedia & Web' },
+]
+
 export default function Signup() {
   const { lang, t } = useLanguage()
-  const { signup, user } = useAuth()
+  const { signup, user, resendConfirmation } = useAuth()
   const navigate = useNavigate()
   const isArabic = lang === 'ar'
 
@@ -109,9 +117,19 @@ export default function Signup() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
   const [showSuccess, setShowSuccess] = useState(false)
   const [needsConfirmation, setNeedsConfirmation] = useState(false)
   const navigateTimer = useRef(null)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const interval = setInterval(() => {
+      setCooldown((c) => (c <= 1 ? 0 : c - 1))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [cooldown])
 
   useEffect(() => {
     return () => {
@@ -124,6 +142,20 @@ export default function Signup() {
   }, [user, showSuccess, navigate])
 
   if (user && !showSuccess) return null
+
+  const handleResend = async () => {
+    if (cooldown > 0 || resending || !form.email) return
+    setResending(true)
+    try {
+      await resendConfirmation(form.email)
+      toast.success(isArabic ? 'تم إعادة إرسال رابط التفعيل إلى بريدك' : 'Verification link resent to your email')
+      setCooldown(60)
+    } catch (_e) {
+      toast.error(isArabic ? 'فشل إعادة الإرسال، يرجى المحاولة لاحقاً' : 'Failed to resend verification link')
+    } finally {
+      setResending(false)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -157,13 +189,10 @@ export default function Signup() {
 
     if (result.ok) {
       setShowSuccess(true)
-      if (!result.needsConfirmation) {
-        sessionStorage.setItem('al_azher_just_auth', '1')
-      }
       if (result.needsConfirmation) {
         setNeedsConfirmation(true)
-        navigateTimer.current = setTimeout(() => navigate('/login'), 1800)
       } else {
+        sessionStorage.setItem('al_azher_just_auth', '1')
         navigateTimer.current = setTimeout(() => navigate('/home'), 1200)
       }
     } else if (result.error === 'STUDENT_ID_EXISTS') {
@@ -192,11 +221,64 @@ export default function Signup() {
       <AuthAlert
         type="success"
         message={needsConfirmation ? t('signup.checkEmail') : t('inline.signup.account-created-successfully')}
-        show={showSuccess}
+        show={showSuccess && !needsConfirmation}
       />
       <AuthAlert type="error" message={error} show={!showSuccess && !!error} />
 
-      {!showSuccess && (
+      {needsConfirmation ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center py-6 space-y-4 relative z-10"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-royal-500 to-cyan-400 flex items-center justify-center text-white mx-auto shadow-lg shadow-royal-500/25">
+            <FiMail size={32} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-ink mb-1.5">{isArabic ? 'تأكيد الحساب الجامعي' : 'Verify Your Email'}</h2>
+            <p className="text-sm text-slate-600 dark:text-white/70 max-w-sm mx-auto leading-relaxed">
+              {isArabic ? (
+                <>
+                  تم إرسال رابط التفعيل إلى بريدك: <br />
+                  <span className="font-bold text-royal-600 dark:text-cyan-400 font-mono text-xs sm:text-sm">{form.email}</span>
+                  <br />
+                  يرجى فتح بريدك (وفحص مجلد Spam إن لزم) والنقر على الرابط لتفعيل حسابك.
+                </>
+              ) : (
+                <>
+                  A verification link was sent to your email: <br />
+                  <span className="font-bold text-royal-600 dark:text-cyan-400 font-mono text-xs sm:text-sm">{form.email}</span>
+                  <br />
+                  Please check your inbox (and spam folder) to activate your account.
+                </>
+              )}
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending || cooldown > 0}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-royal-500/10 hover:bg-royal-500/20 text-royal-600 dark:text-cyan-400 text-xs sm:text-sm font-bold border border-royal-500/20 transition-all disabled:opacity-50"
+            >
+              <FiRefreshCw size={14} className={resending ? 'animate-spin' : ''} />
+              <span>
+                {cooldown > 0
+                  ? isArabic ? `إعادة الإرسال بعد (${cooldown}ث)` : `Resend in (${cooldown}s)`
+                  : isArabic ? 'إعادة إرسال الرابط' : 'Resend Verification Link'}
+              </span>
+            </button>
+
+            <Link
+              to="/login"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl btn-spatial text-xs sm:text-sm font-semibold transition-all shadow-sm"
+            >
+              {t('signup.login')}
+            </Link>
+          </div>
+        </motion.div>
+      ) : !showSuccess && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -296,6 +378,27 @@ export default function Signup() {
                   isArabic={isArabic}
                   autoComplete="organization-title"
                 />
+                {/* Popular major suggestions */}
+                <div className="flex flex-wrap gap-1.5 mt-2 ms-0.5">
+                  {POPULAR_MAJORS.map((m, idx) => {
+                    const label = isArabic ? m.ar : m.en
+                    const selected = form.major === label
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setForm((f) => ({ ...f, major: label }))}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                          selected
+                            ? 'bg-royal-500/20 text-royal-600 dark:text-cyan-300 border border-royal-500/30'
+                            : 'bg-slate-100/70 dark:bg-white/5 text-slate-600 dark:text-white/60 hover:text-ink hover:bg-slate-200/70 dark:hover:bg-white/10'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             </div>
 
@@ -356,11 +459,17 @@ export default function Signup() {
               </div>
             </div>
 
-            {/* Real-time mismatch message */}
+            {/* Real-time match / mismatch message */}
             {form.confirmPassword && form.password !== form.confirmPassword && (
               <p className="text-xs text-rose-500 dark:text-rose-400 ms-1 font-medium">
                 {t('forgotPassword.passwordsDoNotMatch')}
               </p>
+            )}
+            {form.confirmPassword && form.password === form.confirmPassword && form.password.length >= 8 && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-500 dark:text-emerald-400 ms-1 font-semibold">
+                <FiCheckCircle size={14} />
+                <span>{isArabic ? 'كلمتا المرور متطابقتان تماماً' : 'Passwords match successfully'}</span>
+              </div>
             )}
 
             {/* Segmented Password Strength Visualizer */}

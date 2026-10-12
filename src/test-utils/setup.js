@@ -1,7 +1,7 @@
 import { vi, afterEach } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { getSupabase, authRpc } from './mockSupabase'
+import { getSupabase, authRpc, isSupabaseConfigured } from './mockSupabase'
 
 // globals are disabled, so React Testing Library cannot auto-register its
 // cleanup hook. Unmount explicitly after every test to keep the document
@@ -16,6 +16,7 @@ afterEach(() => {
 vi.mock('@/services/supabase', () => ({
   getSupabase,
   authRpc,
+  isSupabaseConfigured,
 }))
 
 // ---------------------------------------------------------------------------

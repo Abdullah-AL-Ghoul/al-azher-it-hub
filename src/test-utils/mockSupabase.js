@@ -340,6 +340,10 @@ export function __resetSupabaseMock() {
   installedMock = null
 }
 
+export function isSupabaseConfigured() {
+  return true
+}
+
 export function getSupabase() {
   if (!installedMock) installedMock = createMockSupabase()
   return installedMock

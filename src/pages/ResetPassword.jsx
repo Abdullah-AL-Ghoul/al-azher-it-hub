@@ -8,6 +8,7 @@ import AuthLayout from '../components/auth/AuthLayout'
 import AuthLogo from '../components/auth/AuthLogo'
 import AuthAlert from '../components/auth/AuthAlert'
 import AuthSubmitButton from '../components/auth/AuthSubmitButton'
+import PasswordStrengthIndicator from '../components/auth/PasswordStrengthIndicator'
 import { FiLock, FiArrowLeft, FiArrowRight, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi'
 
 export default function ResetPassword() {
@@ -203,6 +204,17 @@ export default function ResetPassword() {
                 {t('forgotPassword.passwordsDoNotMatch')}
               </p>
             )}
+
+            {confirmPassword && newPassword === confirmPassword && newPassword.length >= 8 && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-500 dark:text-emerald-400 ms-1 font-semibold">
+                <FiCheckCircle size={14} />
+                <span>{isArabic ? 'كلمتا المرور متطابقتان تماماً' : 'Passwords match successfully'}</span>
+              </div>
+            )}
+
+            <AnimatePresence>
+              <PasswordStrengthIndicator password={newPassword} isArabic={isArabic} />
+            </AnimatePresence>
 
             <AuthSubmitButton
               loading={loading}

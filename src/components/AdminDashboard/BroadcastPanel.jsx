@@ -2,7 +2,7 @@ import { useState, useEffect, memo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { FiRadio, FiCheck, FiX, FiAlertTriangle, FiBell, FiAward, FiInfo, FiExternalLink, FiEye, FiZap, FiTrash2, FiSave } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
-import { getBroadcast, saveBroadcast, clearBroadcast, BROADCAST_TYPES } from '../../services/broadcast'
+import { getBroadcast, saveBroadcastRemote, fetchBroadcastRemote, clearBroadcast, BROADCAST_TYPES } from '../../services/broadcast'
 import { pageContainer, pageItem, pageContainerReduced, pageItemReduced } from '../../utils/motionTokens'
 
 const PRESET_TEMPLATES = [
@@ -73,6 +73,12 @@ function BroadcastPanel({ isArabic, onRefresh }) {
       setCurrent(loaded)
       setForm(loaded)
     }
+    fetchBroadcastRemote().then((remote) => {
+      if (remote) {
+        setCurrent(remote)
+        setForm(remote)
+      }
+    }).catch(() => {})
   }, [])
 
   const handleApplyPreset = (preset) => {
@@ -91,7 +97,7 @@ function BroadcastPanel({ isArabic, onRefresh }) {
     toast.success(isArabic ? 'تم تطبيق القالب الجاهز' : 'Preset template applied')
   }
 
-  const handleSave = (publishState = null) => {
+  const handleSave = async (publishState = null) => {
     if (!form.messageAr.trim() && !form.messageEn.trim() && !form.titleAr.trim()) {
       toast.error(isArabic ? 'يرجى كتابة نص الإعلان أو العنوان أولاً' : 'Please provide announcement text or title')
       return
@@ -103,7 +109,7 @@ function BroadcastPanel({ isArabic, onRefresh }) {
       active: publishState !== null ? publishState : form.active,
     }
 
-    const saved = saveBroadcast(toSave)
+    const saved = await saveBroadcastRemote(toSave)
     setIsSaving(false)
 
     if (saved) {

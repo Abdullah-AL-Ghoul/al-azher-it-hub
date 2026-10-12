@@ -5,7 +5,7 @@ export { getCourses, addCourse, updateCourse, deleteCourse } from './courses'
 export { getLectures, addLecture, updateLecture, deleteLecture } from './lectures'
 export { getSources, addSource, updateSource, deleteSource } from './sources'
 export {
-  getUsers, registerUser, authenticateUser, resetPassword, sendPasswordResetEmail, verifyStudent, verifyStudentEmail, verifyStudentName, getSessionUser, findOrCreateOAuthUser, signOut,
+  getUsers, registerUser, authenticateUser, resetPassword, sendPasswordResetEmail, resendConfirmationEmail, verifyStudent, verifyStudentEmail, verifyStudentName, getSessionUser, findOrCreateOAuthUser, signOut,
   getAuthSession, observeAuthState, updateAuthUserPassword, signInWithOAuthProvider, resolveStudentIdByEmail,
 } from './users'
 export { getFavorites, toggleFavorite } from './favorites'

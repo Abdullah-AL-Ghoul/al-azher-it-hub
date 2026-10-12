@@ -97,22 +97,25 @@ export default memo(function Navbar() {
       <div ref={progressRef} className="scroll-progress" aria-hidden="true" />
 
       <nav aria-label={t('inline.navbar.primary-navigation')} className={`fixed top-0 inset-x-0 z-50 transition duration-300 ${navBg}`}>
-        <div className="container-page">
+        <div className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
-            <Link to="/home" className="flex items-center gap-2 group">
+            <Link to="/home" className="flex items-center gap-2.5 group shrink-0" aria-label="AL-Azher IT Hub">
               <SiteLogo size="sm" />
-              <span className="font-bold text-lg text-ink">{t('site.title')}</span>
+              <div className="flex items-center gap-1.5 whitespace-nowrap">
+                <span className="font-extrabold text-base lg:text-lg text-ink tracking-tight">AL-Azher</span>
+                <span className="text-xs lg:text-sm font-bold text-accent">IT Hub</span>
+              </div>
             </Link>
 
             {/* Desktop nav */}
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-1 xl:gap-1.5">
               {links.map(link => (
                 <Link
                   key={link.to}
                   to={link.to}
                   onMouseEnter={() => prefetchData(link.to)}
                   aria-current={isActive(link.to) ? 'page' : undefined}
-                  className={`relative px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
+                  className={`relative px-2.5 xl:px-3 py-1.5 rounded-xl text-xs xl:text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
                     isActive(link.to)
                       ? 'text-accent'
                       : 'text-slate-600 dark:text-white/60 hover:text-ink'
@@ -133,7 +136,7 @@ export default memo(function Navbar() {
                 <Link
                   to="/admin"
                   aria-current={isActive('/admin') ? 'page' : undefined}
-                  className={`relative px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200 flex items-center gap-1.5 ${
+                  className={`relative px-2.5 xl:px-3 py-1.5 rounded-xl text-xs xl:text-sm font-medium transition-colors duration-200 flex items-center gap-1.5 whitespace-nowrap ${
                     isActive('/admin')
                       ? 'text-accent'
                       : 'text-slate-600 dark:text-white/60 hover:text-ink'
@@ -151,12 +154,12 @@ export default memo(function Navbar() {
                 </Link>
               )}
 
-              <div className="w-px h-5 bg-slate-200 dark:bg-white/10 mx-1" />
+              <div className="w-px h-5 bg-slate-200 dark:bg-white/10 mx-1 shrink-0" />
 
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent('al_azher_open_search'))}
-                className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-white/50 hover:text-ink hover:border-royal-400/50 hover:bg-white/90 dark:hover:bg-white/10 transition-all duration-200 group cursor-pointer"
+                className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-white/50 hover:text-ink hover:border-royal-400/50 hover:bg-white/90 dark:hover:bg-white/10 transition-all duration-200 group cursor-pointer shrink-0"
                 title={lang === 'ar' ? 'البحث السريع في الخطط والمواد والامتحانات (Ctrl+K)' : 'Quick Search (Ctrl+K)'}
                 aria-label={t('nav.search')}
               >

@@ -2,14 +2,16 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
-import { resetPassword, verifyStudentEmail, verifyStudentName } from '../services'
+import { resetPassword, verifyStudentEmail, verifyStudentName, sendPasswordResetEmail } from '../services'
 import { RateLimitService } from '../services/rateLimitService'
 import SpatialInput from '../components/spatial/SpatialInput'
 import AuthLayout from '../components/auth/AuthLayout'
 import AuthLogo from '../components/auth/AuthLogo'
 import AuthAlert from '../components/auth/AuthAlert'
 import AuthSubmitButton from '../components/auth/AuthSubmitButton'
-import { FiUser, FiLock, FiMail, FiArrowLeft, FiArrowRight, FiCheckCircle, FiSmile } from 'react-icons/fi'
+import PasswordStrengthIndicator from '../components/auth/PasswordStrengthIndicator'
+import { FiUser, FiLock, FiMail, FiArrowLeft, FiArrowRight, FiCheckCircle, FiSmile, FiSend, FiShield } from 'react-icons/fi'
+import toast from 'react-hot-toast'
 
 export default function ForgotPassword() {
   const { lang, t } = useLanguage()
@@ -17,9 +19,11 @@ export default function ForgotPassword() {
   const isArabic = lang === 'ar'
   const navigate = useNavigate()
 
+  const [mode, setMode] = useState('wizard') // 'wizard' | 'email'
   const [step, setStep] = useState(1)
   const [studentId, setStudentId] = useState('')
   const [studentEmail, setStudentEmail] = useState('')
+  const [directEmail, setDirectEmail] = useState('')
   const [studentName, setStudentName] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -28,6 +32,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
   const navigateTimer = useRef(null)
 
   useEffect(() => {
@@ -35,6 +40,25 @@ export default function ForgotPassword() {
       if (navigateTimer.current) clearTimeout(navigateTimer.current)
     }
   }, [])
+
+  const handleDirectEmailReset = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (!directEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(directEmail)) {
+      setError(t('signup.error.email'))
+      return
+    }
+    setLoading(true)
+    try {
+      await sendPasswordResetEmail(directEmail.trim())
+      setLoading(false)
+      setEmailSent(true)
+      toast.success(isArabic ? 'تم إرسال رابط إعادة التعيين لبريدك' : 'Reset email sent successfully')
+    } catch (_err) {
+      setLoading(false)
+      setError(t('forgotPassword.error'))
+    }
+  }
 
   const handleVerify = async (e) => {
     e.preventDefault()
@@ -153,25 +177,128 @@ export default function ForgotPassword() {
         isArabic={isArabic}
       />
 
-      {/* 4-Step Progress Indicator */}
-      {!success && (
+      {/* Recovery Mode Selector */}
+      {!success && !emailSent && (
+        <div className="flex rounded-xl bg-slate-100/80 dark:bg-white/5 p-1 mb-5 border border-slate-200/60 dark:border-white/10">
+          <button
+            type="button"
+            onClick={() => { setMode('wizard'); setError('') }}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+              mode === 'wizard'
+                ? 'bg-white dark:bg-white/15 text-royal-600 dark:text-cyan-300 shadow-sm'
+                : 'text-slate-600 dark:text-white/60 hover:text-ink'
+            }`}
+          >
+            {isArabic ? 'التحقق الأكاديمي المباشر' : 'Academic Verification'}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode('email'); setError('') }}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+              mode === 'email'
+                ? 'bg-white dark:bg-white/15 text-royal-600 dark:text-cyan-300 shadow-sm'
+                : 'text-slate-600 dark:text-white/60 hover:text-ink'
+            }`}
+          >
+            {isArabic ? 'رابط الاستعادة للبريد' : 'Email Reset Link'}
+          </button>
+        </div>
+      )}
+
+      {/* 4-Step Progress Indicator (Wizard mode) */}
+      {!success && !emailSent && mode === 'wizard' && (
         <div role="group" className="flex items-center justify-center gap-2 mb-6" aria-label={`Step ${step} of 4`}>
-          {[1, 2, 3, 4].map((s) => (
-            <div
-              key={s}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                step === s
-                  ? 'w-8 bg-royal-500 dark:bg-cyan-400'
-                  : step > s
-                  ? 'w-5 bg-emerald-500/80 dark:bg-emerald-400/80'
-                  : 'w-4 bg-slate-200 dark:bg-white/10'
-              }`}
-            />
+          {[
+            { s: 1, label: isArabic ? 'الرقم الجامعي' : 'ID' },
+            { s: 2, label: isArabic ? 'البريد' : 'Email' },
+            { s: 3, label: isArabic ? 'الاسم' : 'Name' },
+            { s: 4, label: isArabic ? 'كلمة المرور' : 'Password' },
+          ].map(({ s, label }) => (
+            <div key={s} className="flex items-center gap-1.5">
+              <div
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  step === s
+                    ? 'w-8 bg-royal-500 dark:bg-cyan-400'
+                    : step > s
+                    ? 'w-5 bg-emerald-500/80 dark:bg-emerald-400/80'
+                    : 'w-4 bg-slate-200 dark:bg-white/10'
+                }`}
+                title={label}
+              />
+              {step === s && (
+                <span className="text-[11px] font-bold text-royal-600 dark:text-cyan-400 ms-1 hidden sm:inline">
+                  {label}
+                </span>
+              )}
+            </div>
           ))}
         </div>
       )}
 
-      <AuthAlert type="error" message={error} show={!success && !!error} />
+      <AuthAlert type="error" message={error} show={!success && !emailSent && !!error} />
+
+      {/* Email Reset Link Sent State */}
+      {emailSent ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center py-6 space-y-4"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-royal-500 to-cyan-400 flex items-center justify-center text-white mx-auto shadow-lg shadow-royal-500/25">
+            <FiMail size={32} />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-ink mb-1.5">{isArabic ? 'تم إرسال رابط الاستعادة' : 'Reset Link Sent'}</h3>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-white/70 max-w-sm mx-auto leading-relaxed">
+              {isArabic
+                ? 'تم إرسال تعليمات إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى مراجعة بريدك الوارد.'
+                : 'Instructions to reset your password have been sent to your email address.'}
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl btn-spatial text-xs sm:text-sm font-semibold transition shadow-sm"
+            >
+              {t('forgotPassword.backToLogin')}
+            </Link>
+          </div>
+        </motion.div>
+      ) : mode === 'email' ? (
+        /* Direct Email Reset Form */
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+          <p className="text-center text-xs sm:text-sm text-slate-600 dark:text-white/70 mb-3">
+            {isArabic ? 'أدخل بريدك الإلكتروني المسجل لإرسال رابط إعادة تعيين كلمة المرور' : 'Enter your registered email to receive a password reset link'}
+          </p>
+          <form onSubmit={handleDirectEmailReset} className="space-y-4">
+            <div>
+              <label htmlFor="fp-direct-email" className="block text-xs font-semibold text-slate-600 dark:text-white/70 mb-1.5 ms-1 uppercase tracking-wider">
+                {t('forgotPassword.enterEmail')}
+              </label>
+              <SpatialInput
+                id="fp-direct-email"
+                icon={FiMail}
+                type="email"
+                required
+                value={directEmail}
+                onChange={(e) => setDirectEmail(e.target.value)}
+                placeholder="example@university.edu"
+                isArabic={isArabic}
+                autoComplete="email"
+                disabled={loading}
+              />
+            </div>
+            <AuthSubmitButton
+              loading={loading}
+              loadingText={t('forgotPassword.verifying')}
+              buttonText={isArabic ? 'إرسال رابط الاستعادة' : 'Send Reset Link'}
+              isArabic={isArabic}
+              delay={0.2}
+            />
+          </form>
+        </motion.div>
+      ) : (
+        /* Wizard Multi-Step Recovery */
 
       <AnimatePresence mode="wait">
         {success ? (
@@ -363,6 +490,24 @@ export default function ForgotPassword() {
                   </div>
                 </div>
 
+                {/* Real-time match / mismatch indicator */}
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <p className="text-xs text-rose-500 dark:text-rose-400 ms-1 font-medium">
+                    {t('forgotPassword.passwordsDoNotMatch')}
+                  </p>
+                )}
+                {confirmPassword && newPassword === confirmPassword && newPassword.length >= 8 && (
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-500 dark:text-emerald-400 ms-1 font-semibold">
+                    <FiCheckCircle size={14} />
+                    <span>{isArabic ? 'كلمتا المرور متطابقتان تماماً' : 'Passwords match successfully'}</span>
+                  </div>
+                )}
+
+                {/* Segmented Password Strength Visualizer */}
+                <AnimatePresence>
+                  <PasswordStrengthIndicator password={newPassword} isArabic={isArabic} />
+                </AnimatePresence>
+
                 <AuthSubmitButton
                   loading={loading}
                   loadingText={t('forgotPassword.changing')}
@@ -375,6 +520,7 @@ export default function ForgotPassword() {
           </motion.div>
         )}
       </AnimatePresence>
+      )}
 
       {/* Return to Login */}
       <div className="mt-6 pt-4 border-t border-slate-200/80 dark:border-white/10 text-center">

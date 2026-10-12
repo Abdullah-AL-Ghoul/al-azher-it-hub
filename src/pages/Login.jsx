@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { updateLastVisit, addStudentLog } from '../services'
-import { FiUser, FiLock } from 'react-icons/fi'
+import { FiUser, FiLock, FiMail, FiRefreshCw, FiCheck } from 'react-icons/fi'
+import toast from 'react-hot-toast'
 import SpatialInput from '../components/spatial/SpatialInput'
 import AuthLayout from '../components/auth/AuthLayout'
 import AuthLogo from '../components/auth/AuthLogo'
@@ -15,15 +16,27 @@ import SocialAuth from '../components/auth/SocialAuth'
 
 export default function Login() {
   const { lang, t } = useLanguage()
-  const { login, user } = useAuth()
+  const { login, user, resendConfirmation } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const isArabic = lang === 'ar'
 
-  const [form, setForm] = useState({ studentId: '', password: '' })
+  const rememberedId = (() => {
+    try {
+      return localStorage.getItem('al_azher_remembered_id') || ''
+    } catch {
+      return ''
+    }
+  })()
+
+  const [form, setForm] = useState({ studentId: rememberedId, password: '' })
+  const [rememberId, setRememberId] = useState(() => Boolean(rememberedId))
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resendingEmail, setResendingEmail] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState('')
   const navigateTimer = useRef(null)
 
   const [lockoutSeconds, setLockoutSeconds] = useState(() => {
@@ -85,16 +98,35 @@ export default function Login() {
 
   useEffect(() => {
     if (user && !showSuccess) {
-      navigate(user.role === 'admin' ? '/admin' : '/home', { replace: true })
+      const target = location.state?.from || (user.role === 'admin' ? '/admin' : '/home')
+      navigate(target, { replace: true })
     }
-  }, [user, showSuccess, navigate])
+  }, [user, showSuccess, navigate, location.state])
 
   if (user && !showSuccess) return null
+
+  const handleResendConfirmation = async () => {
+    const emailToTarget = unconfirmedEmail || (form.studentId.includes('@') ? form.studentId.trim() : '')
+    if (!emailToTarget) {
+      toast.error(isArabic ? 'يرجى كتابة بريدك الإلكتروني في خانة تسجيل الدخول' : 'Please provide your email address')
+      return
+    }
+    setResendingEmail(true)
+    try {
+      await resendConfirmation(emailToTarget)
+      toast.success(isArabic ? 'تم إرسال رابط التفعيل بنجاح! تفقد بريدك الوارد' : 'Verification email sent! Check your inbox')
+    } catch (_e) {
+      toast.error(isArabic ? 'فشل إعادة الإرسال، يرجى المحاولة لاحقاً' : 'Failed to resend confirmation email')
+    } finally {
+      setResendingEmail(false)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (lockoutSeconds > 0) return
     setError('')
+    setUnconfirmedEmail('')
     if (!form.studentId.trim() || !form.password) {
       setError(t('inline.login.enter-your-id-and'))
       return
@@ -109,6 +141,11 @@ export default function Login() {
       try {
         sessionStorage.removeItem('login_consecutive_failures')
         sessionStorage.removeItem('login_lockout_until')
+        if (rememberId && form.studentId.trim()) {
+          localStorage.setItem('al_azher_remembered_id', form.studentId.trim())
+        } else {
+          localStorage.removeItem('al_azher_remembered_id')
+        }
       } catch (_e) {}
       sessionStorage.setItem('al_azher_just_auth', '1')
 
@@ -125,11 +162,14 @@ export default function Login() {
         } catch (_e) {}
       }
       setTimeout(logVisit, 0)
+      const targetDestination = location.state?.from || (result.user.role === 'admin' ? '/admin' : '/home')
       navigateTimer.current = setTimeout(() => {
-        navigate(result.user.role === 'admin' ? '/admin' : '/home')
+        navigate(targetDestination)
       }, 900)
     } else {
       if (result.error === 'EMAIL_NOT_CONFIRMED') {
+        const mail = form.studentId.includes('@') ? form.studentId.trim() : ''
+        setUnconfirmedEmail(mail)
         setError(t('login.emailNotConfirmed'))
       } else if (result.error === 'TOO_MANY_ATTEMPTS' && result.retryAfter) {
         const secs = Number(result.retryAfter) || 30
@@ -176,6 +216,25 @@ export default function Login() {
       <AuthAlert type="success" message={t('inline.login.login-successful')} show={showSuccess} />
       <AuthAlert type="error" message={error} show={!showSuccess && !!error} />
 
+      {/* Resend confirmation button if email is unconfirmed */}
+      {error && !showSuccess && (error === t('login.emailNotConfirmed') || unconfirmedEmail) && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 text-center"
+        >
+          <button
+            type="button"
+            onClick={handleResendConfirmation}
+            disabled={resendingEmail}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-royal-500/10 hover:bg-royal-500/20 text-royal-600 dark:text-cyan-400 text-xs font-bold border border-royal-500/20 transition-all cursor-pointer"
+          >
+            <FiRefreshCw size={13} className={resendingEmail ? 'animate-spin' : ''} />
+            <span>{isArabic ? 'إعادة إرسال رابط التفعيل إلى بريدك' : 'Resend confirmation link to your email'}</span>
+          </button>
+        </motion.div>
+      )}
+
       {!showSuccess && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -183,6 +242,14 @@ export default function Login() {
           transition={{ delay: 0.15 }}
           className="relative z-10"
         >
+          {/* Welcome back indicator for returning students */}
+          {rememberedId && form.studentId === rememberedId && (
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold mb-3.5">
+              <FiCheck size={14} className="shrink-0" />
+              <span>{isArabic ? 'مرحباً بعودتك! تم استرجاع رقمك المحفوظ.' : 'Welcome back! Your saved ID was restored.'}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Student ID / Email Field */}
             <div>
@@ -241,6 +308,19 @@ export default function Login() {
                 aria-invalid={error ? 'true' : undefined}
                 aria-describedby={error ? 'auth-form-alert' : undefined}
               />
+            </div>
+
+            {/* Remember Me Toggle */}
+            <div className="flex items-center justify-between pt-0.5 pb-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600 dark:text-white/70 hover:text-ink">
+                <input
+                  type="checkbox"
+                  checked={rememberId}
+                  onChange={(e) => setRememberId(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 dark:border-white/20 text-royal-600 focus:ring-royal-400/50 cursor-pointer"
+                />
+                <span>{isArabic ? 'تذكر رقمي في هذا المتصفح' : 'Remember ID on this device'}</span>
+              </label>
             </div>
 
             {/* Submit Action with Progressive Countdown */}

@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { FiAlertTriangle, FiBell, FiAward, FiInfo, FiX, FiExternalLink, FiArrowLeft, FiArrowRight } from 'react-icons/fi'
 import { useLanguage } from '../../context/LanguageContext'
-import { getBroadcast, isBroadcastDismissed, dismissBroadcast, BROADCAST_EVENT, BROADCAST_TYPES } from '../../services/broadcast'
+import { getBroadcast, fetchBroadcastRemote, isBroadcastDismissed, dismissBroadcast, BROADCAST_EVENT, BROADCAST_TYPES } from '../../services/broadcast'
 
 const TYPE_ICONS = {
   urgent: FiAlertTriangle,
@@ -31,6 +31,13 @@ function BroadcastBanner() {
 
   useEffect(() => {
     syncBroadcast()
+    // Fetch latest remote announcement from Supabase
+    fetchBroadcastRemote().then((remote) => {
+      if (remote) {
+        setBroadcast(remote)
+        setDismissed(isBroadcastDismissed(remote.id))
+      }
+    }).catch(() => {})
 
     const handleEvent = (e) => {
       if (e.detail) {
@@ -47,12 +54,20 @@ function BroadcastBanner() {
       }
     }
 
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchBroadcastRemote().catch(() => {})
+      }
+    }
+
     window.addEventListener(BROADCAST_EVENT, handleEvent)
     window.addEventListener('storage', handleStorage)
+    document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
       window.removeEventListener(BROADCAST_EVENT, handleEvent)
       window.removeEventListener('storage', handleStorage)
+      document.removeEventListener('visibilitychange', handleVisibility)
     }
   }, [syncBroadcast])
 
