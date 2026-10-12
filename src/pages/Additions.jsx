@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { pageContainer, pageItem } from '../utils/motionTokens'
 import { uid } from '../utils/helpers'
 import { isSafeUrl } from '../utils/sanitize'
-import { getAdditions, saveAdditions, addComment, deleteComment, getCommentsForAddition, addActivity, addStudentLog } from '../services'
+import { getAdditions, saveAdditions, deleteAddition, addComment, deleteComment, getCommentsForAddition, addStudentLog } from '../services'
 import { FiPlus, FiTrash2, FiEdit2, FiSave, FiX, FiSend, FiVideo, FiLink2, FiFileText, FiMessageCircle, FiUsers, FiSearch, FiExternalLink, FiLayers, FiChevronDown, FiCalendar } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import PageHero from '../components/shared/PageHero'
@@ -48,12 +48,13 @@ export default function Additions() {
   try {
    const a = await getAdditions()
    if (!mountedRef.current) return
-   setAdditions(a)
+   const list = Array.isArray(a) ? a : []
+   setAdditions(list)
    setError(null)
    // Prefetch comment counts for badges, but only for the first 40 items so a
    // long list never triggers an N+1 storm of one query per addition.
    const counts = {}
-   await Promise.all(a.slice(0, 40).map(async (item) => {
+   await Promise.all(list.slice(0, 40).map(async (item) => {
     try {
      const c = await getCommentsForAddition(item.id)
      if (mountedRef.current) counts[item.id] = c
@@ -87,15 +88,18 @@ export default function Additions() {
   }
  }
 
- const stats = useMemo(() => ({
-  total: additions.length,
-  posts: additions.filter(a => a.type === 'post').length,
-  whatsapp: additions.filter(a => a.type === 'whatsapp').length,
-  video: additions.filter(a => a.type === 'video').length,
- }), [additions])
+ const stats = useMemo(() => {
+  const list = Array.isArray(additions) ? additions : []
+  return {
+   total: list.length,
+   posts: list.filter(a => a.type === 'post').length,
+   whatsapp: list.filter(a => a.type === 'whatsapp').length,
+   video: list.filter(a => a.type === 'video').length,
+  }
+ }, [additions])
 
  const filteredAdditions = useMemo(() => {
-  let list = additions
+  let list = Array.isArray(additions) ? additions : []
   if (filter !== 'all') {
    list = list.filter(a => a.type === filter)
   }
@@ -112,7 +116,7 @@ export default function Additions() {
  }, [additions, filter, searchQuery])
 
  const startEdit = () => {
-  setEditData(JSON.parse(JSON.stringify(additions)))
+  setEditData(JSON.parse(JSON.stringify(Array.isArray(additions) ? additions : [])))
   setEditing(true)
  }
 
@@ -122,19 +126,33 @@ export default function Additions() {
  }
 
  const saveEdit = async () => {
+  const currentIds = new Set(editData.map(x => x.id))
+  const removedIds = (Array.isArray(additions) ? additions : [])
+   .filter(x => !currentIds.has(x.id))
+   .map(x => x.id)
+
   const cleaned = editData.filter(a => (a.titleAr || '').trim() || (a.titleEn || '').trim()).map(a => ({
-   ...a,
    id: a.id || uid(),
+   type: a.type || 'post',
+   titleAr: (a.titleAr || '').trim(),
+   titleEn: (a.titleEn || '').trim(),
+   descriptionAr: (a.descriptionAr || '').trim(),
+   descriptionEn: (a.descriptionEn || '').trim(),
+   url: (a.url || '').trim(),
    createdAt: a.createdAt || new Date().toISOString(),
   }))
+
   try {
+   if (removedIds.length > 0) {
+    await Promise.all(removedIds.map(id => deleteAddition(id).catch(() => {})))
+   }
    const saved = await saveAdditions(cleaned)
-   setAdditions(saved)
-   addActivity('additions', 'UPDATE', `${saved.length} additions`)
+   setAdditions(saved || cleaned)
    setEditing(false)
    setEditData([])
    toast.success(t('additions.saved'))
   } catch (err) {
+   console.error('Save additions error:', err)
    toast.error(t('additions.saveError'))
   }
  }

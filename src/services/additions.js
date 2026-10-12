@@ -13,7 +13,19 @@ export const updateAddition = crud.update
 export const deleteAddition = crud.remove
 
 export async function saveAdditions(data) {
-  await authRpc('admin_save_rows', { p_table: 'additions', p_rows: data })
+  const sanitized = (data || []).map((row) => ({
+    id: row.id,
+    type: row.type || 'post',
+    titleAr: row.titleAr || '',
+    titleEn: row.titleEn || '',
+    descriptionAr: row.descriptionAr || '',
+    descriptionEn: row.descriptionEn || '',
+    url: row.url || '',
+    createdAt: row.createdAt || new Date().toISOString(),
+  }))
+  await authRpc('admin_save_rows', { p_table: 'additions', p_rows: sanitized })
   crud.invalidate()
-  await safeActivity('additions', 'UPDATE', `${data.length} items`)
+  await safeActivity('additions', 'UPDATE', `${sanitized.length} items`)
+  return sanitized
 }
+
