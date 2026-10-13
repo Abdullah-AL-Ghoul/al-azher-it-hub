@@ -17,9 +17,20 @@ import {
   FiHeadphones, 
   FiCheck,
   FiBookOpen,
-  FiZap
+  FiZap,
+  FiUsers,
+  FiAward
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
+
+const STUDY_TABLES = [
+  { id: 'tbl-ds', nameAr: 'خوارزميات وهياكل البيانات', nameEn: 'Data Structures & Algorithms', baseStudents: 14, icon: '🌲', topicAr: 'الأشجار والرسومات البيانية', topicEn: 'Trees & Graph Traversal' },
+  { id: 'tbl-db', nameAr: 'قواعد البيانات ومشاريع SQL', nameEn: 'Databases & SQL Systems', baseStudents: 9, icon: '🗄️', topicAr: 'Normal Form واستعلامات JOIN', topicEn: 'Normalization & Indexing' },
+  { id: 'tbl-se', nameAr: 'هندسة البرمجيات والتصميم', nameEn: 'Software Engineering & Arch', baseStudents: 11, icon: '🏗️', topicAr: 'أنماط التصميم وتوثيق UML', topicEn: 'Design Patterns & Clean Code' },
+  { id: 'tbl-net', nameAr: 'شبكات الحاسوب والبروتوكولات', nameEn: 'Computer Networks & Security', baseStudents: 8, icon: '🌐', topicAr: 'TCP/IP وتقسيم Subnetting', topicEn: 'Subnetting & Socket IO' },
+  { id: 'tbl-web', nameAr: 'تطوير تطبيقات الويب والسحاب', nameEn: 'Web & Cloud Full-Stack', baseStudents: 13, icon: '⚡', topicAr: 'React, Node.js وواجهات REST', topicEn: 'React Architecture & APIs' },
+  { id: 'tbl-oop', nameAr: 'البرمجة الشيئية C++ / Java', nameEn: 'Object Oriented Programming', baseStudents: 10, icon: '💻', topicAr: 'الوراثة وتعدد الأشكال (OOP)', topicEn: 'Polymorphism & Memory Ptrs' },
+]
 
 const TIMER_MODES = {
   pomodoro: { id: 'pomodoro', minutes: 25, labelAr: 'جلسة تركيز', labelEn: 'Focus Session', color: 'from-royal-600 to-cyan-500' },
@@ -98,6 +109,28 @@ export default function FocusRoom() {
 
   // Live online study presence
   const [activeOnlineCount, setActiveOnlineCount] = useState(18)
+  const [activeTableId, setActiveTableId] = useState(() => {
+    try {
+      return localStorage.getItem('al_azher_active_study_table') || 'tbl-ds'
+    } catch {
+      return 'tbl-ds'
+    }
+  })
+
+  const handleJoinTable = (tbl) => {
+    setActiveTableId(tbl.id)
+    try {
+      localStorage.setItem('al_azher_active_study_table', tbl.id)
+    } catch {
+      // ignore
+    }
+    toast.success(
+      isArabic
+        ? `انضممت إلى طاولة "${tbl.nameAr}" مع ${tbl.baseStudents} من زملائك بالكلية! 🚀`
+        : `Joined "${tbl.nameEn}" study table with ${tbl.baseStudents} peers! 🚀`
+    )
+  }
+
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveOnlineCount((prev) => {
@@ -537,6 +570,82 @@ export default function FocusRoom() {
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Virtual Synchronous Study Tables */}
+        <div className="glass rounded-3xl p-6 sm:p-8 border border-white/10 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-ink font-bold text-base sm:text-lg">
+                <FiUsers className="text-royal-500" size={20} />
+                <h3>{isArabic ? 'صالة المذاكرة الجماعية التفاعلية (Study Lounge)' : 'Virtual Synchronous Study Lounge'}</h3>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-white/60 mt-1">
+                {isArabic
+                  ? 'انضم إلى طاولة مساقك لمذاكرة جماعية حية بدون مقاطعة مع زملائك في كلية تكنولوجيا المعلومات.'
+                  : 'Join your course study table for distraction-free synchronized peer accountability.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold shrink-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>{isArabic ? `${activeOnlineCount} طالباً يدرسون الآن معاً` : `${activeOnlineCount} students studying now`}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {STUDY_TABLES.map((tbl) => {
+              const isJoined = activeTableId === tbl.id
+              return (
+                <div
+                  key={tbl.id}
+                  className={`p-5 rounded-2xl border transition relative flex flex-col justify-between gap-4 ${
+                    isJoined
+                      ? 'bg-royal-500/10 border-royal-500/40 shadow-sm'
+                      : 'bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 hover:border-white/20'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl">{tbl.icon}</span>
+                      <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/5 text-slate-600 dark:text-white/80">
+                        <span className={`w-2 h-2 rounded-full ${isJoined ? 'bg-emerald-500 animate-ping' : 'bg-slate-400'}`} />
+                        <span>{isJoined ? tbl.baseStudents + 1 : tbl.baseStudents} {isArabic ? 'طالب' : 'peers'}</span>
+                      </div>
+                    </div>
+
+                    <h4 className="text-sm font-bold text-ink">
+                      {isArabic ? tbl.nameAr : tbl.nameEn}
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-white/60">
+                      {isArabic ? tbl.topicAr : tbl.topicEn}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleJoinTable(tbl)}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition ${
+                      isJoined
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-black/10 dark:bg-white/10 text-ink hover:bg-royal-600 hover:text-white'
+                    }`}
+                  >
+                    {isJoined ? (
+                      <>
+                        <FiCheck size={14} />
+                        <span>{isArabic ? 'أنت جالس على هذه الطاولة' : 'You are at this table'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiUsers size={14} />
+                        <span>{isArabic ? 'انضم إلى هذه الطاولة' : 'Join this Table'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )
+            })}
           </div>
         </div>
 

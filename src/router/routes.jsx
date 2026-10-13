@@ -26,6 +26,10 @@ const CodePlayground = lazyWithRecovery(() => import('../pages/CodePlayground'))
 const ExamSimulator = lazyWithRecovery(() => import('../pages/ExamSimulator'))
 const TaskTracker = lazyWithRecovery(() => import('../pages/TaskTracker'))
 const GraduationShowcase = lazyWithRecovery(() => import('../pages/GraduationShowcase'))
+const CodingArena = lazyWithRecovery(() => import('../pages/CodingArena'))
+const InterviewSimulator = lazyWithRecovery(() => import('../pages/InterviewSimulator'))
+const ResumeBuilder = lazyWithRecovery(() => import('../pages/ResumeBuilder'))
+const ExamSolutions = lazyWithRecovery(() => import('../pages/ExamSolutions'))
 const NotFound = lazyWithRecovery(() => import('../pages/NotFound'))
 
 /**
@@ -66,6 +70,10 @@ export const APP_ROUTES = [
   { path: '/quiz', Component: ExamSimulator, protected: true },
   { path: '/tasks', Component: TaskTracker, protected: true },
   { path: '/projects', Component: GraduationShowcase, protected: true },
+  { path: '/arena', Component: CodingArena, protected: true },
+  { path: '/interview', Component: InterviewSimulator, protected: true },
+  { path: '/resume', Component: ResumeBuilder, protected: true },
+  { path: '/exam-solutions', Component: ExamSolutions, protected: true },
   { path: '/profile', Component: Profile, protected: true },
   { path: '/notifications', Component: Notifications, protected: true },
 

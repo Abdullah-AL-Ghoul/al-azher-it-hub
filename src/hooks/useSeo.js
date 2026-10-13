@@ -32,6 +32,10 @@ const ROUTE_TITLES = {
   '/quiz': { ar: 'محاكي الامتحانات والأسئلة - AL-Azher IT Hub', en: 'Exam Simulator & Quizzes - AL-Azher IT Hub' },
   '/tasks': { ar: 'مدير المهام والواجبات الأكاديمية - AL-Azher IT Hub', en: 'Task Tracker - AL-Azher IT Hub' },
   '/projects': { ar: 'معرض مشاريع التخرج - AL-Azher IT Hub', en: 'Graduation Projects Showcase - AL-Azher IT Hub' },
+  '/arena': { ar: 'حلبة التحديات البرمجية ولوحة الشرف - AL-Azher IT Hub', en: 'Coding Arena & Leaderboard - AL-Azher IT Hub' },
+  '/interview': { ar: 'محاكي المقابلات التقنية والوظيفية - AL-Azher IT Hub', en: 'Tech Interview Simulator - AL-Azher IT Hub' },
+  '/resume': { ar: 'صانع السيرة الذاتية المهنية ATS - AL-Azher IT Hub', en: 'ATS Resume Builder - AL-Azher IT Hub' },
+  '/exam-solutions': { ar: 'بنك حلول الامتحانات السابقة خطوة بخطوة - AL-Azher IT Hub', en: 'Past Exams Solver - AL-Azher IT Hub' },
   '/notifications': { ar: 'مركز الإشعارات - AL-Azher IT Hub', en: 'Notifications - AL-Azher IT Hub' },
   '/admin': { ar: 'لوحة التحكم - AL-Azher IT Hub', en: 'Admin Dashboard - AL-Azher IT Hub' },
 }
@@ -122,6 +126,22 @@ const ROUTE_DESCRIPTIONS = {
   '/projects': {
     ar: 'أرشيف ومعرض مشاريع تخرج كلية الهندسة وتكنولوجيا المعلومات',
     en: 'Al-Azher IT Faculty graduation and capstone projects showcase',
+  },
+  '/arena': {
+    ar: 'حلبة تحديات الخوارزميات والبرمجة مع مصحح حالات الاختبار ولوحة شرف طلبة الكلية',
+    en: 'Competitive programming arena with in-browser test runner and IT leaderboard',
+  },
+  '/interview': {
+    ar: 'محاكي المقابلات التقنية والوظيفية لمسارات الواجهات والخلفية والأنظمة والموبايل',
+    en: 'Technical interview simulator covering Frontend, Backend, Systems, and Mobile',
+  },
+  '/resume': {
+    ar: 'صانع ومحرر السيرة الذاتية القياسية ATS المتوافقة مع كبرى الشركات التقنية مع تصدير PDF',
+    en: 'Single-column ATS-friendly IT resume builder with live preview and PDF export',
+  },
+  '/exam-solutions': {
+    ar: 'بنك حلول الامتحانات السابقة النصفية والنهائية خطوة بخطوة مع ملاحظات الأساتذة',
+    en: 'Step-by-step solved past exams bank with doctor academic notes and rubrics',
   },
   '/notifications': {
     ar: 'مركز التنبيهات والإشعارات الأكاديمية الرسمية',
