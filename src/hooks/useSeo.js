@@ -24,6 +24,15 @@ const ROUTE_TITLES = {
   '/contact': { ar: 'تواصل معنا - AL-Azher IT Hub', en: 'Contact - AL-Azher IT Hub' },
   '/profile': { ar: 'الملف الشخصي - AL-Azher IT Hub', en: 'Profile - AL-Azher IT Hub' },
   '/roadmap': { ar: 'خارطة الطريق - AL-Azher IT Hub', en: 'Roadmap - AL-Azher IT Hub' },
+  '/tools': { ar: 'مركز الأدوات الذكية - AL-Azher IT Hub', en: 'Tools Hub - AL-Azher IT Hub' },
+  '/focus': { ar: 'غرفة التركيز وبومودورو - AL-Azher IT Hub', en: 'Focus Room - AL-Azher IT Hub' },
+  '/flashcards': { ar: 'بطاقات المذاكرة والتكرار المتباعد - AL-Azher IT Hub', en: 'Study Flashcards - AL-Azher IT Hub' },
+  '/cheatsheets': { ar: 'خزينة الأكواد والمراجع السريعة - AL-Azher IT Hub', en: 'Syntax Cheatsheets Vault - AL-Azher IT Hub' },
+  '/playground': { ar: 'محرر ومفسر الأكواد التفاعلي - AL-Azher IT Hub', en: 'Code Playground - AL-Azher IT Hub' },
+  '/quiz': { ar: 'محاكي الامتحانات والأسئلة - AL-Azher IT Hub', en: 'Exam Simulator & Quizzes - AL-Azher IT Hub' },
+  '/tasks': { ar: 'مدير المهام والواجبات الأكاديمية - AL-Azher IT Hub', en: 'Task Tracker - AL-Azher IT Hub' },
+  '/projects': { ar: 'معرض مشاريع التخرج - AL-Azher IT Hub', en: 'Graduation Projects Showcase - AL-Azher IT Hub' },
+  '/notifications': { ar: 'مركز الإشعارات - AL-Azher IT Hub', en: 'Notifications - AL-Azher IT Hub' },
   '/admin': { ar: 'لوحة التحكم - AL-Azher IT Hub', en: 'Admin Dashboard - AL-Azher IT Hub' },
 }
 
@@ -81,6 +90,42 @@ const ROUTE_DESCRIPTIONS = {
   '/roadmap': {
     ar: 'خارطة الطريق الأكاديمية - AL-Azher IT Hub',
     en: 'Academic Roadmap - AL-Azher IT Hub',
+  },
+  '/tools': {
+    ar: 'مركز الأدوات والإنتاجية الأكاديمية لطلبة تكنولوجيا المعلومات',
+    en: 'Academic productivity tools hub for Al-Azher IT students',
+  },
+  '/focus': {
+    ar: 'غرفة التركيز ومؤقت بومودورو مع مؤثرات صوتية محيطية بدون مشتتات',
+    en: 'Focus room with Pomodoro timer and ambient soundscapes',
+  },
+  '/flashcards': {
+    ar: 'بطاقات مراجعة تفاعلية ثلاثية الأبعاد بنظام التكرار المتباعد',
+    en: 'Interactive 3D spaced repetition flashcards for IT courses',
+  },
+  '/cheatsheets': {
+    ar: 'خزينة سريعة لأهم أوامر Git ولينكس واستعلامات SQL و Big-O',
+    en: 'Quick reference syntax vault for Git, Linux, SQL, and Big-O',
+  },
+  '/playground': {
+    ar: 'محرر ومختبر تفاعلي لتشغيل أكواد الويب وبايثون واستعلامات SQL',
+    en: 'In-browser interactive code playground for Web, Python, and SQL',
+  },
+  '/quiz': {
+    ar: 'محاكي امتحانات تخصصية واختبارات تجريبية مع تصحيح وتحليل فوري',
+    en: 'Exam simulator with timed quizzes and instant score analytics',
+  },
+  '/tasks': {
+    ar: 'منظم الواجبات والمهام الأكاديمية مع مزامنة التقويم ومشاركة واتساب',
+    en: 'Academic task manager with calendar sync and WhatsApp export',
+  },
+  '/projects': {
+    ar: 'أرشيف ومعرض مشاريع تخرج كلية الهندسة وتكنولوجيا المعلومات',
+    en: 'Al-Azher IT Faculty graduation and capstone projects showcase',
+  },
+  '/notifications': {
+    ar: 'مركز التنبيهات والإشعارات الأكاديمية الرسمية',
+    en: 'Official academic updates and notifications center',
   },
   '/admin': {
     ar: 'لوحة التحكم - AL-Azher IT Hub',

@@ -95,4 +95,15 @@ describe('Study Innovation Suite Unit Tests', () => {
       expect(typeof backupPayload.exportedAt).toBe('string')
     })
   })
+
+  describe('SEO Page Titles for Study Innovation Routes', () => {
+    it('verifies that all innovation routes are defined in APP_ROUTES', () => {
+      const innovationPaths = ['/tools', '/focus', '/flashcards', '/cheatsheets', '/playground', '/quiz', '/tasks', '/projects', '/notifications']
+      innovationPaths.forEach((path) => {
+        const route = APP_ROUTES.find((r) => r.path === path)
+        expect(route).toBeDefined()
+        expect(route.protected).toBe(true)
+      })
+    })
+  })
 })

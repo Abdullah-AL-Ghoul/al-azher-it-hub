@@ -108,6 +108,8 @@ test.describe('Study Innovation Suite E2E Verification', () => {
     await page.waitForLoadState('networkidle')
 
     // Page title and tools header
+    await expect(page).toHaveTitle(/مركز الأدوات الذكية/)
+    await expect(page).not.toHaveTitle(/Page Not Found|الصفحة غير موجودة/)
     await expect(page.locator('text=مركز الأدوات الذكية')).toBeVisible({ timeout: 10000 })
     await expect(page.locator('text=الأدوات المتاحة')).toBeVisible()
 
