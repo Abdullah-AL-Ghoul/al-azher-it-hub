@@ -123,4 +123,48 @@ test.describe('Study Innovation Suite E2E Verification', () => {
     await studyTab.click()
     await expect(page.locator('text=بطاقات المذاكرة')).toBeVisible()
   })
+
+  test('In-Browser Code Playground Page Operates Runner and SQL Engine', async ({ page }) => {
+    await page.goto('/playground')
+    await page.waitForLoadState('networkidle')
+
+    await expect(page.locator('text=محرر ومفسر الأكواد التفاعلي')).toBeVisible({ timeout: 10000 })
+
+    // Switch to SQL tab
+    const sqlTab = page.getByRole('button', { name: /قواعد البيانات \(SQL\)/i })
+    await expect(sqlTab).toBeVisible()
+    await sqlTab.click()
+
+    // Run default SQL query
+    const runBtn = page.getByRole('button', { name: /تشغيل الكود/i })
+    await runBtn.click()
+    await expect(page.locator('text=صفوف بنجاح')).toBeVisible({ timeout: 10000 })
+  })
+
+  test('Exam Simulator Page Renders Timed Exam & Practice Modes', async ({ page }) => {
+    await page.goto('/quiz')
+    await page.waitForLoadState('networkidle')
+
+    await expect(page.locator('text=محاكي الامتحانات وبنك الأسئلة التدريبية')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: /بدء نمط التدريب/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /بدء محاكي الامتحان الموقوت/i })).toBeVisible()
+  })
+
+  test('Academic Task Tracker Page Manages Tasks and Progress', async ({ page }) => {
+    await page.goto('/tasks')
+    await page.waitForLoadState('networkidle')
+
+    await expect(page.locator('text=مدير المهام والواجبات الأكاديمية')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: /تصدير للتقويم/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /مشاركة عبر واتساب/i })).toBeVisible()
+  })
+
+  test('Graduation & Innovation Showcase Page Displays Capstone Projects', async ({ page }) => {
+    await page.goto('/projects')
+    await page.waitForLoadState('networkidle')
+
+    await expect(page.locator('text=معرض مشاريع التخرج والابتكار الأكاديمي')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: /أضف \/ اقترح مشروع تخرجك/i })).toBeVisible()
+    await expect(page.locator('text=هندسة البرمجيات').first()).toBeVisible()
+  })
 })

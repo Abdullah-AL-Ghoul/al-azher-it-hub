@@ -48,6 +48,30 @@ describe('Study Innovation Suite Unit Tests', () => {
       expect(toolsRoute).toBeDefined()
       expect(toolsRoute.protected).toBe(true)
     })
+
+    it('registers /playground code playground route as protected student area', () => {
+      const playgroundRoute = APP_ROUTES.find(r => r.path === '/playground')
+      expect(playgroundRoute).toBeDefined()
+      expect(playgroundRoute.protected).toBe(true)
+    })
+
+    it('registers /quiz exam simulator route as protected student area', () => {
+      const quizRoute = APP_ROUTES.find(r => r.path === '/quiz')
+      expect(quizRoute).toBeDefined()
+      expect(quizRoute.protected).toBe(true)
+    })
+
+    it('registers /tasks task tracker route as protected student area', () => {
+      const tasksRoute = APP_ROUTES.find(r => r.path === '/tasks')
+      expect(tasksRoute).toBeDefined()
+      expect(tasksRoute.protected).toBe(true)
+    })
+
+    it('registers /projects graduation showcase route as protected student area', () => {
+      const projectsRoute = APP_ROUTES.find(r => r.path === '/projects')
+      expect(projectsRoute).toBeDefined()
+      expect(projectsRoute.protected).toBe(true)
+    })
   })
 
   describe('Offline Study Pack Data Structure', () => {

@@ -23,6 +23,7 @@ import BroadcastBanner from './components/shared/BroadcastBanner'
 
 const Chatbot = lazyWithRecovery(() => import('./components/Chatbot'))
 const GlobalSearch = lazyWithRecovery(() => import('./components/GlobalSearch'))
+const PwaInstallPrompt = lazyWithRecovery(() => import('./components/shared/PwaInstallPrompt'))
 // Guide loads only when `?` is pressed — keeps the entry chunk lean.
 const ShortcutsGuide = lazyWithRecovery(() => import('./components/ShortcutsGuide'))
 
@@ -205,6 +206,13 @@ function AppContent() {
       <ErrorBoundary lang={lang} fallback={null}>
        <WelcomeModal />
       </ErrorBoundary>
+     )}
+     {!hideLayout && (
+      <Suspense fallback={null}>
+       <ErrorBoundary lang={lang} fallback={null}>
+        <PwaInstallPrompt />
+       </ErrorBoundary>
+      </Suspense>
      )}
            {searchActive ? (
       <Suspense fallback={null}>
