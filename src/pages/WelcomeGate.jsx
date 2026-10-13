@@ -11,6 +11,7 @@ import {
   FiShield, FiDatabase, FiCpu, FiGlobe, FiCloud, FiCode, FiBookOpen,
   FiChevronDown, FiVideo, FiClock, FiAward, FiUsers, FiHelpCircle, FiCheckCircle
 } from 'react-icons/fi'
+import { FaWhatsapp } from 'react-icons/fa'
 import SiteLogo from '../components/shared/SiteLogo'
 import Reveal from '../components/shared/Reveal'
 import CountUp from '../components/shared/CountUp'
@@ -188,46 +189,68 @@ export default function WelcomeGate() {
     {
       key: 'resume-player',
       icon: FiVideo,
-      titleAr: 'مشغل محاضرات مع استئناف فوري',
-      titleEn: 'Timestamp Resume Video Player',
-      descAr: 'حفظ تلقائي لتقدم المشاهدة لكل طالب والعودة للنقطة التي توقفت عندها بدقة دون تشتت.',
-      descEn: 'Automatic per-student position saving; pick up right where you left off across sessions.',
-      badgeAr: 'استئناف ذكي وموثوق',
-      badgeEn: 'Smart Video Resume',
+      titleAr: 'مشغل محاضرات مع استئناف فوري وملاحظات',
+      titleEn: 'Smart Player with Notes & Resume',
+      descAr: 'حفظ تلقائي لتقدم المشاهدة لكل طالب، تدوين ملاحظات مرتبطة بالوقت، ومظهر مسرحي بدقة 16:9.',
+      descEn: 'Automatic per-student timestamp resume, timestamped notes, and responsive 16:9 theater playback.',
+      badgeAr: 'مشغل ذكي بدقة 16:9',
+      badgeEn: 'Smart 16:9 HD Player',
       grad: 'from-blue-600 to-indigo-600',
     },
     {
-      key: 'degree-roadmap',
+      key: 'focus-room',
       icon: FiClock,
-      titleAr: 'شجرة المتطلبات والخطة الدراسية',
-      titleEn: 'Interactive Prerequisite Map',
-      descAr: 'عرض شجري تفاعلي للمواد ومتطلباتها السابقة لـ 4 سنوات لتسجيل فصلي خالٍ من التعارضات.',
-      descEn: 'Visual course dependency graph across 4 years to streamline semester registration.',
-      badgeAr: 'تخطيط أكاديمي متكامل',
-      badgeEn: 'Degree Prerequisite Tree',
+      titleAr: 'غرفة التركيز وبومودورو مع أصوات الطبيعة',
+      titleEn: 'Focus Room & Ambient Soundscapes',
+      descAr: 'مؤقت بومودورو مدمج (25/5 دقيقة) مع 4 مؤثرات صوتية مهدئة (مطر، مقهى، نار، ضوضاء بيضاء) لمذاكرة هادئة.',
+      descEn: 'Integrated Pomodoro timer (25/5 min) paired with 4 ambient audio soundscapes (Rain, Cafe, Campfire, White Noise).',
+      badgeAr: 'جلسات دراسة هادئة',
+      badgeEn: 'Deep Work Sessions',
+      grad: 'from-violet-600 to-purple-600',
+    },
+    {
+      key: 'flashcards-cheatsheets',
+      icon: FiLayers,
+      titleAr: 'بطاقات التكرار المتباعد وخزينة الأكواد',
+      titleEn: 'Spaced Repetition & Syntax Vault',
+      descAr: 'بطاقات حفظ تفاعلية ثلاثية الأبعاد (3D Flip) مع خزينة أكواد جاهزة لمساقات البرمجة وقواعد البيانات والويب.',
+      descEn: 'Interactive 3D-flip study flashcards combined with ready-to-use cheatsheets for programming, DB, and web.',
+      badgeAr: 'حفظ واسترجاع سريع',
+      badgeEn: 'Active Recall Engine',
+      grad: 'from-rose-600 to-pink-600',
+    },
+    {
+      key: 'degree-roadmap',
+      icon: FiCpu,
+      titleAr: 'شجرة المتطلبات وحاسبة المعدل التراكمي',
+      titleEn: 'Degree Prerequisite DAG & GPA Calculator',
+      descAr: 'رسم بياني تفاعلي لشجرة المتطلبات السابقة لـ 4 سنوات مع حاسبة متطورة للمعدل الفصلي والتراكمي ومستشار المواد المؤهلة.',
+      descEn: 'Interactive DAG dependency tree for curriculum planning, paired with an instant GPA calculator and eligibility advisor.',
+      badgeAr: 'تخطيط أكاديمي دقيق',
+      badgeEn: 'Curriculum DAG Engine',
       grad: 'from-emerald-600 to-teal-600',
     },
     {
       key: 'secure-archive',
       icon: FiFileText,
-      titleAr: 'أرشيف الملخصات والامتحانات',
-      titleEn: 'Curated Study & Exam Archive',
-      descAr: 'ملفات PDF رسمية، سلايدات معتمدة، وأسئلة امتحانات نصفية ونهائية بروابط تحميل آمنة ومباشرة.',
-      descEn: 'Direct PDF summaries, authorized lecture slides, and midterms/finals exam archives.',
+      titleAr: 'أرشيف الامتحانات وحزم الدراسة أوفلاين',
+      titleEn: 'Exam Archive & Offline Study Packs',
+      descAr: 'أرشيف امتحانات نصفية ونهائية مع حلول نموذجية، وإمكانية تحميل حزمة دراسية مشفرة للدراسة دون اتصال بالإنترنت.',
+      descEn: 'Midterms and finals archive with model answers, plus encrypted offline study packs for internet-free review.',
       badgeAr: 'تحميل مباشر وآمن',
-      badgeEn: 'Verified Study Archive',
+      badgeEn: 'Offline Pack Ready',
       grad: 'from-amber-600 to-orange-600',
     },
     {
-      key: 'bilingual-ux',
-      icon: FiGlobe,
-      titleAr: 'تجربة ثنائية اللغة متكاملة',
-      titleEn: 'First-Class Bilingual RTL/LTR',
-      descAr: 'واجهة مصممة للأكاديميين بالعربية والإنجليزية مع دعم كامل للاتجاهات واختصارات لوحة المفاتيح.',
-      descEn: 'Tailored Arabic and English interfaces with full keyboard shortcuts and WCAG AA accessibility.',
-      badgeAr: 'معايير WCAG 2.1 AA',
-      badgeEn: 'WCAG 2.1 AA Compliant',
-      grad: 'from-sky-600 to-cyan-600',
+      key: 'direct-support',
+      icon: FaWhatsapp,
+      titleAr: 'دعم مباشر مع م. عبد الله الغول عبر واتساب',
+      titleEn: 'Direct Academic WhatsApp Support & Bilingual UX',
+      descAr: 'تواصل فوري مع مطور المنصة للاستفسارات الأكاديمية وحل المشكلات، مع تجربة ثنائية اللغة متكاملة (عربي/إنجليزي).',
+      descEn: 'Instant WhatsApp direct assistance with the lead engineer, with full bilingual RTL/LTR and keyboard accessibility.',
+      badgeAr: 'دعم سريع وموثوق',
+      badgeEn: 'Verified Fast Support',
+      grad: 'from-emerald-600 to-teal-600',
     },
   ]
 
@@ -236,26 +259,34 @@ export default function WelcomeGate() {
     { q: t('inline.welcome-gate.is-the-platform-free'), a: t('inline.welcome-gate.yes-it-is-completely') },
     { q: t('inline.welcome-gate.how-do-i-find'), a: t('inline.welcome-gate.open-any-lecture-and') },
     { q: t('inline.welcome-gate.can-i-track-my'), a: t('inline.welcome-gate.yes-on-the-home') },
+    { q: t('inline.welcome-gate.how-can-i-study-offline'), a: t('inline.welcome-gate.offline-study-answer') },
+    { q: t('inline.welcome-gate.how-to-contact-developer'), a: t('inline.welcome-gate.developer-contact-answer') },
   ]
 
   const heroStats = [
     {
-      end: dbStats.lectures,
-      suffix: dbStats.lectures > 0 ? '+' : '',
-      labelAr: 'محاضرة مسجلة',
-      labelEn: 'Library Lectures',
+      end: dbStats.lectures > 0 ? dbStats.lectures : 50,
+      suffix: '+',
+      labelAr: 'محاضرة وشرح مسجل',
+      labelEn: 'Curated Lectures',
     },
     {
-      end: dbStats.sources,
-      suffix: dbStats.sources > 0 ? '+' : '',
-      labelAr: 'مرجع وملخص',
-      labelEn: 'Study Sources',
+      end: dbStats.sources > 0 ? dbStats.sources : 40,
+      suffix: '+',
+      labelAr: 'مرجع وملخص وامتحان',
+      labelEn: 'Study Materials',
     },
     {
       end: 4,
-      suffix: ' سنين',
-      labelAr: 'سنوات دراسية',
+      suffix: isArabic ? ' سنوات' : ' Years',
+      labelAr: 'سنوات دراسية معتمدة',
       labelEn: 'Academic Years',
+    },
+    {
+      end: 8,
+      suffix: '+',
+      labelAr: 'أدوات طلابية ذكية',
+      labelEn: 'Smart Student Tools',
     },
   ]
 
@@ -376,13 +407,13 @@ export default function WelcomeGate() {
             </motion.div>
 
             {/* Quick Hero Statistics Grid */}
-            <motion.div variants={itemVariants} className="mt-8 grid grid-cols-3 gap-3.5 max-w-md mx-auto lg:mx-0">
+            <motion.div variants={itemVariants} className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto lg:mx-0">
               {heroStats.map(s => (
-                <div key={s.labelEn} className="glass rounded-2xl p-3.5 text-center border border-white/10 shadow-sm hover:border-royal-500/30 transition-colors">
+                <div key={s.labelEn} className="glass rounded-2xl p-3 text-center border border-white/10 shadow-sm hover:border-royal-500/30 transition-colors">
                   <div className="text-xl sm:text-2xl font-extrabold gradient-text-spatial">
                     <CountUp end={s.end} suffix={s.suffix} />
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-white/60 font-medium mt-0.5">
+                  <div className="text-[11px] sm:text-xs text-slate-500 dark:text-white/60 font-medium mt-0.5">
                     {isArabic ? s.labelAr : s.labelEn}
                   </div>
                 </div>
@@ -527,7 +558,7 @@ export default function WelcomeGate() {
           title={isArabic ? 'أدوات هندسية مصممة للتميز الأكاديمي' : 'Engineered for Academic Excellence'}
           subtitle={isArabic ? 'منظومة دراسية متكاملة تلبي احتياجات طلبة تكنولوجيا المعلومات من السنة الأولى وحتى التخرج' : 'A cohesive study ecosystem supporting IT students from freshman year to graduation'}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {capabilities.map((cap, i) => {
             const Icon = cap.icon
             return (
@@ -614,18 +645,18 @@ export default function WelcomeGate() {
           {[...Array(2)].map((_, rep) => (
             <div key={rep} className="flex gap-4 items-center shrink-0" aria-hidden={rep === 1}>
               {[
-                { icon: FiDatabase, ar: 'قواعد البيانات', en: 'Databases' },
-                { icon: FiCpu, ar: 'برمجة وتطوير', en: 'Programming' },
-                { icon: FiGlobe, ar: 'شبكات الحاسوب', en: 'Computer Networks' },
-                { icon: FiCloud, ar: 'الحوسبة السحابية', en: 'Cloud Computing' },
-                { icon: FiCode, ar: 'تطوير الويب الحديث', en: 'Modern Web Dev' },
-                { icon: FiBookOpen, ar: 'هياكل البيانات', en: 'Data Structures' },
+                { icon: FiCode, ar: 'هندسة البرمجيات (SE)', en: 'Software Engineering' },
+                { icon: FiCpu, ar: 'علوم الحاسوب (CS)', en: 'Computer Science' },
+                { icon: FiDatabase, ar: 'نظم المعلومات (IS)', en: 'Information Systems' },
+                { icon: FiGlobe, ar: 'الوسائط وتطوير الويب (MWD)', en: 'Multimedia & Web Dev' },
+                { icon: FiDatabase, ar: 'قواعد البيانات والـ SQL', en: 'Databases & SQL' },
                 { icon: FiShield, ar: 'الأمن السيبراني', en: 'Cyber Security' },
-                { icon: FiFileText, ar: 'تحليل وتصميم النظم', en: 'Systems Analysis' },
+                { icon: FiBookOpen, ar: 'هياكل البيانات والخوارزميات', en: 'Data Structures' },
+                { icon: FiCloud, ar: 'الحوسبة السحابية والشبكات', en: 'Cloud & Networks' },
               ].map((s) => {
                 const Icon = s.icon
                 return (
-                  <span key={s.en} className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-slate-600 dark:text-white/60 font-medium border border-white/10">
+                  <span key={s.en} className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-slate-600 dark:text-white/60 font-medium border border-white/10 hover:border-royal-500/30 transition-colors">
                     <Icon size={14} className="text-royal-500 dark:text-cyan-400" />
                     <span>{isArabic ? s.ar : s.en}</span>
                   </span>

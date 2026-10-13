@@ -11,3 +11,4 @@ test-results
 .zcode/
 .qa/
 test-results/
+e2e/*.png

@@ -7,4 +7,8 @@ playwright-report/
 coverage/
 dist/
 e2e/
-scripts/qa-round.mjs
+scripts/
+src/test/
+src/test-utils/
+playwright.config.js
+vitest.config.js
