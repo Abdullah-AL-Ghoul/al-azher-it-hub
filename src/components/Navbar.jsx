@@ -12,6 +12,7 @@ import { HiMenu, HiX } from 'react-icons/hi'
 import { FiSun, FiMoon, FiMonitor, FiUser, FiLogOut, FiShield, FiBell, FiX, FiBookOpen, FiFolder, FiFileText, FiLayers, FiSettings, FiSearch } from 'react-icons/fi'
 import SiteLogo from './shared/SiteLogo'
 import ConfirmDialog from './shared/ConfirmDialog'
+import BroadcastBanner from './shared/BroadcastBanner'
 
 const iconMap = { FiBookOpen, FiFolder, FiFileText, FiLayers, FiUser, FiSettings }
 
@@ -96,7 +97,9 @@ export default memo(function Navbar() {
     <>
       <div ref={progressRef} className="scroll-progress" aria-hidden="true" />
 
-      <nav aria-label={t('inline.navbar.primary-navigation')} className={`fixed top-0 inset-x-0 z-50 transition duration-300 ${navBg}`}>
+      <header className="fixed top-0 inset-x-0 z-50">
+        <BroadcastBanner />
+        <nav aria-label={t('inline.navbar.primary-navigation')} className={`w-full transition duration-300 ${navBg}`}>
         <div className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             <Link to="/home" className="flex items-center gap-2.5 group shrink-0" aria-label="AL-Azher IT Hub">
@@ -443,7 +446,8 @@ export default memo(function Navbar() {
             </motion.div>
           )}
         </AnimatePresence>
-      </nav>
+        </nav>
+      </header>
 
       <ConfirmDialog
         isOpen={showLogoutConfirm}

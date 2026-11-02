@@ -1,8 +1,8 @@
 import { useState, useEffect, memo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { FiRadio, FiCheck, FiX, FiAlertTriangle, FiBell, FiAward, FiInfo, FiExternalLink, FiEye, FiZap, FiTrash2, FiSave } from 'react-icons/fi'
+import { FiRadio, FiCheck, FiX, FiAlertTriangle, FiBell, FiAward, FiInfo, FiExternalLink, FiEye, FiZap, FiTrash2, FiSave, FiRotateCcw } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
-import { getBroadcast, saveBroadcastRemote, fetchBroadcastRemote, clearBroadcast, BROADCAST_TYPES } from '../../services/broadcast'
+import { getBroadcast, saveBroadcastRemote, fetchBroadcastRemote, clearBroadcast, restoreDefaultBroadcast, DEFAULT_BROADCAST, BROADCAST_TYPES } from '../../services/broadcast'
 import { pageContainer, pageItem, pageContainerReduced, pageItemReduced } from '../../utils/motionTokens'
 
 const PRESET_TEMPLATES = [
@@ -147,6 +147,18 @@ function BroadcastPanel({ isArabic, onRefresh }) {
     if (onRefresh) onRefresh()
   }
 
+  const handleRestoreDefault = async () => {
+    setIsSaving(true)
+    const restored = await saveBroadcastRemote(DEFAULT_BROADCAST)
+    setIsSaving(false)
+    if (restored) {
+      setCurrent(restored)
+      setForm(restored)
+      toast.success(isArabic ? 'تم استعادة الإعلان الأكاديمي المعتمد ونشره' : 'Default academic announcement restored and published')
+      if (onRefresh) onRefresh()
+    }
+  }
+
   const activeTypeConfig = BROADCAST_TYPES[form.type] || BROADCAST_TYPES.academic
 
   return (
@@ -198,6 +210,16 @@ function BroadcastPanel({ isArabic, onRefresh }) {
               <FiZap size={16} /> {isArabic ? 'تفعيل ونشر فوراً' : 'Publish Live Now'}
             </button>
           )}
+
+          <button
+            onClick={handleRestoreDefault}
+            disabled={isSaving}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium glass text-royal-600 dark:text-royal-400 hover:bg-royal-50 dark:hover:bg-royal-950/30 transition border border-royal-500/20"
+            title={isArabic ? 'استعادة الإعلان الأكاديمي المعتمد' : 'Restore Default Academic Announcement'}
+          >
+            <FiRotateCcw size={14} className={isSaving ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">{isArabic ? 'استعادة الافتراضي' : 'Restore Default'}</span>
+          </button>
 
           {current.id && (
             <button

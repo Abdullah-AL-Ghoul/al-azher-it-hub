@@ -71,8 +71,24 @@ function BroadcastBanner() {
     }
   }, [syncBroadcast])
 
-  if (!broadcast || !broadcast.active) return null
-  if (dismissed && !broadcast.pinned) return null
+  const isVisible = Boolean(broadcast && broadcast.active && (!dismissed || broadcast.pinned))
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (isVisible) {
+        document.body.classList.add('has-broadcast-banner')
+      } else {
+        document.body.classList.remove('has-broadcast-banner')
+      }
+    }
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.body.classList.remove('has-broadcast-banner')
+      }
+    }
+  }, [isVisible])
+
+  if (!isVisible) return null
 
   const typeConfig = BROADCAST_TYPES[broadcast.type] || BROADCAST_TYPES.academic
   const IconComponent = TYPE_ICONS[broadcast.type] || FiBell
@@ -98,11 +114,11 @@ function BroadcastBanner() {
       <motion.aside
         role="region"
         aria-label={isArabic ? 'إعلان هام من إدارة المنصة' : 'Important announcement'}
-        initial={prefersReduced ? { opacity: 1 } : { opacity: 0, height: 0, y: -10 }}
-        animate={prefersReduced ? { opacity: 1 } : { opacity: 1, height: 'auto', y: 0 }}
-        exit={prefersReduced ? { opacity: 0 } : { opacity: 0, height: 0, y: -10 }}
+        initial={prefersReduced ? { opacity: 1 } : { opacity: 0, height: 0 }}
+        animate={prefersReduced ? { opacity: 1 } : { opacity: 1, height: 'auto' }}
+        exit={prefersReduced ? { opacity: 0 } : { opacity: 0, height: 0 }}
         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-        className={`relative z-40 border-b overflow-hidden shadow-sm ${typeConfig.bgLight} ${typeConfig.bgDark}`}
+        className={`w-full border-b overflow-hidden shadow-sm backdrop-blur-md ${typeConfig.bgLight} ${typeConfig.bgDark}`}
       >
         <div className="container-page py-2.5 px-4 sm:px-6">
           <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">

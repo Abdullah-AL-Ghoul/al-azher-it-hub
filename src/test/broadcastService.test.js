@@ -3,9 +3,12 @@ import {
   getBroadcast,
   saveBroadcast,
   clearBroadcast,
+  restoreDefaultBroadcast,
   dismissBroadcast,
   isBroadcastDismissed,
   toggleBroadcastActive,
+  fetchBroadcastRemote,
+  DEFAULT_BROADCAST,
   BROADCAST_EVENT,
   BROADCAST_TYPES,
 } from '../services/broadcast'
@@ -24,13 +27,22 @@ describe('Broadcast Service Suite', () => {
 
     expect(BROADCAST_TYPES.urgent.badgeAr).toBe('عاجل')
     expect(BROADCAST_TYPES.academic.badgeEn).toBe('ACADEMIC')
+    expect(BROADCAST_TYPES.celebration.badgeAr).toBe('مميز')
+    expect(BROADCAST_TYPES.info.badgeAr).toBe('إرشاد')
   })
 
-  it('returns null when no broadcast is saved', () => {
-    expect(getBroadcast()).toBeNull()
+  it('returns accredited DEFAULT_BROADCAST when storage has no custom broadcast', () => {
+    const broadcast = getBroadcast()
+    expect(broadcast).not.toBeNull()
+    expect(broadcast.active).toBe(true)
+    expect(broadcast.id).toBe(DEFAULT_BROADCAST.id)
+    expect(broadcast.type).toBe('academic')
+    expect(broadcast.titleAr).toContain('إعلان أكاديمي')
+    expect(broadcast.messageAr).toBeDefined()
+    expect(broadcast.link).toBe('/lectures')
   })
 
-  it('saves and retrieves an active broadcast, dispatching window event', () => {
+  it('saves and retrieves a custom active broadcast, dispatching window event', () => {
     const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
 
     const payload = {
@@ -73,19 +85,31 @@ describe('Broadcast Service Suite', () => {
     expect(getBroadcast().active).toBe(true)
   })
 
-  it('clears broadcast completely', () => {
+  it('clears broadcast completely and marks it inactive', () => {
     saveBroadcast({
       titleAr: 'إعلان للتنظيف',
       messageAr: 'سيتم مسحه',
       active: true,
     })
-    expect(getBroadcast()).not.toBeNull()
+    expect(getBroadcast().active).toBe(true)
 
     clearBroadcast()
-    expect(getBroadcast()).toBeNull()
+    const afterClear = getBroadcast()
+    expect(afterClear.active).toBe(false)
+    expect(afterClear.cleared).toBe(true)
   })
 
-  it('tracks dismissed broadcasts per user session', () => {
+  it('restores default broadcast after being cleared', () => {
+    clearBroadcast()
+    expect(getBroadcast().active).toBe(false)
+
+    const restored = restoreDefaultBroadcast()
+    expect(restored.active).toBe(true)
+    expect(restored.id).toBe(DEFAULT_BROADCAST.id)
+    expect(getBroadcast().active).toBe(true)
+  })
+
+  it('tracks dismissed broadcasts per user session and clears dismissal on update', () => {
     const broadcastId = 'bc_test_123'
     expect(isBroadcastDismissed(broadcastId)).toBe(false)
 
@@ -94,5 +118,20 @@ describe('Broadcast Service Suite', () => {
 
     // Different broadcast is not dismissed
     expect(isBroadcastDismissed('bc_other_456')).toBe(false)
+
+    // When admin publishes an update for the same broadcast ID, dismissal is reset
+    saveBroadcast({
+      id: broadcastId,
+      titleAr: 'نسخة محدثة',
+      messageAr: 'محتوى جديد',
+      active: true,
+    })
+    expect(isBroadcastDismissed(broadcastId)).toBe(false)
+  })
+
+  it('falls back to default broadcast when remote fetch returns empty', async () => {
+    const remote = await fetchBroadcastRemote()
+    expect(remote).not.toBeNull()
+    expect(remote.active).toBe(true)
   })
 })

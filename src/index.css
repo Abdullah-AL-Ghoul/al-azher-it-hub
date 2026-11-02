@@ -416,6 +416,12 @@ html[data-theme="amoled"] .spatial-bg {
   will-change: transform;
 }
 
+/* Dynamic clearance for fixed compound header when announcement banner is active */
+body.has-broadcast-banner #main-content {
+  padding-top: 2.75rem;
+  transition: padding-top 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 [dir='rtl'] .scroll-progress,
 [dir='rtl'] .progress-fill {
   transform-origin: right;

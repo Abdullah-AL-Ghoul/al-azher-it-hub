@@ -51,18 +51,36 @@ export const BROADCAST_TYPES = {
   },
 }
 
+export const DEFAULT_BROADCAST = {
+  id: 'bc_academic_welcome_2026',
+  active: true,
+  type: 'academic',
+  titleAr: 'إعلان أكاديمي: نظام ترجمة وتفريغ المحاضرات الذكي بالذكاء الاصطناعي متاح الآن لجميع الطلاب',
+  titleEn: 'Academic Notice: AI Lecture Subtitles & Transcription System is Now Live',
+  messageAr: 'تم تفعيل الترجمة النصية المتزامنة للمحاضرات بالذكاء الاصطناعي مع معجم المصطلحات الأكاديمية المعتمد.',
+  messageEn: 'AI-synchronized multilingual lecture subtitles with accredited terminology glossary are now available for all students.',
+  link: '/lectures',
+  linkTextAr: 'استعراض المحاضرات',
+  linkTextEn: 'Explore Lectures',
+  dismissible: true,
+  pinned: false,
+  updatedAt: '2026-10-25T10:00:00.000Z',
+  updatedBy: 'Dean of IT Faculty',
+}
+
 /**
  * Retrieves the currently configured broadcast from local storage
+ * Falls back to DEFAULT_BROADCAST when no custom configuration is set.
  */
 export function getBroadcast() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
+    if (!raw) return { ...DEFAULT_BROADCAST }
     const data = JSON.parse(raw)
-    if (!data || typeof data !== 'object') return null
+    if (!data || typeof data !== 'object') return { ...DEFAULT_BROADCAST }
     return data
   } catch {
-    return null
+    return { ...DEFAULT_BROADCAST }
   }
 }
 
@@ -84,9 +102,10 @@ export async function fetchBroadcastRemote() {
       window.dispatchEvent(new CustomEvent(BROADCAST_EVENT, { detail: remote }))
       return remote
     } else if (data && data.value === null) {
-      localStorage.removeItem(STORAGE_KEY)
-      window.dispatchEvent(new CustomEvent(BROADCAST_EVENT, { detail: null }))
-      return null
+      const cleared = { id: 'cleared', active: false, cleared: true }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleared))
+      window.dispatchEvent(new CustomEvent(BROADCAST_EVENT, { detail: cleared }))
+      return cleared
     }
     return getBroadcast()
   } catch {
@@ -177,17 +196,43 @@ export function toggleBroadcastActive(active) {
 }
 
 /**
- * Completely clears the broadcast locally and on Supabase
+ * Completely clears the broadcast locally and on Supabase.
+ * Sets active to false so default fallback doesn't re-trigger until explicitly restored.
  */
 export function clearBroadcast() {
   try {
-    localStorage.removeItem(STORAGE_KEY)
-    window.dispatchEvent(new CustomEvent(BROADCAST_EVENT, { detail: null }))
+    const cleared = {
+      id: 'cleared',
+      active: false,
+      cleared: true,
+      titleAr: '',
+      titleEn: '',
+      messageAr: '',
+      messageEn: '',
+      updatedAt: new Date().toISOString(),
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleared))
+    window.dispatchEvent(new CustomEvent(BROADCAST_EVENT, { detail: cleared }))
     if (isSupabaseConfigured()) {
       authRpc('admin_save_setting', { p_key: 'broadcast', p_value: null }).catch(() => {})
     }
+    return cleared
   } catch (err) {
     console.error('Failed to clear broadcast:', err)
+  }
+}
+
+/**
+ * Restores the default academic broadcast announcement
+ */
+export function restoreDefaultBroadcast() {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(DISMISSED_KEY)
+    return saveBroadcast(DEFAULT_BROADCAST)
+  } catch (err) {
+    console.error('Failed to restore default broadcast:', err)
+    return DEFAULT_BROADCAST
   }
 }
 
