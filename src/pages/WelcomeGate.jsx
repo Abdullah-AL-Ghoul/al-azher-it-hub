@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fi'
 import { FaWhatsapp } from 'react-icons/fa'
 import SiteLogo from '../components/shared/SiteLogo'
+import BroadcastBanner from '../components/shared/BroadcastBanner'
 import Reveal from '../components/shared/Reveal'
 import CountUp from '../components/shared/CountUp'
 import SectionHeading from '../components/shared/SectionHeading'
@@ -292,6 +293,9 @@ export default function WelcomeGate() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-spatial-full selection:bg-royal-500/20 selection:text-royal-600">
+      {/* Global Broadcast Announcement */}
+      <BroadcastBanner />
+
       {/* Background depth & ambient glow */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div className="absolute inset-0 spatial-grid opacity-[0.25]" />
