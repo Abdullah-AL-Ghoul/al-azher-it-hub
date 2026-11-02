@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { useUserData } from '../context/UserDataContext'
 import { getLectures, getSources, addStudentLog, signSourceForFetch, getSubtitlesByLecture } from '../services'
+import { DEFAULT_LECTURES } from '../data/sampleLectures'
 import useSecureSourceFile from '../hooks/useSecureSourceFile'
 import { useScrollFrame } from '../hooks/useScrollManager.jsx'
 import { pageContainer, pageItem, revealItem } from '../utils/motionTokens'
@@ -89,7 +90,12 @@ export default function LectureDetail() {
  // so toggling a favorite here is instantly in sync with Lectures and Profile.
  const { favorites, ratings, viewed, toggleFavorite: ctxToggleFavorite, setRating: ctxSetRating, markViewed: ctxMarkViewed } = useUserData()
 
- const lecture = useMemo(() => lectures.find(l => l.id === id), [lectures, id])
+ const lecture = useMemo(() => {
+  return (
+   lectures.find(l => l.id === id || l.aliasId === id) ||
+   DEFAULT_LECTURES.find(l => l.id === id || l.aliasId === id)
+  )
+ }, [lectures, id])
  const videoId = lectureVideoId(lecture)
  const isViewed = viewed.includes(id)
  const isFavorite = favorites.includes(id)
@@ -278,7 +284,8 @@ export default function LectureDetail() {
 
  const subjectLectures = useMemo(() => {
   if (!lecture) return []
-  return lectures
+  const combined = lectures.some(l => l.id === lecture.id) ? lectures : [...lectures, lecture]
+  return combined
    .filter(l => (
     (l.subjectAr && lecture.subjectAr && l.subjectAr === lecture.subjectAr) ||
     (l.subjectEn && lecture.subjectEn && l.subjectEn === lecture.subjectEn)

@@ -36,7 +36,8 @@ export const DEFAULT_LECTURES = [
   // Artificial Intelligence (مساق الذكاء الاصطناعي)
   // ==========================================
   {
-    id: 'lec-ai-101',
+    id: '184c887b-1d29-468a-b592-313768735783',
+    aliasId: 'lec-ai-101',
     titleAr: 'المحاضرة 1: مدخل إلى الذكاء الاصطناعي والشبكات العصبية العميقة (Neural Networks)',
     titleEn: 'Lecture 1: Introduction to AI & Deep Neural Networks',
     subjectAr: 'الذكاء الاصطناعي وتعلم الآلة',

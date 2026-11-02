@@ -23,6 +23,7 @@ import {
   FiDollarSign,
   FiShield,
   FiSliders,
+  FiKey,
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { useLanguage } from '../../context/LanguageContext'
@@ -37,6 +38,11 @@ import {
   runSubtitleGenerationPipeline,
   translateSubtitleTrack,
   translateCues,
+  getGeminiApiKey,
+  setGeminiApiKey,
+  removeGeminiApiKey,
+  isGeminiAvailable,
+  testGeminiConnection,
 } from '../../services/subtitles'
 import VideoPlayer from '../shared/VideoPlayer'
 import { lectureVideoId } from '../../utils/helpers'
@@ -106,6 +112,38 @@ export default function SubtitlesManagement({
   const [importFormat, setImportFormat] = useState('vtt')
   const [importLang, setImportLang] = useState('ar')
   const [importContent, setImportContent] = useState('')
+
+  // Gemini API Key state
+  const [geminiKeyInput, setGeminiKeyInput] = useState(() => getGeminiApiKey())
+  const [hasGeminiKey, setHasGeminiKey] = useState(() => isGeminiAvailable())
+  const [isTestingKey, setIsTestingKey] = useState(false)
+  const [showKeyInput, setShowKeyInput] = useState(!isGeminiAvailable())
+
+  const handleSaveAndTestGeminiKey = async () => {
+    const trimmed = geminiKeyInput.trim()
+    if (!trimmed) {
+      removeGeminiApiKey()
+      setHasGeminiKey(false)
+      toast.success(isArabic ? 'تمت إزالة مفتاح Gemini' : 'Gemini key removed')
+      return
+    }
+    setIsTestingKey(true)
+    try {
+      const result = await testGeminiConnection(trimmed)
+      if (result.ok) {
+        setGeminiApiKey(trimmed)
+        setHasGeminiKey(true)
+        setShowKeyInput(false)
+        toast.success(isArabic ? `تم الاتصال بنجاح بـ Google Gemini!` : `Gemini connected successfully!`)
+      } else {
+        toast.error(isArabic ? `فشل الاتصال: ${result.message}` : `Connection failed: ${result.message}`)
+      }
+    } catch (err) {
+      toast.error(err.message || 'Verification failed')
+    } finally {
+      setIsTestingKey(false)
+    }
+  }
 
   const fetchSubtitles = useCallback(async () => {
     setLoading(true)
@@ -305,18 +343,43 @@ export default function SubtitlesManagement({
     setEditorTranslateProgress(isArabic ? 'جاري الاتصال بمحرك الترجمة...' : 'Connecting to AI Neural Translate...')
 
     try {
-      const translatedCues = await translateCues(
-        editorSubtitle.cues,
-        currentLang,
-        targetLang,
-        ({ current, total, pct }) => {
-          setEditorTranslateProgress(
-            isArabic
-              ? `ترجمة أكاديمية: ${current} من ${total} (${pct}%)`
-              : `Translating: ${current} of ${total} (${pct}%)`
+      let translatedCues = []
+      if (isGeminiAvailable()) {
+        setEditorTranslateProgress(isArabic ? 'جاري الترجمة بـ Google Gemini Flash...' : 'Translating with Google Gemini...')
+        try {
+          translatedCues = await translateCuesWithGemini(editorSubtitle.cues, targetLang, {
+            onProgress: ({ current, total, pct, label }) => {
+              setEditorTranslateProgress(label || `Gemini: ${pct}%`)
+            },
+          })
+        } catch (_err) {
+          translatedCues = await translateCues(
+            editorSubtitle.cues,
+            currentLang,
+            targetLang,
+            ({ current, total, pct }) => {
+              setEditorTranslateProgress(
+                isArabic
+                  ? `ترجمة أكاديمية: ${current} من ${total} (${pct}%)`
+                  : `Translating: ${current} of ${total} (${pct}%)`
+              )
+            }
           )
         }
-      )
+      } else {
+        translatedCues = await translateCues(
+          editorSubtitle.cues,
+          currentLang,
+          targetLang,
+          ({ current, total, pct }) => {
+            setEditorTranslateProgress(
+              isArabic
+                ? `ترجمة أكاديمية: ${current} من ${total} (${pct}%)`
+                : `Translating: ${current} of ${total} (${pct}%)`
+            )
+          }
+        )
+      }
 
       setEditorSubtitle({
         ...editorSubtitle,
@@ -918,6 +981,86 @@ export default function SubtitlesManagement({
                     </span>
                   </label>
                 </div>
+              </div>
+
+              {/* Gemini AI Integration Banner / Key Configuration */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-violet-500/10 via-cyan-500/10 to-royal-600/10 border border-violet-500/20 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-violet-500/20 text-violet-400">
+                      <FiKey size={14} />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        {isArabic ? 'ربط مفتاح Google Gemini AI' : 'Google Gemini AI Integration'}
+                        {hasGeminiKey ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                            <FiCheck size={10} /> {isArabic ? 'متصل ونشط' : 'Active'}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                            {isArabic ? 'اختياري / وضع المحاكاة' : 'Optional'}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyInput(!showKeyInput)}
+                    className="text-[11px] text-cyan-400 hover:text-cyan-300 underline font-medium"
+                  >
+                    {showKeyInput ? (isArabic ? 'إخفاء' : 'Hide') : (isArabic ? 'تعديل المفتاح' : 'Configure')}
+                  </button>
+                </div>
+
+                {showKeyInput && (
+                  <div className="space-y-2 pt-1 border-t border-white/10">
+                    <p className="text-[11px] text-white/60 leading-relaxed">
+                      {isArabic
+                        ? 'أدخل مفتاحك الخاص (GEMINI_API_KEY) من Google AI Studio للحصول على تفريغ صوتي حقيقي متقدم مع توقيتات دقيقة وترجمة أكاديمية.'
+                        : 'Provide your GEMINI_API_KEY from Google AI Studio to unlock live Speech-to-Text audio transcription and academic translation.'}
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        placeholder="AIzaSy..."
+                        value={geminiKeyInput}
+                        onChange={(e) => setGeminiKeyInput(e.target.value)}
+                        className="flex-1 bg-slate-900 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white font-mono placeholder:text-white/30 focus:outline-none focus:border-cyan-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveAndTestGeminiKey}
+                        disabled={isTestingKey}
+                        className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50 transition shadow"
+                      >
+                        {isTestingKey ? (
+                          <>
+                            <FiRefreshCw className="animate-spin" size={12} />
+                            {isArabic ? 'اختبار...' : 'Testing...'}
+                          </>
+                        ) : (
+                          <>
+                            <FiCheck size={12} />
+                            {isArabic ? 'حفظ واختبار' : 'Save & Test'}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-white/40">
+                      <span>{isArabic ? 'المفتاح يُحفظ محلياً في متصفحك أو كمتغير بيئة.' : 'Key stored safely in browser local storage.'}</span>
+                      <a
+                        href="https://aistudio.google.com/app/apikey"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-400 hover:underline flex items-center gap-1"
+                      >
+                        {isArabic ? 'الحصول على مفتاح مجاني ↗' : 'Get free key ↗'}
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 3. Engine & Languages */}

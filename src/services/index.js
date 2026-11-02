@@ -35,4 +35,11 @@ export {
   translateText,
   translateCues,
   applyAcademicGlossary,
+  getGeminiApiKey,
+  setGeminiApiKey,
+  removeGeminiApiKey,
+  isGeminiAvailable,
+  testGeminiConnection,
+  transcribeAudioWithGemini,
+  translateCuesWithGemini,
 } from './subtitles'

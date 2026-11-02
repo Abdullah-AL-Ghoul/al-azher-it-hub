@@ -8,11 +8,12 @@
 
 export const INITIAL_SUBTITLES = [
   // ==========================================
-  // AI Lecture 1: lec-ai-101 (Neural Networks)
+  // AI Lecture 1: 184c887b-1d29-468a-b592-313768735783 (lec-ai-101) (Neural Networks)
   // ==========================================
   {
     id: 'sub_ai101_ar',
-    lectureId: 'lec-ai-101',
+    lectureId: '184c887b-1d29-468a-b592-313768735783',
+    aliasLectureId: 'lec-ai-101',
     language: 'ar',
     labelAr: 'العربية (مترجمة ومعتمدة)',
     labelEn: 'Arabic (Verified)',
@@ -80,7 +81,8 @@ export const INITIAL_SUBTITLES = [
   },
   {
     id: 'sub_ai101_en',
-    lectureId: 'lec-ai-101',
+    lectureId: '184c887b-1d29-468a-b592-313768735783',
+    aliasLectureId: 'lec-ai-101',
     language: 'en',
     labelAr: 'الإنجليزية (الأصلية)',
     labelEn: 'English (Original)',

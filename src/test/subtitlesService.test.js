@@ -8,11 +8,17 @@ import {
   importSubtitleFile,
   runSubtitleGenerationPipeline,
   translateSubtitleTrack,
+  getGeminiApiKey,
+  setGeminiApiKey,
+  removeGeminiApiKey,
+  isGeminiAvailable,
+  clearSubtitlesMemoryCache,
 } from '../services/subtitles'
 
 describe('Subtitles Service & Pipeline Suite', () => {
   beforeEach(() => {
     localStorage.clear()
+    clearSubtitlesMemoryCache()
   })
 
   it('fetches initial demo subtitles when storage is empty', async () => {
@@ -129,5 +135,29 @@ describe('Subtitles Service & Pipeline Suite', () => {
     await deleteSubtitle(sub.id)
     const all = await getAllSubtitles(true)
     expect(all.some(s => s.id === sub.id)).toBe(false)
+  })
+
+  it('retrieves subtitles for the flagship AI lecture by UUID (184c887b-1d29-468a-b592-313768735783)', async () => {
+    const subs = await getSubtitlesByLecture('184c887b-1d29-468a-b592-313768735783', true)
+    expect(Array.isArray(subs)).toBe(true)
+    expect(subs.length).toBeGreaterThan(0)
+    const arTrack = subs.find(s => s.language === 'ar')
+    expect(arTrack).toBeDefined()
+    expect(arTrack.cues.length).toBeGreaterThanOrEqual(9)
+    expect(arTrack.cues[0].text).toContain('الرقم 3')
+  })
+
+  it('manages Gemini API key persistence cleanly', () => {
+    removeGeminiApiKey()
+    expect(isGeminiAvailable()).toBe(false)
+    expect(getGeminiApiKey()).toBe('')
+
+    setGeminiApiKey('AIzaSyTestKey123456789')
+    expect(isGeminiAvailable()).toBe(true)
+    expect(getGeminiApiKey()).toBe('AIzaSyTestKey123456789')
+
+    removeGeminiApiKey()
+    expect(isGeminiAvailable()).toBe(false)
+    expect(getGeminiApiKey()).toBe('')
   })
 })
