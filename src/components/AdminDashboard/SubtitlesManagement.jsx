@@ -24,6 +24,10 @@ import {
   FiShield,
   FiSliders,
   FiKey,
+  FiActivity,
+  FiZap,
+  FiServer,
+  FiCheckSquare,
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { useLanguage } from '../../context/LanguageContext'
@@ -43,6 +47,10 @@ import {
   removeGeminiApiKey,
   isGeminiAvailable,
   testGeminiConnection,
+  AVAILABLE_GEMINI_MODELS,
+  getPreferredGeminiModel,
+  setPreferredGeminiModel,
+  diagnoseGeminiModels,
 } from '../../services/subtitles'
 import VideoPlayer from '../shared/VideoPlayer'
 import { lectureVideoId } from '../../utils/helpers'
@@ -113,11 +121,52 @@ export default function SubtitlesManagement({
   const [importLang, setImportLang] = useState('ar')
   const [importContent, setImportContent] = useState('')
 
-  // Gemini API Key state
+  // Gemini API Key & Model Diagnostics state
   const [geminiKeyInput, setGeminiKeyInput] = useState(() => getGeminiApiKey())
   const [hasGeminiKey, setHasGeminiKey] = useState(() => isGeminiAvailable())
   const [isTestingKey, setIsTestingKey] = useState(false)
   const [showKeyInput, setShowKeyInput] = useState(!isGeminiAvailable())
+  const [preferredModel, setPreferredModel] = useState(() => getPreferredGeminiModel())
+  const [modelDiagnostics, setModelDiagnostics] = useState([])
+  const [isDiagnosingModels, setIsDiagnosingModels] = useState(false)
+  const [showDiagnostics, setShowDiagnostics] = useState(false)
+
+  const handleSelectPreferredModel = (modelId) => {
+    setPreferredGeminiModel(modelId)
+    setPreferredModel(modelId)
+    const modelObj = AVAILABLE_GEMINI_MODELS.find((m) => m.id === modelId)
+    const name = modelObj ? modelObj.name : (isArabic ? 'التبديل التلقائي الذكي' : 'Auto Cascade')
+    toast.success(isArabic ? `تم اعتماد النموذج: ${name}` : `Preferred model set: ${name}`)
+  }
+
+  const handleRunModelDiagnostics = async () => {
+    const key = geminiKeyInput.trim() || getGeminiApiKey()
+    if (!key) {
+      toast.error(isArabic ? 'يرجى إدخال مفتاح API أولاً لتشخيص النماذج' : 'Please provide an API key to diagnose models')
+      return
+    }
+    setIsDiagnosingModels(true)
+    setShowDiagnostics(true)
+    try {
+      const results = await diagnoseGeminiModels(key)
+      setModelDiagnostics(results)
+      const operationalCount = results.filter((r) => r.status === 'available').length
+      const highDemandCount = results.filter((r) => r.status === 'high_demand').length
+      if (operationalCount > 0) {
+        toast.success(
+          isArabic
+            ? `اكتمل الفحص: ${operationalCount} نموذج جاهز للاستخدام الفوري ${highDemandCount > 0 ? `(${highDemandCount} يشهد ضغطاً)` : ''}`
+            : `Diagnostics complete: ${operationalCount} models operational`
+        )
+      } else {
+        toast.error(isArabic ? 'لم يستجب أي نموذج، يرجى التحقق من صلاحية المفتاح' : 'No operational models responded')
+      }
+    } catch (err) {
+      toast.error(err.message || 'Diagnostics failed')
+    } finally {
+      setIsDiagnosingModels(false)
+    }
+  }
 
   const handleSaveAndTestGeminiKey = async () => {
     const trimmed = geminiKeyInput.trim()
@@ -129,12 +178,20 @@ export default function SubtitlesManagement({
     }
     setIsTestingKey(true)
     try {
-      const result = await testGeminiConnection(trimmed)
+      const result = await testGeminiConnection(trimmed, preferredModel)
       if (result.ok) {
         setGeminiApiKey(trimmed)
         setHasGeminiKey(true)
         setShowKeyInput(false)
-        toast.success(isArabic ? `تم الاتصال بنجاح بـ Google Gemini!` : `Gemini connected successfully!`)
+        if (result.cascaded) {
+          toast.success(
+            isArabic
+              ? `تم الاتصال بنجاح عبر النموذج البديل (${result.model}) بعد تخطي ضغط النماذج الأخرى!`
+              : `Connected via fallback model (${result.model})!`
+          )
+        } else {
+          toast.success(isArabic ? `تم الاتصال بنجاح بنموذج (${result.model})!` : `Connected to (${result.model}) successfully!`)
+        }
       } else {
         toast.error(isArabic ? `فشل الاتصال: ${result.message}` : `Connection failed: ${result.message}`)
       }
@@ -1058,6 +1115,114 @@ export default function SubtitlesManagement({
                       >
                         {isArabic ? 'الحصول على مفتاح مجاني ↗' : 'Get free key ↗'}
                       </a>
+                    </div>
+
+                    {/* Model Selector & Live Diagnostics */}
+                    <div className="pt-2 border-t border-white/10 space-y-2.5">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <label className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
+                          <FiCpu size={13} className="text-cyan-400" />
+                          <span>{isArabic ? 'النموذج المعتمد للذكاء الاصطناعي:' : 'Active Gemini Model:'}</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleRunModelDiagnostics}
+                          disabled={isDiagnosingModels}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 flex items-center gap-1.5 transition disabled:opacity-50"
+                        >
+                          <FiActivity size={12} className={isDiagnosingModels ? 'animate-spin' : ''} />
+                          <span>
+                            {isDiagnosingModels
+                              ? (isArabic ? 'جاري الفحص المباشر...' : 'Probing models...')
+                              : (isArabic ? 'فحص جاهزية النماذج والسرعة' : 'Check Models Health')}
+                          </span>
+                        </button>
+                      </div>
+
+                      <select
+                        value={preferredModel}
+                        onChange={(e) => handleSelectPreferredModel(e.target.value)}
+                        className="w-full bg-slate-900 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400"
+                      >
+                        <option value="auto">
+                          {isArabic
+                            ? '⚡ التبديل الذكي التلقائي (Auto Cascade - موصى به لتفادي أي ضغط)'
+                            : '⚡ Smart Auto Cascade (Recommended - bypasses overloaded models)'}
+                        </option>
+                        {AVAILABLE_GEMINI_MODELS.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name} — {isArabic ? m.descriptionAr : m.descriptionEn}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Live Model Diagnostics Results */}
+                      {showDiagnostics && modelDiagnostics.length > 0 && (
+                        <div className="space-y-1.5 pt-1">
+                          <span className="text-[10px] text-white/60 font-medium block">
+                            {isArabic ? 'نتائج فحص النماذج المباشر مع استجابة السيرفر:' : 'Live Model Server Latency & Status:'}
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto overscroll-contain pr-1">
+                            {modelDiagnostics.map((diag) => {
+                              const isSelected = preferredModel === diag.id
+                              const isGreen = diag.status === 'available'
+                              const isAmber = diag.status === 'high_demand'
+
+                              return (
+                                <div
+                                  key={diag.id}
+                                  className={`p-2 rounded-xl border text-xs transition ${
+                                    isSelected
+                                      ? 'border-cyan-400/80 bg-cyan-500/10 shadow-sm'
+                                      : 'border-white/10 bg-black/20 hover:border-white/20'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-1 mb-1">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <span
+                                        className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                          isGreen ? 'bg-emerald-400 animate-pulse' : isAmber ? 'bg-amber-400' : 'bg-red-400'
+                                        }`}
+                                      />
+                                      <span className="font-bold text-white text-[11px] truncate">{diag.name}</span>
+                                    </div>
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider ${diag.badgeColor}`}>
+                                      {isArabic ? diag.badge : diag.badgeEn}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center justify-between gap-2 mt-1.5 pt-1 border-t border-white/5">
+                                    <span
+                                      className={`text-[10px] font-mono ${
+                                        isGreen ? 'text-emerald-400' : isAmber ? 'text-amber-300' : 'text-rose-400'
+                                      }`}
+                                    >
+                                      {isArabic ? diag.messageAr : diag.messageEn}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSelectPreferredModel(diag.id)}
+                                      className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold transition ${
+                                        isSelected
+                                          ? 'bg-cyan-500 text-black font-bold'
+                                          : 'bg-white/10 text-white/80 hover:bg-white/20 hover:text-white'
+                                      }`}
+                                    >
+                                      {isSelected ? (isArabic ? 'مُعتمد ✓' : 'Selected') : (isArabic ? 'اختيار' : 'Select')}
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      <p className="text-[10px] text-white/50 leading-relaxed bg-black/20 p-2 rounded-xl border border-white/5">
+                        {isArabic
+                          ? '💡 نصيحة: في حال ظهور رسالة ضغط مؤقت (High Demand) على نموذج معين كـ Gemini 3.8 Flash، يقوم وضع التبديل الذكي تلقائياً بنقل الطلب خلال ثوانٍ إلى Gemini 3.5 Flash-Lite أو Gemini 2.5 Flash دون انقطاع.'
+                          : '💡 Tip: Smart Auto Cascade automatically fails over in seconds to Gemini 3.5 Flash-Lite or Gemini 2.5 Flash if a flagship model experiences temporary demand spikes.'}
+                      </p>
                     </div>
                   </div>
                 )}

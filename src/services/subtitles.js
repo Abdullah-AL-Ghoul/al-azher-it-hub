@@ -19,6 +19,10 @@ import {
   transcribeAudioWithGemini,
   translateCuesWithGemini,
   runGeminiSubtitlePipeline,
+  diagnoseGeminiModels,
+  getPreferredGeminiModel,
+  setPreferredGeminiModel,
+  AVAILABLE_GEMINI_MODELS,
 } from './geminiSubtitles'
 
 const STORAGE_KEY = 'al_azher_subtitles_data'
@@ -499,4 +503,8 @@ export {
   testGeminiConnection,
   transcribeAudioWithGemini,
   translateCuesWithGemini,
+  diagnoseGeminiModels,
+  getPreferredGeminiModel,
+  setPreferredGeminiModel,
+  AVAILABLE_GEMINI_MODELS,
 }

@@ -10,13 +10,102 @@
 import { validateCues, applyAcademicGlossary, TECHNICAL_GLOSSARY } from '../utils/vttParser'
 
 const GEMINI_STORAGE_KEY = 'al_azher_gemini_api_key'
-const CANDIDATE_MODELS = [
-  'gemini-3.8-flash',
-  'gemini-3.6-flash',
-  'gemini-2.5-flash',
+const GEMINI_MODEL_STORAGE_KEY = 'al_azher_gemini_preferred_model'
+
+export const AVAILABLE_GEMINI_MODELS = [
+  {
+    id: 'gemini-3.5-flash-lite',
+    name: 'Gemini 3.5 Flash-Lite',
+    tier: 'recommended',
+    descriptionAr: 'الأسرع والأقل تأثراً بضغط السيرفرات، خفيف ومثالي للترجمة الفورية',
+    descriptionEn: 'Ultra-fast & resilient to server demand spikes, high throughput',
+    badge: 'موصى به للسرعة',
+    badgeEn: 'Recommended',
+    badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  },
+  {
+    id: 'gemini-3.6-flash',
+    name: 'Gemini 3.6 Flash',
+    tier: 'balanced',
+    descriptionAr: 'متوازن بين الذكاء والسرعة للاستخدام الأكاديمي',
+    descriptionEn: 'Balanced intelligence & speed for academic workflows',
+    badge: 'متوازن',
+    badgeEn: 'Balanced',
+    badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  },
+  {
+    id: 'gemini-3.8-flash',
+    name: 'Gemini 3.8 Flash',
+    tier: 'flagship',
+    descriptionAr: 'الأحدث والأعلى ذكاءً (قد يشهد ضغطاً مؤقتاً في ساعات الذروة)',
+    descriptionEn: 'Latest flagship intelligence (may experience peak-hour demand)',
+    badge: 'الأعلى ذكاءً',
+    badgeEn: 'Flagship',
+    badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    tier: 'stable',
+    descriptionAr: 'نموذج مستقر عالي الاعتمادية ومناسب للتفريغ الصوتي',
+    descriptionEn: 'High reliability stable model for audio transcription',
+    badge: 'مستقر وموثوق',
+    badgeEn: 'Stable',
+    badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  },
+  {
+    id: 'gemini-2.5-flash-lite',
+    name: 'Gemini 2.5 Flash-Lite',
+    tier: 'fast',
+    descriptionAr: 'خفيف وسريع جداً، استجابة فورية بأقل زمن انتظار',
+    descriptionEn: 'Fast & lightweight with minimal latency',
+    badge: 'سريع جداً',
+    badgeEn: 'Fast',
+    badgeColor: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
+  },
+  {
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    tier: 'pro',
+    descriptionAr: 'نموذج التفكير العميق للمصطلحات المعقدة والترجمات التخصصية',
+    descriptionEn: 'Deep reasoning model for specialized academic terms',
+    badge: 'تفكير عميق',
+    badgeEn: 'Pro Reasoning',
+    badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  },
 ]
+
+const CANDIDATE_MODELS = AVAILABLE_GEMINI_MODELS.map((m) => m.id)
 const PRIMARY_MODEL = CANDIDATE_MODELS[0]
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
+
+/**
+ * Get preferred Gemini model ID (or 'auto')
+ * @returns {string}
+ */
+export function getPreferredGeminiModel() {
+  try {
+    const stored = localStorage.getItem(GEMINI_MODEL_STORAGE_KEY)
+    if (stored && (stored === 'auto' || CANDIDATE_MODELS.includes(stored))) {
+      return stored
+    }
+  } catch (_e) { /* ignore */ }
+  return 'auto'
+}
+
+/**
+ * Set preferred Gemini model ID (or 'auto')
+ * @param {string} modelId
+ */
+export function setPreferredGeminiModel(modelId) {
+  try {
+    if (!modelId || modelId === 'auto') {
+      localStorage.setItem(GEMINI_MODEL_STORAGE_KEY, 'auto')
+    } else if (CANDIDATE_MODELS.includes(modelId)) {
+      localStorage.setItem(GEMINI_MODEL_STORAGE_KEY, modelId)
+    }
+  } catch (_e) { /* ignore */ }
+}
 
 /**
  * Retrieve the active Gemini API key from localStorage or environment variables.
@@ -87,17 +176,166 @@ function fileToBase64(file) {
 }
 
 /**
- * Helper to call Gemini generateContent API with fallback model.
+ * Call a single Gemini model with a strict timeout.
+ * @param {string} apiKey
+ * @param {string} model
+ * @param {string} promptText
+ * @param {number} [timeoutMs=7000]
+ * @returns {Promise<{ ok: boolean, text: string, model: string, latencyMs: number }>}
+ */
+export async function callSingleModel(apiKey, model, promptText = 'Respond with: READY', timeoutMs = 7000) {
+  const start = performance.now()
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const url = `${BASE_URL}/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
+    const payload = {
+      contents: [{ role: 'user', parts: [{ text: promptText }] }],
+      generationConfig: { maxOutputTokens: 20, temperature: 0.1 },
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+    const latencyMs = Math.round(performance.now() - start)
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}))
+      const rawMessage = errorData?.error?.message || `HTTP ${res.status}: ${res.statusText}`
+      const isHighDemand =
+        res.status === 503 ||
+        res.status === 429 ||
+        rawMessage.toLowerCase().includes('high demand') ||
+        rawMessage.toLowerCase().includes('spikes in demand') ||
+        rawMessage.toLowerCase().includes('overloaded') ||
+        rawMessage.toLowerCase().includes('resource has been exhausted')
+      const isNotFound =
+        res.status === 404 ||
+        rawMessage.toLowerCase().includes('no longer available') ||
+        rawMessage.toLowerCase().includes('not found') ||
+        rawMessage.toLowerCase().includes('deprecated')
+
+      const err = new Error(rawMessage)
+      err.status = res.status
+      err.isHighDemand = isHighDemand
+      err.isNotFound = isNotFound
+      err.latencyMs = latencyMs
+      throw err
+    }
+
+    const data = await res.json()
+    const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || ''
+    return { ok: true, text, model, latencyMs }
+  } catch (err) {
+    clearTimeout(timer)
+    const latencyMs = Math.round(performance.now() - start)
+    err.latencyMs = latencyMs
+    if (err.name === 'AbortError') {
+      err.isTimeout = true
+      err.isHighDemand = true
+      err.message = `مهلة الاستجابة انتهت (${Math.round(timeoutMs / 1000)}s) - ضغط سيرفر`
+    }
+    throw err
+  }
+}
+
+/**
+ * Runs live health diagnostics across all candidate Gemini models
+ * Returns status, latency, and operational assessment.
+ * @param {string} [apiKey]
+ * @returns {Promise<Array<Object>>}
+ */
+export async function diagnoseGeminiModels(apiKey) {
+  const key = apiKey || getGeminiApiKey()
+  if (!key) return []
+
+  const probePromises = AVAILABLE_GEMINI_MODELS.map(async (m) => {
+    try {
+      const res = await callSingleModel(key, m.id, 'Ping: return READY', 6500)
+      return {
+        id: m.id,
+        name: m.name,
+        badge: m.badge,
+        badgeEn: m.badgeEn,
+        badgeColor: m.badgeColor,
+        descriptionAr: m.descriptionAr,
+        status: 'available',
+        latencyMs: res.latencyMs,
+        messageAr: `متصل وجاهز (${res.latencyMs}ms)`,
+        messageEn: `Operational (${res.latencyMs}ms)`,
+      }
+    } catch (err) {
+      let status = 'error'
+      let messageAr = err.message || 'خطأ غير معروف'
+      let messageEn = err.message || 'Unknown error'
+
+      if (err.isHighDemand) {
+        status = 'high_demand'
+        messageAr = `ضغط مؤقت على السيرفر (High Demand - ${err.latencyMs}ms)`
+        messageEn = `High Demand (${err.latencyMs}ms)`
+      } else if (err.isNotFound) {
+        status = 'not_available'
+        messageAr = 'غير متاح لهذا الحساب أو الإصدار'
+        messageEn = 'Not available for this account'
+      } else if (err.message?.includes('API_KEY_INVALID') || err.status === 400) {
+        status = 'invalid_key'
+        messageAr = 'مفتاح API غير صالح'
+        messageEn = 'Invalid API key'
+      }
+
+      return {
+        id: m.id,
+        name: m.name,
+        badge: m.badge,
+        badgeEn: m.badgeEn,
+        badgeColor: m.badgeColor,
+        descriptionAr: m.descriptionAr,
+        status,
+        latencyMs: err.latencyMs || 0,
+        messageAr,
+        messageEn,
+      }
+    }
+  })
+
+  return Promise.all(probePromises)
+}
+
+/**
+ * Helper to call Gemini generateContent API with smart auto-cascade fallback.
+ * Automatically avoids models with high demand spikes or deprecations.
+ *
  * @param {string} apiKey
  * @param {Array<Object>} contents
  * @param {Object} [generationConfig]
- * @returns {Promise<any>}
+ * @param {number} [timeoutMs=14000]
+ * @returns {Promise<{ data: any, text: string, model: string, cascaded: boolean }>}
  */
-async function callGeminiGenerateContent(apiKey, contents, generationConfig = {}) {
-  const models = CANDIDATE_MODELS
-  let lastError = null
+async function callGeminiGenerateContent(apiKey, contents, generationConfig = {}, timeoutMs = 14000) {
+  const preferred = getPreferredGeminiModel()
 
-  for (const model of models) {
+  // Build model priority list
+  let models = []
+  if (preferred && preferred !== 'auto') {
+    models = [preferred, ...CANDIDATE_MODELS.filter((m) => m !== preferred)]
+  } else {
+    // Default smart order: high-resilience fast models first
+    models = CANDIDATE_MODELS
+  }
+
+  let lastError = null
+  const attempts = []
+
+  for (let i = 0; i < models.length; i++) {
+    const model = models[i]
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+
     try {
       const url = `${BASE_URL}/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
       const payload = {
@@ -112,63 +350,121 @@ async function callGeminiGenerateContent(apiKey, contents, generationConfig = {}
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       })
+      clearTimeout(timer)
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}))
-        const message = errorData?.error?.message || `HTTP ${res.status}: ${res.statusText}`
+        const rawMessage = errorData?.error?.message || `HTTP ${res.status}: ${res.statusText}`
+        const lower = rawMessage.toLowerCase()
+
+        const isHighDemandOrOverloaded =
+          res.status === 503 ||
+          res.status === 429 ||
+          res.status === 500 ||
+          res.status === 502 ||
+          res.status === 504 ||
+          lower.includes('high demand') ||
+          lower.includes('spikes in demand') ||
+          lower.includes('overloaded') ||
+          lower.includes('capacity') ||
+          lower.includes('resource has been exhausted') ||
+          lower.includes('temporarily unavailable')
+
         const isDeprecationOrNotFound =
           res.status === 404 ||
-          message.toLowerCase().includes('no longer available') ||
-          message.toLowerCase().includes('not found') ||
-          message.toLowerCase().includes('deprecated') ||
-          message.toLowerCase().includes('unsupported')
+          lower.includes('no longer available') ||
+          lower.includes('not found') ||
+          lower.includes('deprecated') ||
+          lower.includes('unsupported')
 
-        if (isDeprecationOrNotFound) {
-          console.warn(`[Gemini] Model ${model} is unavailable, trying fallback: ${message}`)
-          lastError = new Error(`Gemini API [${model}] Error: ${message}`)
-          continue
+        attempts.push({ model, status: res.status, error: rawMessage })
+
+        if (isHighDemandOrOverloaded || isDeprecationOrNotFound) {
+          console.warn(`[Gemini Cascade] Model ${model} returned (${res.status}: ${rawMessage}). Attempting next fallback model...`)
+          lastError = new Error(`Gemini API [${model}]: ${rawMessage}`)
+          continue // Swiftly cascade to next model!
         }
 
-        throw new Error(`Gemini API [${model}] Error: ${message}`)
+        throw new Error(`Gemini API [${model}] Error: ${rawMessage}`)
       }
 
       const data = await res.json()
       const candidate = data?.candidates?.[0]
-      const text = candidate?.content?.parts?.map(p => p.text).join('') || ''
-      return { data, text, model }
+      const text = candidate?.content?.parts?.map((p) => p.text).join('') || ''
+      return { data, text, model, cascaded: i > 0, attempts }
     } catch (err) {
-      lastError = err
-      const isDeprecationOrNotFound =
-        err.message?.toLowerCase().includes('no longer available') ||
-        err.message?.toLowerCase().includes('not found') ||
-        err.message?.toLowerCase().includes('404') ||
-        err.message?.toLowerCase().includes('deprecated')
+      clearTimeout(timer)
+      const isTimeout = err.name === 'AbortError'
+      const msg = isTimeout ? `مهلة الاستجابة انتهت (${Math.round(timeoutMs / 1000)}s)` : err.message
+      attempts.push({ model, error: msg })
 
-      if (isDeprecationOrNotFound) {
+      const lower = msg.toLowerCase()
+      const isTransient =
+        isTimeout ||
+        lower.includes('high demand') ||
+        lower.includes('spikes in demand') ||
+        lower.includes('overloaded') ||
+        lower.includes('unavailable') ||
+        lower.includes('timeout') ||
+        lower.includes('abort') ||
+        lower.includes('no longer available') ||
+        lower.includes('not found') ||
+        lower.includes('404') ||
+        lower.includes('503') ||
+        lower.includes('429')
+
+      if (isTransient && i < models.length - 1) {
+        console.warn(`[Gemini Cascade] Model ${model} failed (${msg}). Cascading to next model...`)
+        lastError = err
         continue
       }
-      // For auth or quota errors, rethrow immediately
       throw err
     }
   }
 
-  throw lastError || new Error('Gemini API request failed on all candidate models')
+  throw lastError || new Error(`فشلت جميع نماذج Gemini المتاحة بعد عدة محاولات (${attempts.map((a) => a.model).join(', ')})`)
 }
 
 /**
- * Test connectivity with Gemini API using provided or stored key.
+ * Test connectivity with Gemini API using provided or stored key and optional target model.
  * @param {string} [testKey]
- * @returns {Promise<{ ok: boolean, message: string }>}
+ * @param {string} [targetModel]
+ * @returns {Promise<{ ok: boolean, message: string, model: string, cascaded: boolean }>}
  */
-export async function testGeminiConnection(testKey) {
+export async function testGeminiConnection(testKey, targetModel) {
   const key = testKey || getGeminiApiKey()
   if (!key) {
     return { ok: false, message: 'مفتاح Gemini API غير متوفر' }
   }
 
+  // If a specific model was requested for testing, test it directly with 6s timeout
+  if (targetModel && targetModel !== 'auto') {
+    try {
+      const res = await callSingleModel(key, targetModel, 'Respond with: READY', 6500)
+      return {
+        ok: true,
+        model: targetModel,
+        latencyMs: res.latencyMs,
+        cascaded: false,
+        message: `تم الاتصال بنجاح بنموذج (${targetModel}) في ${res.latencyMs}ms!`,
+      }
+    } catch (err) {
+      if (err.isHighDemand) {
+        return {
+          ok: false,
+          model: targetModel,
+          message: `النموذج (${targetModel}) يشهد ضغطاً مؤقتاً على السيرفر (High Demand). يوصى باختيار (Auto Cascade) أو نموذج بديل.`,
+        }
+      }
+      return { ok: false, model: targetModel, message: err.message || 'فشل الاتصال بهذا النموذج' }
+    }
+  }
+
+  // Otherwise, run auto-cascade to find the fastest operational model
   try {
-    const { text, model } = await callGeminiGenerateContent(
+    const { text, model, cascaded } = await callGeminiGenerateContent(
       key,
       [
         {
@@ -176,13 +472,25 @@ export async function testGeminiConnection(testKey) {
           parts: [{ text: 'Respond with the single word: "READY"' }],
         },
       ],
-      { maxOutputTokens: 10 }
+      { maxOutputTokens: 10 },
+      7000
     )
 
-    if (text && text.toUpperCase().includes('READY')) {
-      return { ok: true, message: `تم الاتصال بنجاح بنموذج (${model})!` }
+    if (cascaded) {
+      return {
+        ok: true,
+        model,
+        cascaded: true,
+        message: `تم الاتصال بنجاح عبر النموذج البديل (${model}) بعد تجاوز ضغط النماذج السابقة!`,
+      }
     }
-    return { ok: true, message: `تم الاتصال بنجاح بنموذج (${model})` }
+
+    return {
+      ok: true,
+      model,
+      cascaded: false,
+      message: `تم الاتصال بنجاح بنموذج (${model})!`,
+    }
   } catch (err) {
     return { ok: false, message: err.message || 'فشل الاتصال بـ Gemini API' }
   }
