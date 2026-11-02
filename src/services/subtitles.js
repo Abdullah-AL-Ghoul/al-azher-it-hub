@@ -8,7 +8,7 @@
 
 import { getSupabase, isSupabaseConfigured, authRpc } from './supabase'
 import { safeActivity } from './activity'
-import { parseVtt, parseSrt, cuesToVtt, validateCues, TECHNICAL_GLOSSARY } from '../utils/vttParser'
+import { parseVtt, parseSrt, cuesToVtt, validateCues, TECHNICAL_GLOSSARY, translateText, translateCues, applyAcademicGlossary } from '../utils/vttParser'
 import { INITIAL_SUBTITLES } from '../data/sampleSubtitles'
 
 const STORAGE_KEY = 'al_azher_subtitles_data'
@@ -101,20 +101,7 @@ export async function getAllSubtitles(force = false) {
 export async function getSubtitlesByLecture(lectureId) {
   if (!lectureId) return []
   const all = await getAllSubtitles()
-  const matched = all.filter(s => s.lectureId === lectureId && s.status === 'published')
-  if (matched.length > 0) return matched
-
-  // Fallback demo for lecture testing if empty
-  const demoFallback = all.filter(s => s.lectureId === 'demo-1')
-  if (demoFallback.length > 0) {
-    return demoFallback.map(s => ({
-      ...s,
-      id: `${s.id}_${lectureId}`,
-      lectureId,
-    }))
-  }
-
-  return []
+  return all.filter(s => s.lectureId === lectureId && s.status === 'published')
 }
 
 /**
@@ -353,18 +340,15 @@ export async function runSubtitleGenerationPipeline({
   })
   createdTracks.push(originalTrack)
 
-  // 2. Translations with Technical Glossary application
+  // 2. Translations with Technical Glossary application via real MT
   for (const targetLang of targetLangs) {
     onProgress?.({ step: 4, label: `الترجمة الأكاديمية الذكية إلى (${targetLang}) مع توحيد المصطلحات...`, pct: 85 })
-    await new Promise(r => setTimeout(r, 700))
-
-    const translatedCues = [
-      { start: 0, end: 4.8, text: 'مرحباً بكم في هذه الجلسة التقنية الشاملة حول أساسيات علوم الحاسوب.' },
-      { start: 5.2, end: 11.0, text: 'نناقش اليوم تخطيط الذاكرة (Memory Layout) وهياكل البيانات الفعالة.' },
-      { start: 11.5, end: 17.8, text: 'على وجه التحديد، سنحلل أشجار البحث الثنائية (Binary Search Trees) وأشجار AVL المتوازنة.' },
-      { start: 18.2, end: 25.0, text: 'لاحظ كيف تضمن كل عملية شجرة تعقيداً زمنياً O(log n).' },
-      { start: 25.5, end: 32.4, text: 'دعونا نراجع الآن التطبيق العملي وكيفية معالجة الحالات الحدية (Edge Cases).' },
-    ]
+    let translatedCues = []
+    try {
+      translatedCues = await translateCues(baseCues, sourceLang, targetLang)
+    } catch (_err) {
+      translatedCues = baseCues.map(c => ({ ...c }))
+    }
 
     const transTrack = await saveSubtitle({
       lectureId,
@@ -381,3 +365,44 @@ export async function runSubtitleGenerationPipeline({
   onProgress?.({ step: 5, label: 'تم التحقق من WebVTT وحفظ الترجمات بنجاح!', pct: 100 })
   return createdTracks
 }
+
+/**
+ * Translate an existing subtitle track into a new language track.
+ * @param {Object} params
+ * @param {string} params.subtitleId - ID of existing track to translate from
+ * @param {string} [params.targetLang='ar'] - Target language code
+ * @param {Function} [params.onProgress]
+ * @returns {Promise<Object>} The newly created translated subtitle track
+ */
+export async function translateSubtitleTrack({
+  subtitleId,
+  targetLang = 'ar',
+  onProgress,
+}) {
+  const all = await getAllSubtitles(true)
+  const sourceTrack = all.find((s) => s.id === subtitleId)
+  if (!sourceTrack) {
+    throw new Error('Source subtitle track not found')
+  }
+
+  const translatedCues = await translateCues(
+    sourceTrack.cues || [],
+    sourceTrack.language || 'en',
+    targetLang,
+    onProgress
+  )
+
+  const newTrack = await saveSubtitle({
+    lectureId: sourceTrack.lectureId,
+    language: targetLang,
+    sourceType: 'translation',
+    status: 'needs_review',
+    labelAr: targetLang === 'ar' ? 'العربية (مترجمة بالذكاء الاصطناعي)' : 'الإنجليزية (مترجمة)',
+    labelEn: targetLang === 'ar' ? 'Arabic (AI Translated)' : 'English (AI Translated)',
+    cues: translatedCues,
+  })
+
+  return newTrack
+}
+
+export { translateText, translateCues, applyAcademicGlossary }

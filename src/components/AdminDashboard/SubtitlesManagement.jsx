@@ -35,6 +35,8 @@ import {
   importSubtitleFile,
   exportSubtitleFile,
   runSubtitleGenerationPipeline,
+  translateSubtitleTrack,
+  translateCues,
 } from '../../services/subtitles'
 import VideoPlayer from '../shared/VideoPlayer'
 import { lectureVideoId } from '../../utils/helpers'
@@ -84,6 +86,8 @@ export default function SubtitlesManagement({
   // Editor states
   const [activeCueId, setActiveCueId] = useState(null)
   const [previewTime, setPreviewTime] = useState(0)
+  const [isTranslatingEditor, setIsTranslatingEditor] = useState(false)
+  const [editorTranslateProgress, setEditorTranslateProgress] = useState(null)
   const editorPlayerRef = useRef(null)
 
   // Generation Workflow states
@@ -288,6 +292,54 @@ export default function SubtitlesManagement({
     toast.success(isArabic ? 'تم تقسيم المقطع إلى مقطعين' : 'Cue split into two segments')
   }
 
+  const handleTranslateEditorCues = async () => {
+    if (!editorSubtitle || !editorSubtitle.cues || editorSubtitle.cues.length === 0) {
+      toast.error(isArabic ? 'لا توجد مقاطع للترجمة' : 'No cues to translate')
+      return
+    }
+
+    const currentLang = editorSubtitle.language || 'en'
+    const targetLang = currentLang === 'ar' ? 'en' : 'ar'
+
+    setIsTranslatingEditor(true)
+    setEditorTranslateProgress(isArabic ? 'جاري الاتصال بمحرك الترجمة...' : 'Connecting to AI Neural Translate...')
+
+    try {
+      const translatedCues = await translateCues(
+        editorSubtitle.cues,
+        currentLang,
+        targetLang,
+        ({ current, total, pct }) => {
+          setEditorTranslateProgress(
+            isArabic
+              ? `ترجمة أكاديمية: ${current} من ${total} (${pct}%)`
+              : `Translating: ${current} of ${total} (${pct}%)`
+          )
+        }
+      )
+
+      setEditorSubtitle({
+        ...editorSubtitle,
+        language: targetLang,
+        labelAr: targetLang === 'ar' ? 'العربية (مترجمة بالذكاء الاصطناعي)' : 'الإنجليزية',
+        labelEn: targetLang === 'ar' ? 'Arabic (AI Translated)' : 'English',
+        sourceType: 'translation',
+        cues: translatedCues,
+      })
+
+      toast.success(
+        isArabic
+          ? `تمت الترجمة إلى ${targetLang === 'ar' ? 'العربية' : 'الإنجليزية'} وتطبيق مصطلحات علوم الحاسوب بنجاح!`
+          : `Translated to ${targetLang} with academic glossary applied!`
+      )
+    } catch (err) {
+      toast.error(err.message || 'Translation failed')
+    } finally {
+      setIsTranslatingEditor(false)
+      setEditorTranslateProgress(null)
+    }
+  }
+
   const handleSaveEditor = async (newStatus) => {
     if (!editorSubtitle) return
     try {
@@ -479,6 +531,29 @@ export default function SubtitlesManagement({
                     </td>
                     <td className="px-4 py-3 text-end">
                       <div className="flex items-center justify-end gap-1.5">
+                        {lecture.tracks.some((t) => t.language === 'en') && !lecture.tracks.some((t) => t.language === 'ar') && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const enTrack = lecture.tracks.find((t) => t.language === 'en')
+                              if (!enTrack) return
+                              toast.loading(isArabic ? 'جاري ترجمة المحاضرة إلى العربية...' : 'Translating to Arabic...', { id: `tr_${lecture.id}` })
+                              try {
+                                await translateSubtitleTrack({ subtitleId: enTrack.id, targetLang: 'ar' })
+                                toast.success(isArabic ? 'تم توليد الترجمة العربية بنجاح!' : 'Arabic translation generated!', { id: `tr_${lecture.id}` })
+                                fetchSubtitles()
+                                onRefresh?.()
+                              } catch (err) {
+                                toast.error(err.message || 'Translation failed', { id: `tr_${lecture.id}` })
+                              }
+                            }}
+                            className="px-2 py-1 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 border border-violet-500/25 transition text-[11px] flex items-center gap-1"
+                            title={isArabic ? 'توليد ترجمة عربية تلقائية من الإنجليزية' : 'Auto-translate to Arabic'}
+                          >
+                            <span>✨ {isArabic ? 'ترجمة' : 'Translate'}</span>
+                          </button>
+                        )}
+
                         {lecture.tracks.map((t) => (
                           <button
                             key={t.id}
@@ -620,10 +695,28 @@ export default function SubtitlesManagement({
               {/* Right/Bottom: Cues List & Timestamps (7 cols) */}
               <div className="lg:col-span-7 flex flex-col overflow-hidden bg-black/10">
                 <div className="p-3 bg-white/5 border-b border-white/5 flex items-center justify-between text-xs text-white/60">
-                  <span>{isArabic ? 'المقاطع الزمنية (Cues)' : 'Transcript Cues'}</span>
-                  <span className="text-[10px] text-white/40">
-                    {isArabic ? 'اضغط على زر التشغيل للقفز إلى توقيت المقطع' : 'Click play to jump to cue time'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-white/80">{isArabic ? 'المقاطع الزمنية (Cues)' : 'Transcript Cues'}</span>
+                    <span className="text-[10px] text-white/40">
+                      ({editorSubtitle.cues?.length || 0})
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleTranslateEditorCues}
+                    disabled={isTranslatingEditor}
+                    className="px-2.5 py-1 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 border border-violet-500/30 text-xs font-semibold flex items-center gap-1.5 transition disabled:opacity-50 shadow-sm"
+                  >
+                    <FiRefreshCw className={isTranslatingEditor ? 'animate-spin text-cyan-400' : ''} size={12} />
+                    <span>
+                      {isTranslatingEditor
+                        ? (editorTranslateProgress || (isArabic ? 'جاري الترجمة...' : 'Translating...'))
+                        : (editorSubtitle.language === 'ar'
+                            ? (isArabic ? '✨ ترجمة ذكية إلى الإنجليزية' : '✨ Translate to English')
+                            : (isArabic ? '✨ ترجمة ذكية إلى العربية' : '✨ Translate to Arabic'))}
+                    </span>
+                  </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">

@@ -31,4 +31,8 @@ export {
   importSubtitleFile,
   exportSubtitleFile,
   runSubtitleGenerationPipeline,
+  translateSubtitleTrack,
+  translateText,
+  translateCues,
+  applyAcademicGlossary,
 } from './subtitles'

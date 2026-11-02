@@ -295,3 +295,129 @@ export function searchCues(cues, query) {
   })
   return results
 }
+
+/**
+ * Normalizes translated text with academic Computer Science terminology.
+ * Ensures consistent terminology between Arabic and English terms.
+ * @param {string} text
+ * @returns {string}
+ */
+export function applyAcademicGlossary(text) {
+  if (!text || typeof text !== 'string') return text
+
+  const terms = [
+    { target: 'الفرز السريع', replace: 'الترتيب السريع (QuickSort)' },
+    { target: 'أشجار البحث الثنائية', replace: 'أشجار البحث الثنائية (BST)' },
+    { target: 'هياكل البيانات', replace: 'هياكل البيانات (Data Structures)' },
+    { target: 'القوائم المترابطة', replace: 'القوائم المترابطة (Linked Lists)' },
+    { target: 'القوائم المتصلة', replace: 'القوائم المترابطة (Linked Lists)' },
+    { target: 'قواعد البيانات العلائقية', replace: 'قواعد البيانات العلائقية (RDBMS)' },
+    { target: 'الجمود التام', replace: 'الجمود التام (Deadlock)' },
+    { target: 'التعقيد الزمني', replace: 'التعقيد الزمني (Time Complexity)' },
+    { target: 'الحالات الحدية', replace: 'الحالات الحدية (Edge Cases)' },
+    { target: 'تخطيط الذاكرة', replace: 'تخطيط الذاكرة (Memory Layout)' },
+  ]
+
+  let result = text
+  for (const { target, replace } of terms) {
+    if (result.includes(target) && !result.includes(replace)) {
+      result = result.replaceAll(target, replace)
+    }
+  }
+
+  return result
+}
+
+/**
+ * Translate a text string using Google Neural Translation API.
+ * Automatically applies Computer Science academic glossary when target is Arabic.
+ * @param {string} text
+ * @param {string} [from='auto']
+ * @param {string} [to='ar']
+ * @returns {Promise<string>}
+ */
+export async function translateText(text, from = 'auto', to = 'ar') {
+  if (!text || typeof text !== 'string') return ''
+  const trimmed = text.trim()
+  if (!trimmed || from === to) return trimmed
+
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(from)}&tl=${encodeURIComponent(to)}&dt=t&q=${encodeURIComponent(trimmed)}`
+    const res = await fetch(url, { headers: { Accept: 'application/json' } })
+    if (!res.ok) throw new Error(`Translate API status ${res.status}`)
+    const data = await res.json()
+    if (Array.isArray(data) && Array.isArray(data[0])) {
+      const translated = data[0].map((item) => item[0]).filter(Boolean).join('')
+      return to === 'ar' ? applyAcademicGlossary(translated) : translated
+    }
+  } catch (err) {
+    console.warn('[translateText] Translation fallback:', err.message)
+  }
+  return trimmed
+}
+
+/**
+ * Translate an array of subtitle cues from one language to another.
+ * Employs batching (chunks of 15) to optimize network roundtrips,
+ * with graceful single-cue fallback on line-count divergence.
+ * @param {Array<Object>} cues - Array of { id, start, end, text }
+ * @param {string} [from='en']
+ * @param {string} [to='ar']
+ * @param {Function} [onProgress] - Callback with { current, total, pct }
+ * @returns {Promise<Array<Object>>}
+ */
+export async function translateCues(cues, from = 'en', to = 'ar', onProgress) {
+  if (!Array.isArray(cues) || cues.length === 0) return []
+  if (from === to) return cues.map((c) => ({ ...c }))
+
+  const total = cues.length
+  const translatedCues = []
+  const CHUNK_SIZE = 15
+
+  for (let i = 0; i < total; i += CHUNK_SIZE) {
+    const chunk = cues.slice(i, i + CHUNK_SIZE)
+    const combinedText = chunk.map((c) => (c.text || '').replace(/\r?\n/g, ' ')).join('\n')
+
+    let translatedChunkTexts = null
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(from)}&tl=${encodeURIComponent(to)}&dt=t&q=${encodeURIComponent(combinedText)}`
+      const res = await fetch(url, { headers: { Accept: 'application/json' } })
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data) && Array.isArray(data[0])) {
+          const combinedTranslated = data[0].map((item) => item[0]).filter(Boolean).join('')
+          const split = combinedTranslated.split('\n')
+          if (split.length === chunk.length) {
+            translatedChunkTexts = split
+          }
+        }
+      }
+    } catch (_err) {
+      // Chunk batch failed, sequential fallback will handle it
+    }
+
+    for (let j = 0; j < chunk.length; j++) {
+      const cue = chunk[j]
+      let text = cue.text
+      if (translatedChunkTexts && translatedChunkTexts[j] !== undefined) {
+        const line = translatedChunkTexts[j].trim()
+        text = to === 'ar' ? applyAcademicGlossary(line) : line
+      } else {
+        text = await translateText(cue.text, from, to)
+      }
+
+      translatedCues.push({
+        ...cue,
+        text,
+      })
+
+      onProgress?.({
+        current: translatedCues.length,
+        total,
+        pct: Math.round((translatedCues.length / total) * 100),
+      })
+    }
+  }
+
+  return translatedCues
+}

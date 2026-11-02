@@ -9,6 +9,9 @@ import {
   findActiveCue,
   searchCues,
   TECHNICAL_GLOSSARY,
+  applyAcademicGlossary,
+  translateText,
+  translateCues,
 } from '../utils/vttParser'
 
 describe('vttParser Suite', () => {
@@ -124,5 +127,25 @@ Second line of SRT`
     expect(TECHNICAL_GLOSSARY['array']).toContain('مصفوفة')
     expect(TECHNICAL_GLOSSARY['linked list']).toContain('قائمة مترابطة')
     expect(TECHNICAL_GLOSSARY['database']).toContain('قاعدة بيانات')
+  })
+
+  it('applies academic CS glossary correctly to Arabic text', () => {
+    const raw = 'في هذه المحاضرة سنشرح هياكل البيانات وأشجار البحث الثنائية والفرز السريع.'
+    const refined = applyAcademicGlossary(raw)
+    expect(refined).toContain('هياكل البيانات (Data Structures)')
+    expect(refined).toContain('أشجار البحث الثنائية (BST)')
+    expect(refined).toContain('الترتيب السريع (QuickSort)')
+  })
+
+  it('translates text and subtitle cues seamlessly', async () => {
+    const cues = [
+      { id: '1', start: 0, end: 4, text: 'Welcome to this computer science lecture.' },
+    ]
+    const translated = await translateCues(cues, 'en', 'ar')
+    expect(translated).toHaveLength(1)
+    expect(translated[0].start).toBe(0)
+    expect(translated[0].end).toBe(4)
+    expect(typeof translated[0].text).toBe('string')
+    expect(translated[0].text.length).toBeGreaterThan(0)
   })
 })

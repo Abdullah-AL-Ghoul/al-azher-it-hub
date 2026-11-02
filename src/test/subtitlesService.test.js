@@ -7,6 +7,7 @@ import {
   updateSubtitleStatus,
   importSubtitleFile,
   runSubtitleGenerationPipeline,
+  translateSubtitleTrack,
 } from '../services/subtitles'
 
 describe('Subtitles Service & Pipeline Suite', () => {
@@ -27,6 +28,33 @@ describe('Subtitles Service & Pipeline Suite', () => {
     expect(subs.length).toBeGreaterThan(0)
     expect(subs[0]).toHaveProperty('cues')
     expect(subs[0].cues.length).toBeGreaterThan(0)
+  })
+
+  it('returns empty array for an arbitrary lecture without subtitles, never falling back to demo', async () => {
+    const subs = await getSubtitlesByLecture('arbitrary-lecture-xyz-999')
+    expect(Array.isArray(subs)).toBe(true)
+    expect(subs).toHaveLength(0)
+  })
+
+  it('translates an existing subtitle track into a target language', async () => {
+    const source = await saveSubtitle({
+      lectureId: 'test-trans-lec',
+      language: 'en',
+      status: 'published',
+      cues: [
+        { id: 'c1', start: 0, end: 5, text: 'Introduction to Algorithms' },
+      ],
+    })
+
+    const translated = await translateSubtitleTrack({
+      subtitleId: source.id,
+      targetLang: 'ar',
+    })
+
+    expect(translated).toBeDefined()
+    expect(translated.language).toBe('ar')
+    expect(translated.sourceType).toBe('translation')
+    expect(translated.cues).toHaveLength(1)
   })
 
   it('saves and updates subtitle records with automatic cue validation', async () => {
