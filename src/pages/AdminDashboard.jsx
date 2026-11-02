@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { FiLayout, FiBook, FiVideo, FiLink, FiUsers, FiActivity, FiSettings, FiHome, FiClipboard, FiLogOut, FiTrendingUp, FiRadio } from 'react-icons/fi'
+import { FiLayout, FiBook, FiVideo, FiLink, FiUsers, FiActivity, FiSettings, FiHome, FiClipboard, FiLogOut, FiTrendingUp, FiRadio, FiFileText } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import SiteLogo from '../components/shared/SiteLogo'
 
@@ -17,6 +17,7 @@ const TABS = [
  { key: 'broadcast', icon: FiRadio, labelAr: 'البث والإعلانات', labelEn: 'Broadcast' },
  { key: 'courses', icon: FiBook, labelAr: 'المواد', labelEn: 'Courses' },
  { key: 'lectures', icon: FiVideo, labelAr: 'المحاضرات', labelEn: 'Lectures' },
+ { key: 'subtitles', icon: FiFileText, labelAr: 'الترجمة والتفريغ', labelEn: 'Subtitles & Transcripts' },
  { key: 'sources', icon: FiLink, labelAr: 'المصادر', labelEn: 'Sources' },
  { key: 'users', icon: FiUsers, labelAr: 'الطلاب', labelEn: 'Students' },
  { key: 'studentLogs', icon: FiClipboard, labelAr: 'سجل الطلاب', labelEn: 'Student Logs' },
@@ -30,6 +31,7 @@ const TAB_DATA_MAP = {
  broadcast: [],
  courses: ['courses'],
  lectures: ['lectures', 'courses'],
+ subtitles: ['lectures', 'courses'],
  sources: ['sources'],
  users: ['users'],
  studentLogs: ['studentLogs', 'users'],

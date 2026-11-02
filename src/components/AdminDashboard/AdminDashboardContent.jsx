@@ -8,6 +8,7 @@ import { extractYouTubeId } from '../../utils/helpers'
 import LectureThumbnail from '../shared/LectureThumbnail'
 import CoursesTable from './CoursesTable'
 import LecturesTable from './LecturesTable'
+import SubtitlesManagement from './SubtitlesManagement'
 import SourcesTable from './SourcesTable'
 import UsersTable from './UsersTable'
 import ActivityLogs from './ActivityLogs'
@@ -465,6 +466,17 @@ setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString
        setShowLectureForm(true)
        scrollToForm(lectureFormRef)
       }}
+      onRefresh={onRefresh}
+     />
+    </div>
+   )}
+
+   {/* ========== SUBTITLES TAB ========== */}
+   {selectedTab === 'subtitles' && (
+    <div className="space-y-4">
+     <SubtitlesManagement
+      lectures={lectures}
+      courses={courses}
       onRefresh={onRefresh}
      />
     </div>

@@ -22,3 +22,13 @@ export { getSubjects } from './subjects'
 export { getRoadmap, saveRoadmap } from './roadmap'
 export { getAllUserStats, getAllRatings } from './adminStats'
 export { uploadSourceFile, validateFiles, validateMagicBytes, getSignedSourceUrls, signSourceForFetch } from './sourceStorage'
+export {
+  getAllSubtitles,
+  getSubtitlesByLecture,
+  saveSubtitle,
+  deleteSubtitle,
+  updateSubtitleStatus,
+  importSubtitleFile,
+  exportSubtitleFile,
+  runSubtitleGenerationPipeline,
+} from './subtitles'

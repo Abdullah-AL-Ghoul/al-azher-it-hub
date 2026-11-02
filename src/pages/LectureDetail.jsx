@@ -4,12 +4,13 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { useUserData } from '../context/UserDataContext'
-import { getLectures, getSources, addStudentLog, signSourceForFetch } from '../services'
+import { getLectures, getSources, addStudentLog, signSourceForFetch, getSubtitlesByLecture } from '../services'
 import useSecureSourceFile from '../hooks/useSecureSourceFile'
 import { useScrollFrame } from '../hooks/useScrollManager.jsx'
 import { pageContainer, pageItem, revealItem } from '../utils/motionTokens'
 import { lectureVideoId, lectureThumb, getSourceFiles } from '../utils/helpers'
 import VideoPlayer from '../components/shared/VideoPlayer'
+import TranscriptPanel from '../components/lectures/TranscriptPanel'
 import StarRating from '../components/shared/StarRating'
 import {
   FiPlay,
@@ -59,6 +60,8 @@ export default function LectureDetail() {
  const [error, setError] = useState(null)
  const [note, setNote] = useState('')
  const [noteSaved, setNoteSaved] = useState(false)
+ const [subtitles, setSubtitles] = useState([])
+ const [sidebarTab, setSidebarTab] = useState('transcript')
 
  const playerRef = useRef(null)
  const [currentTime, setCurrentTime] = useState(0)
@@ -231,10 +234,11 @@ export default function LectureDetail() {
   let mounted = true
   async function load() {
    try {
-    const [l, s] = await Promise.all([getLectures(), getSources()])
+    const [l, s, subs] = await Promise.all([getLectures(), getSources(), getSubtitlesByLecture(id)])
     if (!mounted) return
     setLectures(l)
     setSources(s)
+    setSubtitles(subs || [])
    } catch (err) { if (mounted) setError(err) }
    if (mounted) setLoading(false)
   }
@@ -411,6 +415,7 @@ export default function LectureDetail() {
         isTheater={theaterMode}
         onToggleTheater={toggleTheaterMode}
         onTimeUpdate={(t) => setCurrentTime(t)}
+        subtitles={subtitles}
        />
       </div>
 
@@ -599,8 +604,46 @@ export default function LectureDetail() {
        )}
       </div>
 
-      {/* 2. Interactive Notes Card: Timestamped + General */}
-      {user && (
+      {/* 2. Sidebar Tab Controls: Transcript vs Notes */}
+      <div className="flex items-center gap-1.5 bg-black/10 dark:bg-white/5 p-1 rounded-2xl border border-white/10">
+       <button
+        type="button"
+        onClick={() => setSidebarTab('transcript')}
+        className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition ${
+         sidebarTab === 'transcript'
+          ? 'bg-gradient-to-r from-cyan-500 to-royal-600 text-white shadow-lg'
+          : 'text-slate-500 dark:text-white/60 hover:text-white'
+        }`}
+       >
+        <FiFileText size={14} />
+        <span>{isArabic ? 'التفريغ والترجمة' : 'Transcript'}</span>
+        {subtitles.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+       </button>
+       {user && (
+        <button
+         type="button"
+         onClick={() => setSidebarTab('notes')}
+         className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition ${
+          sidebarTab === 'notes'
+           ? 'bg-gradient-to-r from-cyan-500 to-royal-600 text-white shadow-lg'
+           : 'text-slate-500 dark:text-white/60 hover:text-white'
+         }`}
+        >
+         <FiBookmark size={14} />
+         <span>{isArabic ? 'الملاحظات' : 'Notes'}</span>
+        </button>
+       )}
+      </div>
+
+      {sidebarTab === 'transcript' && (
+       <TranscriptPanel
+        subtitles={subtitles}
+        currentTime={currentTime}
+        onSeek={(sec) => playerRef.current?.seekTo?.(sec)}
+        className="min-h-[420px]"
+       />
+      )}
+      {sidebarTab === 'notes' && user && (
        <div className="glass rounded-2xl p-5 border border-white/10 space-y-4">
         {/* Timestamped notes header */}
         <div>

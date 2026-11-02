@@ -12,10 +12,14 @@ import {
   FiX,
   FiRotateCcw,
   FiTv,
+  FiCheck,
+  FiType,
+  FiSliders,
 } from 'react-icons/fi'
 import LectureThumbnail from './LectureThumbnail'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
+import { findActiveCue } from '../../utils/vttParser'
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
 const MIN_RESUME_SEC = 30
@@ -62,6 +66,8 @@ const VideoPlayer = forwardRef(function VideoPlayer({
   isTheater = false,
   onToggleTheater,
   onTimeUpdate,
+  subtitles = [],
+  onSubtitleChange,
 }, ref) {
   const { t, lang } = useLanguage()
   const isArabic = lang === 'ar'
@@ -86,6 +92,49 @@ const VideoPlayer = forwardRef(function VideoPlayer({
   const [speedOpen, setSpeedOpen] = useState(false)
   const timeRef = useRef(0)
   const playerStateRef = useRef(-1)
+
+  // Subtitle Telemetry & Overlay State
+  const [currentTime, setCurrentTime] = useState(0)
+  const [selectedSubLang, setSelectedSubLang] = useState(() => {
+    try {
+      return localStorage.getItem('al_azher_sub_lang') || 'ar'
+    } catch {
+      return 'ar'
+    }
+  })
+  const [subStyle, setSubStyle] = useState(() => {
+    try {
+      const saved = localStorage.getItem('al_azher_sub_style')
+      return saved ? JSON.parse(saved) : { size: 'normal', bg: 'translucent' }
+    } catch {
+      return { size: 'normal', bg: 'translucent' }
+    }
+  })
+  const [subSettingsOpen, setSubSettingsOpen] = useState(false)
+
+  const activeTrack = useMemo(() => {
+    if (!subtitles || subtitles.length === 0 || selectedSubLang === 'off') return null
+    return subtitles.find((s) => s.language === selectedSubLang) || subtitles[0] || null
+  }, [subtitles, selectedSubLang])
+
+  const currentCue = useMemo(() => {
+    if (!activeTrack || !activeTrack.cues || selectedSubLang === 'off') return null
+    return findActiveCue(activeTrack.cues, currentTime).cue
+  }, [activeTrack, currentTime, selectedSubLang])
+
+  const handleSelectSubLang = useCallback((targetLang) => {
+    setSelectedSubLang(targetLang)
+    try { localStorage.setItem('al_azher_sub_lang', targetLang) } catch (_e) {}
+    onSubtitleChange?.(targetLang)
+  }, [onSubtitleChange])
+
+  const handleUpdateSubStyle = useCallback((updates) => {
+    setSubStyle((prev) => {
+      const next = { ...prev, ...updates }
+      try { localStorage.setItem('al_azher_sub_style', JSON.stringify(next)) } catch (_e) {}
+      return next
+    })
+  }, [])
 
   // Resume state
   const [resumeSec, setResumeSec] = useState(0)
@@ -202,6 +251,7 @@ const VideoPlayer = forwardRef(function VideoPlayer({
         const info = data.info
         if (!Number.isFinite(info.currentTime)) return
         timeRef.current = info.currentTime
+        setCurrentTime(info.currentTime)
         onTimeUpdate?.(info.currentTime)
         if (Number.isFinite(info.duration) && info.duration > 0) {
           const p = Math.min(100, Math.round((info.currentTime / info.duration) * 100))
@@ -268,9 +318,13 @@ const VideoPlayer = forwardRef(function VideoPlayer({
       case ' ': case 'Spacebar': e.preventDefault(); togglePlayPause(); break
       case 'm': case 'M': case 'م': post(muted ? 'unMute' : 'mute'); setMuted(!muted); break
       case 'f': case 'F': case 'ف': toggleFullscreen(); break
+      case 'c': case 'C': case 'ؤ':
+        e.preventDefault()
+        handleSelectSubLang(selectedSubLang === 'off' ? (subtitles[0]?.language || 'ar') : 'off')
+        break
       default: break
     }
-  }, [inline, seekBy, togglePlayPause, post, muted, toggleFullscreen])
+  }, [inline, seekBy, togglePlayPause, post, muted, toggleFullscreen, selectedSubLang, subtitles, handleSelectSubLang])
 
   const startOver = useCallback(() => {
     setResumeChip(0)
@@ -324,6 +378,12 @@ const VideoPlayer = forwardRef(function VideoPlayer({
             autoPlay={autoPlay}
             playsInline
             className="w-full h-full object-contain"
+            onTimeUpdate={(e) => {
+              const t = e.currentTarget.currentTime
+              timeRef.current = t
+              setCurrentTime(t)
+              onTimeUpdate?.(t)
+            }}
             onPlay={() => {
               setIsPlaying(true)
               if (!watchedRef.current) {
@@ -333,6 +393,35 @@ const VideoPlayer = forwardRef(function VideoPlayer({
             }}
             onPause={() => setIsPlaying(false)}
           />
+
+          {/* Subtitle Overlay for direct video */}
+          {selectedSubLang !== 'off' && currentCue && (
+            <div
+              className="absolute bottom-14 inset-x-4 z-30 flex justify-center pointer-events-none select-none"
+              aria-live="polite"
+            >
+              <div
+                className={`max-w-[85%] text-center px-4 py-2 rounded-xl transition-all duration-150 ${
+                  subStyle.bg === 'translucent'
+                    ? 'bg-black/75 backdrop-blur-md border border-white/10 shadow-xl'
+                    : subStyle.bg === 'solid'
+                    ? 'bg-black border border-white/20 shadow-2xl'
+                    : 'bg-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]'
+                } ${
+                  subStyle.size === 'small'
+                    ? 'text-xs sm:text-sm font-medium'
+                    : subStyle.size === 'large'
+                    ? 'text-base sm:text-xl font-bold'
+                    : 'text-sm sm:text-base font-semibold'
+                } text-white`}
+                dir={selectedSubLang === 'ar' ? 'rtl' : 'ltr'}
+              >
+                <span className="leading-relaxed inline-block whitespace-pre-line">
+                  {currentCue.text}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -431,6 +520,35 @@ const VideoPlayer = forwardRef(function VideoPlayer({
               </a>
             </div>
           )}
+
+          {/* Subtitle Overlay (Non-blocking pointer events) */}
+          {selectedSubLang !== 'off' && currentCue && (
+            <div
+              className="absolute bottom-4 sm:bottom-6 inset-x-3 sm:inset-x-8 z-30 flex justify-center pointer-events-none select-none"
+              aria-live="polite"
+            >
+              <div
+                className={`max-w-[92%] sm:max-w-[85%] text-center px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-xl transition-all duration-150 ${
+                  subStyle.bg === 'translucent'
+                    ? 'bg-black/75 backdrop-blur-md border border-white/10 shadow-xl'
+                    : subStyle.bg === 'solid'
+                    ? 'bg-black border border-white/20 shadow-2xl'
+                    : 'bg-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]'
+                } ${
+                  subStyle.size === 'small'
+                    ? 'text-xs sm:text-sm font-medium'
+                    : subStyle.size === 'large'
+                    ? 'text-base sm:text-xl font-bold'
+                    : 'text-sm sm:text-base font-semibold'
+                } text-white`}
+                dir={selectedSubLang === 'ar' ? 'rtl' : 'ltr'}
+              >
+                <span className="leading-relaxed inline-block whitespace-pre-line tracking-wide">
+                  {currentCue.text}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Supplementary control bar */}
@@ -494,6 +612,135 @@ const VideoPlayer = forwardRef(function VideoPlayer({
                     {rate === s && <span aria-hidden="true">✓</span>}
                   </button>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* CC Subtitles Button & Popover */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setSubSettingsOpen((v) => !v)}
+              className={`${controlBtn} font-bold text-[11px] tracking-wider px-2 py-1 ${
+                selectedSubLang !== 'off'
+                  ? 'text-cyan-300 bg-cyan-500/15 border border-cyan-400/30'
+                  : 'text-white/60 hover:text-white'
+              }`}
+              aria-haspopup="menu"
+              aria-expanded={subSettingsOpen}
+              aria-label={isArabic ? 'إعدادات الترجمة (CC)' : 'Subtitle settings (CC)'}
+              title={isArabic ? 'الترجمة المصاحبة (C)' : 'Subtitles (C)'}
+            >
+              CC
+            </button>
+            {subSettingsOpen && (
+              <div
+                role="menu"
+                aria-label={isArabic ? 'إعدادات الترجمة' : 'Subtitle options'}
+                className="absolute bottom-full mb-2 start-0 z-40 bg-slate-900/95 backdrop-blur-md border border-white/15 rounded-2xl overflow-hidden shadow-2xl w-64 p-3 space-y-3"
+              >
+                {/* Language section */}
+                <div>
+                  <div className="text-[11px] font-semibold text-white/50 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span>{isArabic ? 'لغة الترجمة' : 'Language'}</span>
+                    <span className="text-[10px] text-cyan-400 font-normal">
+                      {subtitles.length} {isArabic ? 'متوفر' : 'available'}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => { handleSelectSubLang('off'); setSubSettingsOpen(false) }}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                        selectedSubLang === 'off'
+                          ? 'bg-rose-500/20 text-rose-300 font-semibold'
+                          : 'text-white/70 hover:bg-white/10'
+                      }`}
+                    >
+                      <span>{isArabic ? 'إيقاف الترجمة' : 'Turn Off'}</span>
+                      {selectedSubLang === 'off' && <FiCheck size={14} className="text-rose-400" />}
+                    </button>
+
+                    {subtitles.map((track) => {
+                      const isSelected = selectedSubLang === track.language
+                      const label = isArabic ? (track.labelAr || track.language) : (track.labelEn || track.language)
+                      return (
+                        <button
+                          key={track.id || track.language}
+                          type="button"
+                          onClick={() => { handleSelectSubLang(track.language); setSubSettingsOpen(false) }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                            isSelected
+                              ? 'bg-cyan-500/20 text-cyan-300 font-semibold'
+                              : 'text-white/80 hover:bg-white/10'
+                          }`}
+                        >
+                          <span className="truncate">{label}</span>
+                          {isSelected && <FiCheck size={14} className="text-cyan-400" />}
+                        </button>
+                      )
+                    })}
+
+                    {subtitles.length === 0 && (
+                      <div className="text-[11px] text-white/50 px-2 py-1 italic">
+                        {isArabic ? 'لا تتوفر ترجمة مرفوعة لهذه المحاضرة بعد.' : 'No subtitle tracks uploaded yet.'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Subtitle Appearance Settings */}
+                {selectedSubLang !== 'off' && (
+                  <div className="border-t border-white/10 pt-2 space-y-2">
+                    <div className="text-[11px] font-semibold text-white/50 uppercase tracking-wider">
+                      {isArabic ? 'حجم الخط' : 'Font Size'}
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 bg-white/5 p-1 rounded-lg">
+                      {[
+                        { key: 'small', label: isArabic ? 'صغير' : 'Small' },
+                        { key: 'normal', label: isArabic ? 'متوسط' : 'Medium' },
+                        { key: 'large', label: isArabic ? 'كبير' : 'Large' },
+                      ].map((s) => (
+                        <button
+                          key={s.key}
+                          type="button"
+                          onClick={() => handleUpdateSubStyle({ size: s.key })}
+                          className={`py-1 text-[11px] rounded transition font-medium ${
+                            subStyle.size === s.key
+                              ? 'bg-cyan-500 text-white shadow'
+                              : 'text-white/70 hover:text-white'
+                          }`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="text-[11px] font-semibold text-white/50 uppercase tracking-wider">
+                      {isArabic ? 'خلفية النص' : 'Background'}
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 bg-white/5 p-1 rounded-lg">
+                      {[
+                        { key: 'translucent', label: isArabic ? 'شبه شفاف' : 'Blur' },
+                        { key: 'solid', label: isArabic ? 'معتم' : 'Solid' },
+                        { key: 'none', label: isArabic ? 'بدون' : 'None' },
+                      ].map((b) => (
+                        <button
+                          key={b.key}
+                          type="button"
+                          onClick={() => handleUpdateSubStyle({ bg: b.key })}
+                          className={`py-1 text-[11px] rounded transition font-medium ${
+                            subStyle.bg === b.key
+                              ? 'bg-cyan-500 text-white shadow'
+                              : 'text-white/70 hover:text-white'
+                          }`}
+                        >
+                          {b.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

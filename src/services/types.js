@@ -88,5 +88,25 @@
  * @property {string} [descriptionEn]
  * @property {string} [date]
  * @property {string} [createdAt]
+ *
+ * @typedef {Object} SubtitleCue
+ * @property {string} id
+ * @property {number} start
+ * @property {number} end
+ * @property {string} text
+ *
+ * @typedef {Object} Subtitle
+ * @property {string} id
+ * @property {string} lectureId
+ * @property {string} language
+ * @property {string} [labelAr]
+ * @property {string} [labelEn]
+ * @property {'original_transcript'|'translation'|'import'} sourceType
+ * @property {'ai_generated'|'needs_review'|'reviewed'|'published'} status
+ * @property {number} version
+ * @property {SubtitleCue[]} cues
+ * @property {string} [vttUrl]
+ * @property {string} [createdAt]
+ * @property {string} [updatedAt]
  */
 export {}
