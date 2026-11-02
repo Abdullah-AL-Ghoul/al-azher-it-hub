@@ -10,8 +10,12 @@
 import { validateCues, applyAcademicGlossary, TECHNICAL_GLOSSARY } from '../utils/vttParser'
 
 const GEMINI_STORAGE_KEY = 'al_azher_gemini_api_key'
-const PRIMARY_MODEL = 'gemini-2.0-flash'
-const FALLBACK_MODEL = 'gemini-1.5-flash'
+const CANDIDATE_MODELS = [
+  'gemini-3.8-flash',
+  'gemini-3.6-flash',
+  'gemini-2.5-flash',
+]
+const PRIMARY_MODEL = CANDIDATE_MODELS[0]
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
 
 /**
@@ -90,7 +94,7 @@ function fileToBase64(file) {
  * @returns {Promise<any>}
  */
 async function callGeminiGenerateContent(apiKey, contents, generationConfig = {}) {
-  const models = [PRIMARY_MODEL, FALLBACK_MODEL]
+  const models = CANDIDATE_MODELS
   let lastError = null
 
   for (const model of models) {
@@ -113,6 +117,19 @@ async function callGeminiGenerateContent(apiKey, contents, generationConfig = {}
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}))
         const message = errorData?.error?.message || `HTTP ${res.status}: ${res.statusText}`
+        const isDeprecationOrNotFound =
+          res.status === 404 ||
+          message.toLowerCase().includes('no longer available') ||
+          message.toLowerCase().includes('not found') ||
+          message.toLowerCase().includes('deprecated') ||
+          message.toLowerCase().includes('unsupported')
+
+        if (isDeprecationOrNotFound) {
+          console.warn(`[Gemini] Model ${model} is unavailable, trying fallback: ${message}`)
+          lastError = new Error(`Gemini API [${model}] Error: ${message}`)
+          continue
+        }
+
         throw new Error(`Gemini API [${model}] Error: ${message}`)
       }
 
@@ -122,8 +139,13 @@ async function callGeminiGenerateContent(apiKey, contents, generationConfig = {}
       return { data, text, model }
     } catch (err) {
       lastError = err
-      // If error is 404 (model not found on v1beta), try fallback model
-      if (err.message && err.message.includes('404')) {
+      const isDeprecationOrNotFound =
+        err.message?.toLowerCase().includes('no longer available') ||
+        err.message?.toLowerCase().includes('not found') ||
+        err.message?.toLowerCase().includes('404') ||
+        err.message?.toLowerCase().includes('deprecated')
+
+      if (isDeprecationOrNotFound) {
         continue
       }
       // For auth or quota errors, rethrow immediately
@@ -186,7 +208,7 @@ export async function transcribeAudioWithGemini(audioFile, options = {}) {
   options.onProgress?.({ step: 2, label: 'تجهيز الملف الصوتي وترميزه لمعالجة الذكاء الاصطناعي...', pct: 25 })
   const { base64, mimeType } = await fileToBase64(audioFile)
 
-  options.onProgress?.({ step: 3, label: 'إرسال الصوت إلى Google Gemini 2.0 Flash واستخراج المقاطع والـ Timestamps...', pct: 55 })
+  options.onProgress?.({ step: 3, label: 'إرسال الصوت إلى Google Gemini 3.8 Flash واستخراج المقاطع والـ Timestamps...', pct: 55 })
 
   const prompt = `You are an expert Automatic Speech Recognition (ASR) system specialized in academic Computer Science, AI, and Software Engineering lectures.
 Listen carefully to the provided audio file and transcribe the lecture into synchronized subtitle cues.
@@ -356,7 +378,7 @@ export async function runGeminiSubtitlePipeline({
   }
 
   // Step 1: Speech to Text
-  onProgress?.({ step: 1, label: 'التحقق من الاتصال بـ Google Gemini 2.0 Flash...', pct: 15 })
+  onProgress?.({ step: 1, label: 'التحقق من الاتصال بـ Google Gemini 3.8 Flash...', pct: 15 })
   let baseCues = []
 
   if (audioFile) {

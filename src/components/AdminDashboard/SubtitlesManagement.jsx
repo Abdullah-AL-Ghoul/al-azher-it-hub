@@ -1074,7 +1074,7 @@ export default function SubtitlesManagement({
                     onChange={(e) => setSelectedEngine(e.target.value)}
                     className="w-full bg-slate-900 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none"
                   >
-                    <option value="gemini-flash">Google Gemini 2.5 Flash ($0.00)</option>
+                    <option value="gemini-flash">Google Gemini 3.8 Flash (الموصى به - الأحدث والأعلى دقة)</option>
                     <option value="whisper-api">OpenAI Whisper API</option>
                     <option value="deepgram">Deepgram Nova-2</option>
                   </select>
