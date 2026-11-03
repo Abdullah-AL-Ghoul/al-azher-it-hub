@@ -57,7 +57,11 @@ export function evaluateArenaChallenge(userCode, rawInput) {
     env[name] = structuredCloneSafe(args[idx])
   })
 
-  return executeJsBlock(body, env)
+  const res = executeJsBlock(body, env)
+  if (res && typeof res === 'object' && res.type === RETURN_SIGNAL) {
+    return res.value
+  }
+  return res
 }
 
 function structuredCloneSafe(val) {
@@ -114,7 +118,17 @@ function splitTopLevelStatements(src) {
     throw new Error('SyntaxError: Unbalanced brackets or parentheses')
   }
   if (current.trim()) stmts.push(current.trim())
-  return stmts
+
+  const merged = []
+  for (let i = 0; i < stmts.length; i++) {
+    const s = stmts[i].trim()
+    if (/^else\b/.test(s) && merged.length > 0) {
+      merged[merged.length - 1] += ' ' + s
+    } else {
+      merged.push(s)
+    }
+  }
+  return merged
 }
 
 const RETURN_SIGNAL = Symbol('RETURN')
@@ -129,7 +143,7 @@ function executeJsBlock(blockSrc, env, maxSteps = 5000) {
       if (++steps > maxSteps) throw new Error('RangeError: Maximum loop execution limit exceeded')
     })
     if (res && typeof res === 'object' && res.type === RETURN_SIGNAL) {
-      return res.value
+      return res
     }
   }
   return undefined
@@ -243,12 +257,19 @@ function executeJsStatement(rawStmt, env, tick) {
     return undefined
   }
 
-  // 5. Variable declaration: let / const / var x = expr
-  const declMatch = stmt.match(/^(?:let|const|var)\s+([a-zA-Z_$][\w$]*)\s*(?:=\s*([\s\S]+))?$/)
+  // 5. Variable declaration: let / const / var x = expr, y = expr
+  const declMatch = stmt.match(/^(?:let|const|var)\s+([\s\S]+)$/)
   if (declMatch) {
-    const varName = declMatch[1]
-    const rhs = declMatch[2] ? declMatch[2].replace(/;$/, '').trim() : undefined
-    env[varName] = rhs !== undefined ? evalJsExpr(rhs, env) : undefined
+    const varsRaw = declMatch[1].replace(/;$/, '').trim()
+    const decls = splitTopLevelCommas(varsRaw)
+    for (const d of decls) {
+      const singleMatch = d.trim().match(/^([a-zA-Z_$][\w$]*)\s*(?:=\s*([\s\S]+))?$/)
+      if (singleMatch) {
+        const varName = singleMatch[1]
+        const rhs = singleMatch[2] ? singleMatch[2].trim() : undefined
+        env[varName] = rhs !== undefined ? evalJsExpr(rhs, env) : undefined
+      }
+    }
     return undefined
   }
 
@@ -344,9 +365,12 @@ function splitByOperatorOutsideParens(expr, op) {
   let depthBracket = 0
   let depthBrace = 0
   let inQuote = null
-  for (let i = expr.length - op.length; i >= 0; i--) {
+  let lastIndex = -1
+
+  for (let i = 0; i <= expr.length - op.length; i++) {
     const ch = expr[i]
     const prev = i > 0 ? expr[i - 1] : ''
+
     if (inQuote) {
       if (ch === inQuote && prev !== '\\') inQuote = null
       continue
@@ -355,16 +379,15 @@ function splitByOperatorOutsideParens(expr, op) {
       inQuote = ch
       continue
     }
-    if (ch === ')') depthParen++
-    else if (ch === '(') depthParen--
-    else if (ch === ']') depthBracket++
-    else if (ch === '[') depthBracket--
-    else if (ch === '}') depthBrace++
-    else if (ch === '{') depthBrace--
+    if (ch === '(') depthParen++
+    else if (ch === ')') depthParen--
+    else if (ch === '[') depthBracket++
+    else if (ch === ']') depthBracket--
+    else if (ch === '{') depthBrace++
+    else if (ch === '}') depthBrace--
 
     if (depthParen === 0 && depthBracket === 0 && depthBrace === 0) {
       if (expr.slice(i, i + op.length) === op) {
-        // Avoid matching `===` when searching `==` or `<=` when searching `<`
         const before = i > 0 ? expr[i - 1] : ''
         const after = expr[i + op.length] || ''
         if ((op === '+' || op === '-') && i === 0) continue
@@ -373,9 +396,13 @@ function splitByOperatorOutsideParens(expr, op) {
         if (op === '>' && (after === '=' || before === '>')) continue
         if (op === '==' && (after === '=' || before === '!' || before === '=')) continue
         if (op === '!=' && after === '=') continue
-        return [expr.slice(0, i).trim(), expr.slice(i + op.length).trim()]
+        lastIndex = i
       }
     }
+  }
+
+  if (lastIndex !== -1) {
+    return [expr.slice(0, lastIndex).trim(), expr.slice(lastIndex + op.length).trim()]
   }
   return null
 }
@@ -1293,11 +1320,11 @@ export function executeCppCode(code) {
     }
 
     // 5. Standard for loop: `for (int i = 0; i < n; i++) ...`
-    const stdForMatch = stmt.match(/^for\s*\(\s*(?:int\s+)?([a-zA-Z_]\w*)\s*=\s*(\d+)\s*;\s*\1\s*(<=|<)\s*(\d+)\s*;\s*\1\+\+\s*\)\s*([\s\S]+)$/)
+    const stdForMatch = stmt.match(/^for\s*\(\s*(?:int\s+)?([a-zA-Z_]\w*)\s*=\s*([^;]+)\s*;\s*\1\s*(<=|<)\s*([^;]+)\s*;\s*\1\+\+\s*\)\s*([\s\S]+)$/)
     if (stdForMatch) {
       const [, iterVar, startStr, op, endStr, loopBody] = stdForMatch
-      const start = Number(startStr)
-      const end = Number(endStr)
+      const start = Number(evalCppExpr(startStr, env))
+      const end = Number(evalCppExpr(endStr, env))
       for (let k = start; op === '<=' ? k <= end : k < end; k++) {
         env[iterVar] = k
         outputBuffer += runCppCoutOrAssign(loopBody.replace(/^\{|\}$/g, '').trim(), env)

@@ -11,16 +11,19 @@
 | فئة الفحص | الأمر المنفذ | النتيجة قبل التحديث (Baseline) | النتيجة بعد التحديث (Final) | الحكم (Verdict) |
 |---|---|---|---|---|
 | **الفحص الثابت للكود (ESLint)** | `npm run lint:check` | **FAIL ❌** (`190 problems: 183 errors, 7 warnings`) | **PASS ✅** (`0 errors, 0 warnings`) | **PASS ✅** |
-| **اختبارات الوحدات والتكامل (Vitest)** | `npx vitest run` | **PASS ✅** (`12 files, 94 tests passed`) | **PASS ✅** (`13 files, 99 tests passed`) | **PASS ✅** |
+| **اختبارات الوحدات والتكامل (Vitest)** | `npx vitest run` | **PASS ✅** (`12 files, 94 tests passed`) | **PASS ✅** (`16 files, 137 tests passed`) | **PASS ✅** |
 | **البناء الإنتاجي (Production Build)** | `npm run build` | **WARN ⚠️** (تحذير تجاوز حجم الحزمة `> 500 kB`) | **PASS ✅** (بناء نظيف 100% بدون أي تحذيرات) | **PASS ✅** |
 | **فحص أمن الاعتماديات الإنتاجية** | `npm audit --omit=dev` | 0 ثغرات حرجة أو عالية (3 متوسطة في `vite` وقت التطوير فقط) | 0 ثغرات حرجة أو عالية في الحزم الإنتاجية | **PASS ✅** |
 
 ---
 
-## 2. تفصيل حزم الاختبارات الآلية (13 Test Suites — 99 Tests Passing)
+## 2. تفصيل حزم الاختبارات الآلية (16 Test Suites — 137 Tests Passing)
 
 | ملف الاختبار | عدد الاختبارات | المجال الذي يغطيه | الحالة |
 |---|---|---|---|
+| `src/test/academicFeatures.test.jsx` | 7 | فحص الخطط المعتمدة وحسابات المعدل التراكمي الموزون وتعارض الجداول | **PASS ✅** |
+| `src/test/codeEvaluators.test.js` | 23 | محرك حلبة البرمجة الآمن لـ 5 تحديات برمجية ومفسرات Python وSQL وC++ | **PASS ✅** |
+| `src/test/userStorage.test.js` | 8 | عزل التخزين المحلي لكل طالب لمنع تسريب البيانات على الأجهزة المشتركة | **PASS ✅** |
 | `src/test/academicCurriculum.test.js` | 7 | سلامة الخطط الدراسية المعتمدة (2025/2026) وتوزيع الساعات والمتطلبات السابقة | **PASS ✅** |
 | `src/test/academicAnalytics.test.js` | 4 | حسابات المعدل التراكمي المستهدف، وتوزيع فئات المساقات، ومرتبة الشرف | **PASS ✅** |
 | `src/test/authService.test.js` | 21 | تسجيل الدخول، إنشاء الحسابات، التجزئة الأمنية، استعادة كلمة المرور، وصلاحيات المشرف | **PASS ✅** |
