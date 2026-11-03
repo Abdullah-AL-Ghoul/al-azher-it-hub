@@ -11,6 +11,7 @@ import {
   FiFileText,
   FiExternalLink,
   FiLayers,
+  FiCpu,
 } from 'react-icons/fi'
 import { formatVttTime, searchCues } from '../../utils/vttParser'
 import { exportSubtitleFile } from '../../services/subtitles'
@@ -27,6 +28,8 @@ export default function TranscriptPanel({
   subtitles = [],
   currentTime = 0,
   onSeek,
+  onGenerateSubtitles,
+  lectureTitle = '',
   className = '',
 }) {
   const { t, lang } = useLanguage()
@@ -114,29 +117,43 @@ export default function TranscriptPanel({
             </span>
           </div>
 
-          {/* Export button */}
-          {activeTrack && (
-            <div className="flex items-center gap-1">
+          {/* Export & Actions button */}
+          <div className="flex items-center gap-1">
+            {onGenerateSubtitles && (
               <button
                 type="button"
-                onClick={() => exportSubtitleFile(activeTrack, 'vtt')}
-                className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition text-xs flex items-center gap-1 border border-white/10"
-                title={isArabic ? 'تحميل كملف WebVTT' : 'Download WebVTT'}
+                onClick={onGenerateSubtitles}
+                className="px-2.5 py-1 rounded-lg text-xs font-medium bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 transition flex items-center gap-1 shadow-sm"
+                title={isArabic ? 'توليد أو تحديث الترجمة بالذكاء الاصطناعي' : 'Generate / Update AI Subtitles'}
               >
-                <FiDownload size={13} />
-                <span className="hidden sm:inline">VTT</span>
+                <FiCpu size={12} className="text-cyan-400" />
+                <span className="hidden sm:inline">{isArabic ? 'ترجمة ذكية (AI)' : 'AI Translate'}</span>
               </button>
-              <button
-                type="button"
-                onClick={() => exportSubtitleFile(activeTrack, 'txt')}
-                className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition text-xs flex items-center gap-1 border border-white/10"
-                title={isArabic ? 'تحميل كنص خام' : 'Download text'}
-              >
-                <FiDownload size={13} />
-                <span className="hidden sm:inline">TXT</span>
-              </button>
-            </div>
-          )}
+            )}
+
+            {activeTrack && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => exportSubtitleFile(activeTrack, 'vtt')}
+                  className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition text-xs flex items-center gap-1 border border-white/10"
+                  title={isArabic ? 'تحميل كملف WebVTT' : 'Download WebVTT'}
+                >
+                  <FiDownload size={13} />
+                  <span className="hidden sm:inline">VTT</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => exportSubtitleFile(activeTrack, 'txt')}
+                  className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition text-xs flex items-center gap-1 border border-white/10"
+                  title={isArabic ? 'تحميل كنص خام' : 'Download text'}
+                >
+                  <FiDownload size={13} />
+                  <span className="hidden sm:inline">TXT</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Language Tabs & Search Input */}
@@ -212,10 +229,22 @@ export default function TranscriptPanel({
         className="flex-1 overflow-y-auto max-h-[460px] p-3 space-y-2 divide-y divide-white/5"
       >
         {filteredCues.length === 0 ? (
-          <div className="text-center py-12 text-white/50 text-xs">
-            {searchQuery
-              ? (isArabic ? 'لم يتم العثور على نتائج تطابق بحثك.' : 'No matching cues found.')
-              : (isArabic ? 'لا توجد مقاطع ترجمة لهذه المحاضرة حتى الآن.' : 'No transcript cues available.')}
+          <div className="text-center py-12 px-4 space-y-3">
+            <p className="text-white/60 text-xs">
+              {searchQuery
+                ? (isArabic ? 'لم يتم العثور على نتائج تطابق بحثك.' : 'No matching cues found.')
+                : (isArabic ? 'لا توجد مقاطع ترجمة لهذه المحاضرة حتى الآن.' : 'No transcript cues available.')}
+            </p>
+            {!searchQuery && onGenerateSubtitles && (
+              <button
+                type="button"
+                onClick={onGenerateSubtitles}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-royal-600 hover:opacity-90 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 transition transform hover:scale-105"
+              >
+                <FiCpu size={14} />
+                <span>{isArabic ? 'توليد الترجمة الأكاديمية فوراً عبر الذكاء الاصطناعي' : 'Generate AI Subtitles Now'}</span>
+              </button>
+            )}
           </div>
         ) : (
           filteredCues.map(({ cue, originalIdx }) => {

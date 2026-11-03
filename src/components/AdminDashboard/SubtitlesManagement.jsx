@@ -221,7 +221,14 @@ export default function SubtitlesManagement({
   // Map lectures with subtitles
   const lecturesWithSubs = useMemo(() => {
     return lectures.map((lecture) => {
-      const tracks = subtitles.filter((s) => s.lectureId === lecture.id)
+      const tracks = subtitles.filter(
+        (s) =>
+          s.lectureId === lecture.id ||
+          s.aliasLectureId === lecture.id ||
+          (lecture.aliasId && (s.lectureId === lecture.aliasId || s.aliasLectureId === lecture.aliasId)) ||
+          (lecture.id === '184c887b-1d29-468a-b592-313768735783' && (s.lectureId === 'lec-ai-101' || s.aliasLectureId === 'lec-ai-101')) ||
+          (lecture.id === 'lec-ai-101' && (s.lectureId === '184c887b-1d29-468a-b592-313768735783' || s.aliasLectureId === '184c887b-1d29-468a-b592-313768735783'))
+      )
       return {
         ...lecture,
         tracks,
@@ -277,17 +284,20 @@ export default function SubtitlesManagement({
       return
     }
 
+    const targetLecture = lectures.find((l) => l.id === selectedLectureId)
     setIsGenerating(true)
     try {
       await runSubtitleGenerationPipeline({
         lectureId: selectedLectureId,
+        lectureTitle: targetLecture?.titleAr || targetLecture?.titleEn,
+        lectureSubject: targetLecture?.subjectAr || targetLecture?.subjectEn,
         audioFile,
         sourceLang,
         targetLangs,
         engine: selectedEngine,
         onProgress: (p) => setGenerationProgress(p),
       })
-      toast.success(isArabic ? 'تم توليد الترجمة والتحقق منها بنجاح!' : 'Subtitles generated successfully!')
+      toast.success(isArabic ? 'تم توليد الترجمة ونشرها بنجاح!' : 'Subtitles generated and published successfully!')
       setGenerationModalOpen(false)
       setGenerationProgress(null)
       fetchSubtitles()
@@ -651,26 +661,33 @@ export default function SubtitlesManagement({
                     </td>
                     <td className="px-4 py-3 text-end">
                       <div className="flex items-center justify-end gap-1.5">
-                        {lecture.tracks.some((t) => t.language === 'en') && !lecture.tracks.some((t) => t.language === 'ar') && (
+                        {lecture.tracks.some((t) => t.language === 'en') && (
                           <button
                             type="button"
                             onClick={async () => {
                               const enTrack = lecture.tracks.find((t) => t.language === 'en')
                               if (!enTrack) return
-                              toast.loading(isArabic ? 'جاري ترجمة المحاضرة إلى العربية...' : 'Translating to Arabic...', { id: `tr_${lecture.id}` })
+                              const toastId = `tr_${lecture.id}`
+                              toast.loading(isArabic ? 'جاري ترجمة وتوحيد المصطلحات بالذكاء الاصطناعي...' : 'Translating with AI...', { id: toastId })
                               try {
                                 await translateSubtitleTrack({ subtitleId: enTrack.id, targetLang: 'ar' })
-                                toast.success(isArabic ? 'تم توليد الترجمة العربية بنجاح!' : 'Arabic translation generated!', { id: `tr_${lecture.id}` })
+                                toast.success(isArabic ? 'تم حفظ ونشر الترجمة العربية بنجاح!' : 'Arabic translation published!', { id: toastId })
                                 fetchSubtitles()
                                 onRefresh?.()
                               } catch (err) {
-                                toast.error(err.message || 'Translation failed', { id: `tr_${lecture.id}` })
+                                toast.error(err.message || 'Translation failed', { id: toastId })
                               }
                             }}
                             className="px-2 py-1 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 border border-violet-500/25 transition text-[11px] flex items-center gap-1"
-                            title={isArabic ? 'توليد ترجمة عربية تلقائية من الإنجليزية' : 'Auto-translate to Arabic'}
+                            title={
+                              lecture.tracks.some((t) => t.language === 'ar')
+                                ? (isArabic ? 'إعادة توليد الترجمة العربية بالذكاء الاصطناعي' : 'Regenerate Arabic with AI')
+                                : (isArabic ? 'توليد ترجمة عربية تلقائية من الإنجليزية' : 'Auto-translate to Arabic')
+                            }
                           >
-                            <span>✨ {isArabic ? 'ترجمة' : 'Translate'}</span>
+                            <span>
+                              ✨ {lecture.tracks.some((t) => t.language === 'ar') ? (isArabic ? 'إعادة ترجمة' : 'Re-translate') : (isArabic ? 'ترجمة' : 'Translate')}
+                            </span>
                           </button>
                         )}
 

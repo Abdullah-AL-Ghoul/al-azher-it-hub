@@ -674,6 +674,8 @@ ${JSON.stringify(cues.map(c => ({ start: c.start, end: c.end, text: c.text })))}
  */
 export async function runGeminiSubtitlePipeline({
   lectureId,
+  lectureTitle,
+  lectureSubject,
   audioFile,
   sourceLang = 'en',
   targetLangs = ['ar'],
@@ -686,7 +688,7 @@ export async function runGeminiSubtitlePipeline({
   }
 
   // Step 1: Speech to Text
-  onProgress?.({ step: 1, label: 'التحقق من الاتصال بـ Google Gemini 3.8 Flash...', pct: 15 })
+  onProgress?.({ step: 1, label: 'التحقق من الاتصال بمحرك Gemini AI للترجمة والتفريغ...', pct: 15 })
   let baseCues = []
 
   if (audioFile) {
@@ -696,15 +698,44 @@ export async function runGeminiSubtitlePipeline({
       onProgress,
     })
   } else {
-    // Academic prompt-based synthesis if audio not provided
-    onProgress?.({ step: 2, label: 'توليد المقاطع الزمنية الأكاديمية للمحاضرة عبر Gemini...', pct: 35 })
-    const prompt = `Generate a realistic educational subtitle transcript with 6-8 cues for a university Computer Science lecture on Algorithms and Data Structures. Each cue must have start, end, and text in ${sourceLang === 'ar' ? 'Arabic' : 'English'}. Return valid JSON: { "cues": [{ "start": 0, "end": 4.5, "text": "..." }] }`
-    const { text } = await callGeminiGenerateContent(activeKey, [{ role: 'user', parts: [{ text: prompt }] }], { responseMimeType: 'application/json' })
-    const parsed = JSON.parse(text)
-    baseCues = validateCues(Array.isArray(parsed) ? parsed : (parsed?.cues || []))
+    // Academic prompt-based synthesis matching the exact lecture topic
+    const topic = lectureTitle || 'مدخل إلى الذكاء الاصطناعي والشبكات العصبية العميقة (Neural Networks)'
+    const subject = lectureSubject || 'الذكاء الاصطناعي وتعلم الآلة'
+    onProgress?.({ step: 2, label: `توليد المقاطع الزمنية الأكاديمية لمساق (${topic}) عبر Gemini...`, pct: 35 })
+
+    const prompt = `You are a university professor preparing educational subtitle transcripts.
+Generate a realistic, academically accurate subtitle transcript with 8 to 10 timed cues for the university lecture titled "${topic}" in the subject "${subject}".
+The language of the text must be ${sourceLang === 'ar' ? 'Arabic' : 'English'}.
+The cues must accurately match the specific lecture topic (key concepts, definitions, operational formulas, and core components).
+Each cue must have:
+- "start": start time in seconds (e.g. 0.0)
+- "end": end time in seconds (e.g. 4.8)
+- "text": subtitle content
+
+Return strictly a valid JSON object matching:
+{
+  "cues": [
+    { "start": 0.0, "end": 4.5, "text": "..." }
+  ]
+}`
+    const { text } = await callGeminiGenerateContent(
+      activeKey,
+      [{ role: 'user', parts: [{ text: prompt }] }],
+      { responseMimeType: 'application/json' }
+    )
+
+    let parsed = null
+    try {
+      parsed = JSON.parse(text)
+    } catch (_e) {
+      const cleaned = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim()
+      parsed = JSON.parse(cleaned)
+    }
+    const rawCues = Array.isArray(parsed) ? parsed : (parsed?.cues || [])
+    baseCues = validateCues(rawCues)
   }
 
-  onProgress?.({ step: 3, label: 'تم استخراج التفريغ الصوتي بنجاح، جاري الحفظ والترجمة...', pct: 70 })
+  onProgress?.({ step: 3, label: 'تم استخراج وتجهيز التفريغ بنجاح، جاري الحفظ وتطبيق القاموس الأكاديمي...', pct: 70 })
 
   return {
     baseCues,

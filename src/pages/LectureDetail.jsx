@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { useUserData } from '../context/UserDataContext'
-import { getLectures, getSources, addStudentLog, signSourceForFetch, getSubtitlesByLecture } from '../services'
+import { getLectures, getSources, addStudentLog, signSourceForFetch, getSubtitlesByLecture, runSubtitleGenerationPipeline } from '../services'
 import { DEFAULT_LECTURES } from '../data/sampleLectures'
 import useSecureSourceFile from '../hooks/useSecureSourceFile'
 import { useScrollFrame } from '../hooks/useScrollManager.jsx'
@@ -240,7 +240,7 @@ export default function LectureDetail() {
   let mounted = true
   async function load() {
    try {
-    const [l, s, subs] = await Promise.all([getLectures(), getSources(), getSubtitlesByLecture(id)])
+    const [l, s, subs] = await Promise.all([getLectures(), getSources(), getSubtitlesByLecture(id, true)])
     if (!mounted) return
     setLectures(l)
     setSources(s)
@@ -250,7 +250,7 @@ export default function LectureDetail() {
   }
    load()
    return () => { mounted = false }
-  }, [])
+  }, [id])
 
   useEffect(() => {
    if (!lecture) return
@@ -306,6 +306,27 @@ export default function LectureDetail() {
    next: idx >= 0 && idx < subjectLectures.length - 1 ? subjectLectures[idx + 1] : null,
   }
  }, [subjectLectures, lecture])
+
+  const handleGenerateAiSubtitles = useCallback(async () => {
+    if (!lecture) return
+    const toastId = `gen_sub_${id}`
+    toast.loading(isArabic ? 'جاري توليد الترجمة الأكاديمية بالذكاء الاصطناعي...' : 'Generating AI subtitles...', { id: toastId })
+    try {
+      await runSubtitleGenerationPipeline({
+        lectureId: id,
+        lectureTitle: lecture.titleAr || lecture.titleEn,
+        lectureSubject: lecture.subjectAr || lecture.subjectEn,
+        sourceLang: 'en',
+        targetLangs: ['ar'],
+        engine: 'gemini-flash',
+      })
+      const freshSubs = await getSubtitlesByLecture(id, true)
+      setSubtitles(freshSubs || [])
+      toast.success(isArabic ? 'تم توليد وتفعيل الترجمة بنجاح!' : 'Subtitles generated & activated!', { id: toastId })
+    } catch (err) {
+      toast.error(err.message || (isArabic ? 'فشلت عملية التوليد' : 'Generation failed'), { id: toastId })
+    }
+  }, [lecture, id, isArabic])
 
  const handleToggleFavorite = useCallback(async () => {
   if (!user || !lecture) return
@@ -647,6 +668,8 @@ export default function LectureDetail() {
         subtitles={subtitles}
         currentTime={currentTime}
         onSeek={(sec) => playerRef.current?.seekTo?.(sec)}
+        onGenerateSubtitles={handleGenerateAiSubtitles}
+        lectureTitle={lecture ? (isArabic ? lecture.titleAr : lecture.titleEn) : ''}
         className="min-h-[420px]"
        />
       )}

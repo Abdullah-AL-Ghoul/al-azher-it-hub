@@ -181,4 +181,49 @@ describe('Subtitles Service & Pipeline Suite', () => {
     setPreferredGeminiModel('auto')
     expect(getPreferredGeminiModel()).toBe('auto')
   })
+
+  it('ensures pipeline-generated subtitles are immediately published and retrievable by lecture ID', async () => {
+    const lectureId = 'test-immediate-live-lec'
+    const results = await runSubtitleGenerationPipeline({
+      lectureId,
+      sourceLang: 'en',
+      targetLangs: ['ar'],
+      engine: 'gemini-flash',
+    })
+
+    expect(results).toHaveLength(2)
+    expect(results[0].status).toBe('published')
+    expect(results[1].status).toBe('published')
+
+    // getSubtitlesByLecture must immediately return both tracks
+    const retrieved = await getSubtitlesByLecture(lectureId, true)
+    expect(retrieved).toHaveLength(2)
+    const arTrack = retrieved.find((t) => t.language === 'ar')
+    expect(arTrack).toBeDefined()
+    expect(arTrack.cues.length).toBeGreaterThan(0)
+  })
+
+  it('updates existing AI lecture subtitles in-place when translating or generating new cues', async () => {
+    const aiLectureId = '184c887b-1d29-468a-b592-313768735783'
+    const initialTracks = await getSubtitlesByLecture(aiLectureId, true)
+    const initialAr = initialTracks.find((t) => t.language === 'ar')
+    expect(initialAr).toBeDefined()
+
+    // Save an updated Arabic translation track for AI lecture
+    const updated = await saveSubtitle({
+      lectureId: aiLectureId,
+      language: 'ar',
+      labelAr: 'العربية (محدثة بالذكاء الاصطناعي)',
+      cues: [
+        { id: 'new_c1', start: 0, end: 4, text: 'هذه تجربة ترجمة جديدة وشغالة للذكاء الاصطناعي' },
+      ],
+    })
+
+    expect(updated.id).toBe(initialAr.id) // Must reuse existing ID to prevent stale duplicates
+    expect(updated.status).toBe('published')
+
+    const freshTracks = await getSubtitlesByLecture(aiLectureId, true)
+    const freshAr = freshTracks.find((t) => t.language === 'ar')
+    expect(freshAr.cues[0].text).toContain('هذه تجربة ترجمة جديدة')
+  })
 })

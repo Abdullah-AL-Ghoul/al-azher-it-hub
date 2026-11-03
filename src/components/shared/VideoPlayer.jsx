@@ -26,6 +26,7 @@ const MIN_RESUME_SEC = 30
 const WATCHED_RATIO = 0.9
 
 function buildEmbedSrc(videoId, { autoplay = false, start = 0 } = {}) {
+  const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : ''
   const params = new URLSearchParams({
     rel: '0',
     playsinline: '1',
@@ -33,6 +34,9 @@ function buildEmbedSrc(videoId, { autoplay = false, start = 0 } = {}) {
     enablejsapi: '1',
     autoplay: autoplay ? '1' : '0',
   })
+  if (origin && origin !== 'null') {
+    params.set('origin', origin)
+  }
   if (start > 0) params.set('start', String(Math.floor(start)))
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`
 }
@@ -112,9 +116,25 @@ const VideoPlayer = forwardRef(function VideoPlayer({
   })
   const [subSettingsOpen, setSubSettingsOpen] = useState(false)
 
+  // Ensure selected language matches an available track, defaulting to Arabic or first track
+  useEffect(() => {
+    if (subtitles && subtitles.length > 0 && selectedSubLang !== 'off') {
+      const hasCurrent = subtitles.some((s) => s.language === selectedSubLang)
+      if (!hasCurrent) {
+        const hasAr = subtitles.some((s) => s.language === 'ar')
+        setSelectedSubLang(hasAr ? 'ar' : subtitles[0].language)
+      }
+    }
+  }, [subtitles, selectedSubLang])
+
   const activeTrack = useMemo(() => {
     if (!subtitles || subtitles.length === 0 || selectedSubLang === 'off') return null
-    return subtitles.find((s) => s.language === selectedSubLang) || subtitles[0] || null
+    return (
+      subtitles.find((s) => s.language === selectedSubLang) ||
+      subtitles.find((s) => s.language === 'ar') ||
+      subtitles[0] ||
+      null
+    )
   }, [subtitles, selectedSubLang])
 
   const currentCue = useMemo(() => {
@@ -219,7 +239,11 @@ const VideoPlayer = forwardRef(function VideoPlayer({
     if (!inline || !videoId) return undefined
     const listen = () => {
       const win = iframeRef.current?.contentWindow
-      if (win) win.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*')
+      if (win) {
+        win.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*')
+        win.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }), '*')
+        win.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['infoDelivery'] }), '*')
+      }
     }
     listen()
 
@@ -249,15 +273,22 @@ const VideoPlayer = forwardRef(function VideoPlayer({
         }
       } else if (data.event === 'infoDelivery' && data.info) {
         const info = data.info
-        if (!Number.isFinite(info.currentTime)) return
-        timeRef.current = info.currentTime
-        setCurrentTime(info.currentTime)
-        onTimeUpdate?.(info.currentTime)
+        let sec = null
+        if (Number.isFinite(info.currentTime)) sec = info.currentTime
+        else if (typeof info === 'number' && Number.isFinite(info)) sec = info
+
+        if (sec !== null) {
+          timeRef.current = sec
+          setCurrentTime(sec)
+          onTimeUpdate?.(sec)
+        }
+
         if (Number.isFinite(info.duration) && info.duration > 0) {
-          const p = Math.min(100, Math.round((info.currentTime / info.duration) * 100))
+          const cur = sec !== null ? sec : timeRef.current
+          const p = Math.min(100, Math.round((cur / info.duration) * 100))
           setPct((prev) => (prev === p ? prev : p))
-          if (barRef.current) barRef.current.style.transform = `scaleX(${Math.min(1, info.currentTime / info.duration)})`
-          if (info.currentTime >= info.duration * WATCHED_RATIO && !watchedRef.current) {
+          if (barRef.current) barRef.current.style.transform = `scaleX(${Math.min(1, cur / info.duration)})`
+          if (cur >= info.duration * WATCHED_RATIO && !watchedRef.current) {
             watchedRef.current = true
             onWatch?.()
           }
@@ -269,11 +300,18 @@ const VideoPlayer = forwardRef(function VideoPlayer({
 
     window.addEventListener('message', onMessage)
     const loadTimer = setTimeout(listen, 600)
+
+    // Periodic time heartbeat to ensure subtitles remain synchronized
+    const heartbeat = setInterval(() => {
+      post('getCurrentTime')
+    }, 400)
+
     return () => {
       window.removeEventListener('message', onMessage)
       clearTimeout(loadTimer)
+      clearInterval(heartbeat)
     }
-  }, [inline, videoId, storageKey, onWatch, onTimeUpdate])
+  }, [inline, videoId, storageKey, onWatch, onTimeUpdate, post])
 
   // Fullscreen sync
   useEffect(() => {
