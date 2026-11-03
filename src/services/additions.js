@@ -20,6 +20,8 @@ export async function saveAdditions(data) {
     titleEn: row.titleEn || '',
     descriptionAr: row.descriptionAr || '',
     descriptionEn: row.descriptionEn || '',
+    // NOTE: subjectAr/subjectEn are not persisted — the `additions` table has no such
+    // columns yet. Requires an approved DB migration (see AL_AZHAR_IT_HUB_IMPROVEMENT_ROADMAP.md).
     url: row.url || '',
     createdAt: row.createdAt || new Date().toISOString(),
   }))

@@ -1,24 +1,19 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { pageContainer, pageItem } from '../utils/motionTokens'
 import PageHero from '../components/shared/PageHero'
 import {
   FiPlay,
-  FiRotateCcw,
   FiCopy,
   FiDownload,
   FiTerminal,
   FiCode,
   FiDatabase,
-  FiCpu,
-  FiCheck,
-  FiMaximize2,
-  FiMinimize2,
-  FiHelpCircle,
-  FiLayers
+  FiCpu
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
+import { executePythonCode, executeSqlQuery, executeCppCode } from '../utils/codeEvaluators'
 
 const LANGUAGES = [
   { id: 'web', labelAr: 'الويب (HTML / CSS / JS)', labelEn: 'Web (HTML/CSS/JS)', icon: FiCode, color: 'from-orange-500 to-amber-500' },
@@ -276,35 +271,6 @@ int main() {
   }
 }
 
-// Sample in-memory relational database for Al-Azher IT Hub
-const MOCK_DB = {
-  Students: [
-    { id: 20220101, name: 'أحمد محمود', major: 'هندسة البرمجيات', gpa: 91.5, completed_hours: 98 },
-    { id: 20220140, name: 'سارة خالد', major: 'علوم الحاسوب', gpa: 94.2, completed_hours: 104 },
-    { id: 20220188, name: 'محمد النجار', major: 'نظم المعلومات', gpa: 86.0, completed_hours: 82 },
-    { id: 20220215, name: 'نور الدين علي', major: 'الوسائط وتطوير الويب', gpa: 88.7, completed_hours: 90 },
-    { id: 20220299, name: 'عبد الله الغول', major: 'هندسة البرمجيات', gpa: 95.8, completed_hours: 120 },
-    { id: 20220350, name: 'مريم يوسف', major: 'علوم الحاسوب', gpa: 84.5, completed_hours: 76 },
-    { id: 20220412, name: 'عمر القدوة', major: 'هندسة البرمجيات', gpa: 79.0, completed_hours: 64 },
-  ],
-  Courses: [
-    { id: 101, code: 'ITCS2301', title: 'هياكل البيانات', credits: 3 },
-    { id: 102, code: 'ITSE3302', title: 'هندسة البرمجيات 1', credits: 3 },
-    { id: 103, code: 'ITIS2305', title: 'نظم قواعد البيانات', credits: 3 },
-    { id: 104, code: 'ITWD3301', title: 'تطوير تطبيقات الويب', credits: 3 },
-    { id: 105, code: 'ITCS3304', title: 'شبكات الحاسوب', credits: 3 },
-  ],
-  Enrollments: [
-    { student_id: 20220299, course_id: 101, semester: 'خريف 2025', grade: 98 },
-    { student_id: 20220299, course_id: 103, semester: 'خريف 2025', grade: 96 },
-    { student_id: 20220140, course_id: 101, semester: 'خريف 2025', grade: 94 },
-    { student_id: 20220101, course_id: 102, semester: 'خريف 2025', grade: 92 },
-    { student_id: 20220188, course_id: 103, semester: 'خريف 2025', grade: 87 },
-    { student_id: 20220215, course_id: 104, semester: 'خريف 2025', grade: 93 },
-    { student_id: 20220350, course_id: 105, semester: 'خريف 2025', grade: 85 },
-  ]
-}
-
 export default function CodePlayground() {
   const { lang } = useLanguage()
   const isArabic = lang === 'ar'
@@ -317,6 +283,7 @@ export default function CodePlayground() {
   const [selectedTemplateKey, setSelectedTemplateKey] = useState('counter')
 
   const iframeRef = useRef(null)
+  const [previewDoc, setPreviewDoc] = useState('')
 
   const runTimerRef = useRef(null)
 
@@ -343,146 +310,45 @@ export default function CodePlayground() {
     setSqlResults(null)
   }
 
-  // Run Code logic per language
+  // Run Code logic per language (real in-browser evaluators, CSP-safe)
   const handleRunCode = useCallback(() => {
     if (runTimerRef.current) clearTimeout(runTimerRef.current)
     setIsRunning(true)
     setOutput('')
     setSqlResults(null)
 
-    if (activeLang === 'web') {
-      runTimerRef.current = setTimeout(() => {
-        try {
-          if (iframeRef.current) {
-            const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document
-            if (doc) {
-              doc.open()
-              doc.write(code)
-              doc.close()
-            }
-          }
-          toast.success(isArabic ? 'تم تحديث العرض المباشر' : 'Live preview updated')
-        } catch (_err) {
-          // ignore
-        } finally {
-          setIsRunning(false)
-        }
-      }, 50)
-    } else if (activeLang === 'python') {
-      // In-browser lightweight Python execution
-      runTimerRef.current = setTimeout(() => {
-        try {
-          const logs = []
-          // Simulate standard Python output for the pre-built logic
-          if (code.includes('gpa =') || code.includes('تقرير الدرجات')) {
-            logs.push('=============================================')
-            logs.push('  تقرير الدرجات الفصلي - AL-Azher IT Hub')
-            logs.push('=============================================')
-            logs.push('• هياكل البيانات والخوارزميات: 92% (3 ساعات)')
-            logs.push('• نظم قواعد البيانات      : 88% (3 ساعات)')
-            logs.push('• برمجة الويب المتقدمة    : 95% (3 ساعات)')
-            logs.push('• شبكات الحاسوب           : 85% (3 ساعات)')
-            logs.push('• تحليل وتصميم النظم      : 90% (2 ساعات)')
-            logs.push('---------------------------------------------')
-            logs.push('إجمالي الساعات المعتمدة: 14')
-            logs.push('المعدل الفصلي المحسوب  : 90.14%')
-            logs.push('التقدير الأكاديمي      : امتياز مع مرتبة الشرف 🌟')
-            logs.push('=============================================')
-          } else if (code.includes('binary_search')) {
-            logs.push('البحث عن الرقم الجامعي: 20220299')
-            logs.push('المصفوفة: [20220101, 20220140, 20220188, 20220215, 20220299, 20220350, 20220412]\n')
-            logs.push('الخطوة 1: فحص العنصر في المؤشر 3 القيمة = 20220215')
-            logs.push('الخطوة 2: فحص العنصر في المؤشر 5 القيمة = 20220350')
-            logs.push('الخطوة 3: فحص العنصر في المؤشر 4 القيمة = 20220299')
-            logs.push('\n✅ تم العثور على الطالب في الفهرس: 4 بعد 3 خطوات فقط!')
-          } else {
-            // Evaluates simple expressions
-            logs.push('>>> تنفيـذ الكود بنجاح (Python 3.12 Runtime):')
-            logs.push(`[Output]: مخرجات التنفيذ جاهزة وسليمة (0 أخطاء syntax).`)
-          }
-          setOutput(logs.join('\n'))
-          toast.success(isArabic ? 'اكتمل تنفيذ الكود بنجاح' : 'Execution completed')
-        } catch (err) {
-          setOutput(`Error: ${err.message}`)
-        } finally {
-          setIsRunning(false)
-        }
-      }, 300)
-    } else if (activeLang === 'sql') {
+    runTimerRef.current = setTimeout(() => {
       try {
-        const lower = code.toLowerCase()
-        if (lower.includes('from students') && lower.includes('group by major')) {
-          // Aggregated query
-          setSqlResults({
-            columns: ['major', 'total_students', 'average_gpa', 'highest_gpa'],
-            rows: [
-              ['هندسة البرمجيات', '3', '88.77', '95.80'],
-              ['علوم الحاسوب', '2', '89.35', '94.20'],
-              ['نظم المعلومات', '1', '86.00', '86.00'],
-              ['الوسائط وتطوير الويب', '1', '88.70', '88.70'],
-            ]
-          })
-        } else if (lower.includes('join')) {
-          // Join query
-          setSqlResults({
-            columns: ['student_name', 'major', 'course_title', 'credits', 'semester', 'grade'],
-            rows: [
-              ['عبد الله الغول', 'هندسة البرمجيات', 'هياكل البيانات', '3', 'خريف 2025', '98'],
-              ['عبد الله الغول', 'هندسة البرمجيات', 'نظم قواعد البيانات', '3', 'خريف 2025', '96'],
-              ['سارة خالد', 'علوم الحاسوب', 'هياكل البيانات', '3', 'خريف 2025', '94'],
-              ['نور الدين علي', 'الوسائط وتطوير الويب', 'تطوير تطبيقات الويب', '3', 'خريف 2025', '93'],
-              ['أحمد محمود', 'هندسة البرمجيات', 'هندسة البرمجيات 1', '3', 'خريف 2025', '92'],
-            ]
-          })
-        } else {
-          // Default select top students
-          setSqlResults({
-            columns: ['student_id', 'student_name', 'major', 'gpa', 'completed_hours'],
-            rows: [
-              ['20220299', 'عبد الله الغول', 'هندسة البرمجيات', '95.8', '120'],
-              ['20220140', 'سارة خالد', 'علوم الحاسوب', '94.2', '104'],
-              ['20220101', 'أحمد محمود', 'هندسة البرمجيات', '91.5', '98'],
-              ['20220215', 'نور الدين علي', 'الوسائط وتطوير الويب', '88.7', '90'],
-              ['20220188', 'محمد النجار', 'نظم المعلومات', '86.0', '82'],
-            ]
-          })
+        if (activeLang === 'web') {
+          // Opaque-origin sandbox: render via srcDoc instead of touching contentDocument
+          setPreviewDoc(code)
+          toast.success(isArabic ? 'تم تحديث العرض المباشر' : 'Live preview updated')
+        } else if (activeLang === 'python') {
+          setOutput(executePythonCode(code) || (isArabic ? '(لا توجد مخرجات)' : '(no output)'))
+          toast.success(isArabic ? 'اكتمل تنفيذ الكود بنجاح' : 'Execution completed')
+        } else if (activeLang === 'sql') {
+          setSqlResults(executeSqlQuery(code))
+          toast.success(isArabic ? 'تم تنفيذ استعلام SQL بنجاح' : 'SQL Query executed')
+        } else if (activeLang === 'cpp') {
+          setOutput(executeCppCode(code) || (isArabic ? '(لا توجد مخرجات)' : '(no output)'))
+          toast.success(isArabic ? 'تم تنفيذ كود C++' : 'C++ code executed')
         }
-        toast.success(isArabic ? 'تم تنفيذ استعلام SQL بنجاح' : 'SQL Query executed')
       } catch (err) {
-        setOutput(`SQL Error: ${err.message}`)
+        setOutput(`Error: ${err?.message || err}`)
+        toast.error(isArabic ? 'حدث خطأ أثناء التنفيذ' : 'Execution error')
       } finally {
         setIsRunning(false)
       }
-    } else if (activeLang === 'cpp') {
-      setTimeout(() => {
-        setOutput(
-          `g++ -O3 -std=c++17 main.cpp && ./a.out\n` +
-          `درجات الطلبة قبل الفرز: 88 95 72 64 91 83 78\n` +
-          `درجات الطلبة بعد QuickSort: 64 72 78 83 88 91 95\n\n` +
-          `Program finished with exit code 0 (Time: 0.002s, Memory: 2.1MB)`
-        )
-        setIsRunning(false)
-        toast.success(isArabic ? 'تم تجميع وتنفيذ كود C++' : 'C++ code compiled & run')
-      }, 350)
-    }
+    }, 50)
   }, [activeLang, code, isArabic])
 
   // Initial web render
   useEffect(() => {
-    if (activeLang === 'web' && iframeRef.current) {
-      try {
-        const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document
-        if (doc) {
-          doc.open()
-          doc.write(code)
-          doc.close()
-        }
-      } catch (_) {}
-    }
+    if (activeLang === 'web') setPreviewDoc(code)
     return () => {
       if (runTimerRef.current) clearTimeout(runTimerRef.current)
     }
-  }, [activeLang])
+  }, [activeLang, code])
 
   // Ctrl + Enter shortcut to run
   useEffect(() => {
@@ -663,6 +529,7 @@ export default function CodePlayground() {
                     ref={iframeRef}
                     title="live-preview"
                     sandbox="allow-scripts allow-modals"
+                    srcDoc={previewDoc}
                     className="w-full h-full min-h-[380px] rounded-xl border border-white/10 bg-white"
                   />
                 ) : activeLang === 'sql' && sqlResults ? (

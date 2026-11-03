@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
+import { getUserStorageKey } from '../utils/userStorage'
 import { ambientAudio } from '../utils/ambientAudio'
 import { getAcademicPlan } from '../data/academicCurriculum'
 import { 
@@ -18,8 +20,7 @@ import {
   FiCheck,
   FiBookOpen,
   FiZap,
-  FiUsers,
-  FiAward
+  FiUsers
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 
@@ -47,7 +48,11 @@ const SOUNDSCAPES = [
 
 export default function FocusRoom() {
   const { lang } = useLanguage()
+  const { user } = useAuth()
   const isArabic = lang === 'ar'
+  const focusTasksKey = getUserStorageKey('al_azher_focus_tasks', user)
+  const studyTableKey = getUserStorageKey('al_azher_active_study_table', user)
+  const activePlanStorageKey = getUserStorageKey('al_azher_active_major_plan', user)
 
   // Timer state
   const [activeMode, setActiveMode] = useState('pomodoro')
@@ -61,11 +66,11 @@ export default function FocusRoom() {
   // Associated course
   const activePlanId = useMemo(() => {
     try {
-      return localStorage.getItem('al_azher_active_major_plan') || 'cse-2025'
+      return localStorage.getItem(activePlanStorageKey) || localStorage.getItem('al_azher_active_major_plan') || 'cse-2025'
     } catch {
       return 'cse-2025'
     }
-  }, [])
+  }, [activePlanStorageKey])
 
   const plan = useMemo(() => getAcademicPlan(activePlanId), [activePlanId])
   const courseOptions = useMemo(() => {
@@ -85,7 +90,7 @@ export default function FocusRoom() {
   // Tasks state
   const [tasks, setTasks] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_focus_tasks')
+      const saved = localStorage.getItem(focusTasksKey)
       return saved ? JSON.parse(saved) : [
         { id: '1', text: isArabic ? 'مراجعة شيت الأسئلة والأمثلة البرمجية' : 'Review exercise sheet and code samples', done: false },
         { id: '2', text: isArabic ? 'تدوين الملاحظات الهامة في دفتر المساق' : 'Summarize key lecture takeaways in notes', done: true },
@@ -99,7 +104,7 @@ export default function FocusRoom() {
   // Stats state
   const [stats, setStats] = useState(() => {
     try {
-      const key = `al_azher_focus_stats_${new Date().toISOString().slice(0, 10)}`
+      const key = getUserStorageKey(`al_azher_focus_stats_${new Date().toISOString().slice(0, 10)}`, user)
       const saved = localStorage.getItem(key)
       return saved ? JSON.parse(saved) : { completedSessions: 0, totalMinutes: 0 }
     } catch {
@@ -111,7 +116,7 @@ export default function FocusRoom() {
   const [activeOnlineCount, setActiveOnlineCount] = useState(18)
   const [activeTableId, setActiveTableId] = useState(() => {
     try {
-      return localStorage.getItem('al_azher_active_study_table') || 'tbl-ds'
+      return localStorage.getItem(studyTableKey) || 'tbl-ds'
     } catch {
       return 'tbl-ds'
     }
@@ -120,7 +125,7 @@ export default function FocusRoom() {
   const handleJoinTable = (tbl) => {
     setActiveTableId(tbl.id)
     try {
-      localStorage.setItem('al_azher_active_study_table', tbl.id)
+      localStorage.setItem(studyTableKey, tbl.id)
     } catch {
       // ignore
     }
@@ -144,11 +149,11 @@ export default function FocusRoom() {
   // Sync tasks to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('al_azher_focus_tasks', JSON.stringify(tasks))
+      localStorage.setItem(focusTasksKey, JSON.stringify(tasks))
     } catch (_e) {
       // ignore
     }
-  }, [tasks])
+  }, [tasks, focusTasksKey])
 
   // Timer interval
   useEffect(() => {
@@ -170,7 +175,7 @@ export default function FocusRoom() {
             totalMinutes: prev.totalMinutes + addedMinutes,
           }
           try {
-            const key = `al_azher_focus_stats_${new Date().toISOString().slice(0, 10)}`
+            const key = getUserStorageKey(`al_azher_focus_stats_${new Date().toISOString().slice(0, 10)}`, user)
             localStorage.setItem(key, JSON.stringify(next))
           } catch (_e) {
             // ignore
@@ -192,7 +197,7 @@ export default function FocusRoom() {
     }
 
     return () => clearInterval(interval)
-  }, [isRunning, timeLeft, activeMode, duration, isArabic])
+  }, [isRunning, timeLeft, activeMode, duration, isArabic, user])
 
   // Soundscape switcher
   useEffect(() => {

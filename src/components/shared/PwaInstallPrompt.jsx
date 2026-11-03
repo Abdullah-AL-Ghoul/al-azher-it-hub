@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../../context/LanguageContext'
-import { FiDownload, FiX, FiSmartphone, FiShare, FiCheck } from 'react-icons/fi'
+import { FiDownload, FiX, FiSmartphone, FiShare } from 'react-icons/fi'
 
 export default function PwaInstallPrompt() {
   const { lang } = useLanguage()

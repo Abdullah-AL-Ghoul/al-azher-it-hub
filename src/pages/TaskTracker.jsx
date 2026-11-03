@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
+import { getUserStorageKey } from '../utils/userStorage'
 import { pageContainer, pageItem } from '../utils/motionTokens'
 import PageHero from '../components/shared/PageHero'
 import {
@@ -9,12 +11,7 @@ import {
   FiPlus,
   FiTrash2,
   FiCalendar,
-  FiAlertCircle,
-  FiClock,
   FiDownload,
-  FiShare2,
-  FiFilter,
-  FiCheck,
   FiList
 } from 'react-icons/fi'
 import { FaWhatsapp } from 'react-icons/fa'
@@ -65,11 +62,13 @@ const DEFAULT_TASKS = [
 
 export default function TaskTracker() {
   const { lang } = useLanguage()
+  const { user } = useAuth()
   const isArabic = lang === 'ar'
+  const tasksKey = getUserStorageKey('al_azher_academic_tasks', user)
 
   const [tasks, setTasks] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_academic_tasks')
+      const saved = localStorage.getItem(tasksKey)
       return saved ? JSON.parse(saved) : DEFAULT_TASKS
     } catch {
       return DEFAULT_TASKS
@@ -79,11 +78,11 @@ export default function TaskTracker() {
   // Save to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('al_azher_academic_tasks', JSON.stringify(tasks))
+      localStorage.setItem(tasksKey, JSON.stringify(tasks))
     } catch {
       // ignore
     }
-  }, [tasks])
+  }, [tasks, tasksKey])
 
   // Filter state
   const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'todo' | 'in_progress' | 'done'
@@ -92,7 +91,7 @@ export default function TaskTracker() {
   // New task form state
   const [newTitle, setNewTitle] = useState('')
   const [newCourse, setNewCourse] = useState('ITCS2301')
-  const [newCategory, setNewCategory] = useState('assignment')
+  const [newCategory] = useState('assignment')
   const [newPriority, setNewPriority] = useState('medium')
   const [newDueDate, setNewDueDate] = useState('')
 

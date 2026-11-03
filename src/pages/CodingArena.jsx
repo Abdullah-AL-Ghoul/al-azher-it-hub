@@ -1,6 +1,9 @@
 import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
+import { getUserStorageKey } from '../utils/userStorage'
+import { evaluateArenaChallenge } from '../utils/codeEvaluators'
 import PageHero from '../components/shared/PageHero'
 import {
   FiAward,
@@ -9,14 +12,7 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiZap,
-  FiStar,
-  FiTerminal,
-  FiTrendingUp,
-  FiLayers,
-  FiCheck,
-  FiCopy,
-  FiRotateCcw,
-  FiUsers
+  FiRotateCcw
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 
@@ -171,7 +167,9 @@ const LEADERBOARD_STUDENTS = [
 
 export default function CodingArena() {
   const { lang } = useLanguage()
+  const { user } = useAuth()
   const isArabic = lang === 'ar'
+  const arenaStatsKey = getUserStorageKey('al_azher_arena_stats', user)
 
   const [activeTab, setActiveTab] = useState('challenges') // 'challenges' | 'leaderboard'
   const [activeDifficulty, setActiveDifficulty] = useState('all')
@@ -181,15 +179,46 @@ export default function CodingArena() {
   const [isRunning, setIsRunning] = useState(false)
   const [showHint, setShowHint] = useState(false)
 
-  // Local storage score tracking
+  // Local storage score tracking (scoped per student)
   const [userStats, setUserStats] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_arena_stats')
+      const saved = localStorage.getItem(arenaStatsKey)
       return saved ? JSON.parse(saved) : { xp: 350, solvedIds: ['ch-1'] }
     } catch {
       return { xp: 350, solvedIds: ['ch-1'] }
     }
   })
+
+  // Dynamic leaderboard merging current student's live XP and solved count
+  const rankedLeaderboard = useMemo(() => {
+    const currentName = user?.name || (isArabic ? 'أنت (طالب الأزهر)' : 'You (Al-Azhar Student)')
+    const currentMajor = user?.major || (isArabic ? 'تكنولوجيا المعلومات' : 'Information Technology')
+    const baseList = LEADERBOARD_STUDENTS.map((s) => ({ ...s }))
+    const existingIdx = baseList.findIndex((s) => s.name === currentName)
+
+    if (existingIdx >= 0) {
+      baseList[existingIdx] = {
+        ...baseList[existingIdx],
+        xp: Math.max(baseList[existingIdx].xp, userStats.xp),
+        solved: Math.max(baseList[existingIdx].solved, userStats.solvedIds.length),
+        isCurrentUser: true,
+      }
+    } else {
+      baseList.push({
+        rank: 0,
+        name: currentName,
+        major: currentMajor,
+        solved: userStats.solvedIds.length,
+        xp: userStats.xp,
+        badge: isArabic ? 'متحدي نشط 🔥' : 'Active Challenger 🔥',
+        isCurrentUser: true,
+      })
+    }
+
+    return baseList
+      .sort((a, b) => b.xp - a.xp || b.solved - a.solved)
+      .map((entry, idx) => ({ ...entry, rank: idx + 1 }))
+  }, [user, userStats, isArabic])
 
   const filteredChallenges = useMemo(() => {
     if (activeDifficulty === 'all') return CHALLENGES
@@ -203,7 +232,7 @@ export default function CodingArena() {
     setShowHint(false)
   }
 
-  // Execute student solution against test cases
+  // Execute student solution against test cases (CSP-compliant, zero eval/new Function)
   const handleRunTests = () => {
     setIsRunning(true)
     setTestResults(null)
@@ -214,14 +243,8 @@ export default function CodingArena() {
           let actual
           let passed = false
           try {
-            // Evaluates safely inside constructed Function sandbox
-            const runner = new Function(`
-              ${userCode}
-              const fnName = "${selectedChallenge.starterCode.match(/function\s+(\w+)/)?.[1]}";
-              if (typeof window[fnName] === 'function') return window[fnName](${tc.input});
-              return eval(fnName + "(" + ${JSON.stringify(tc.input)} + ")");
-            `)
-            actual = JSON.stringify(runner())
+            const outputVal = evaluateArenaChallenge(userCode, tc.input)
+            actual = JSON.stringify(outputVal)
             passed = String(actual).trim() === String(tc.expected).trim()
           } catch (e) {
             actual = `Error: ${e.message}`
@@ -242,8 +265,8 @@ export default function CodingArena() {
             }
             setUserStats(updated)
             try {
-              localStorage.setItem('al_azher_arena_stats', JSON.stringify(updated))
-            } catch {}
+              localStorage.setItem(arenaStatsKey, JSON.stringify(updated))
+            } catch { /* ignore storage errors */ }
           }
         } else {
           toast.error(isArabic ? 'بعض الفحوصات لم تنجح، راجع الكود وجرّب مجدداً' : 'Some test cases failed. Review your code and retry.')
@@ -253,7 +276,7 @@ export default function CodingArena() {
       } finally {
         setIsRunning(false)
       }
-    }, 400)
+    }, 200)
   }
 
   return (
@@ -550,7 +573,7 @@ export default function CodingArena() {
 
             {/* Top 3 Podium Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4">
-              {LEADERBOARD_STUDENTS.slice(0, 3).map((st) => (
+              {rankedLeaderboard.slice(0, 3).map((st) => (
                 <div
                   key={st.rank}
                   className={`p-6 rounded-3xl border text-center flex flex-col items-center justify-between space-y-3 relative overflow-hidden ${
@@ -593,8 +616,8 @@ export default function CodingArena() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5 dark:divide-white/5">
-                  {LEADERBOARD_STUDENTS.map((st) => (
-                    <tr key={st.rank} className="hover:bg-black/5 dark:hover:bg-white/5 transition">
+                  {rankedLeaderboard.map((st) => (
+                    <tr key={st.rank} className={`hover:bg-black/5 dark:hover:bg-white/5 transition ${st.isCurrentUser ? 'bg-royal-500/10 dark:bg-cyan-500/10' : ''}`}>
                       <td className="py-3.5 px-4 font-extrabold text-ink">{st.rank}</td>
                       <td className="py-3.5 px-4 font-bold text-ink">{st.name}</td>
                       <td className="py-3.5 px-4 text-slate-500 dark:text-white/70">{st.major}</td>

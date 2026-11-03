@@ -5,12 +5,9 @@ import {
   FiCompass, 
   FiCheckCircle, 
   FiClock, 
-  FiAlertCircle, 
   FiChevronDown, 
   FiChevronUp,
-  FiBookOpen,
   FiCheck,
-  FiPlusCircle,
   FiCalendar
 } from 'react-icons/fi'
 import { COURSE_TYPES } from '../../data/academicCurriculum'

@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
+import { getUserStorageKey } from '../utils/userStorage'
 import PageHero from '../components/shared/PageHero'
 import { 
   FiAward, 
@@ -10,12 +12,9 @@ import {
   FiPlus, 
   FiUsers, 
   FiUserCheck, 
-  FiTag, 
   FiX, 
-  FiCheckCircle, 
   FiBookOpen, 
-  FiStar,
-  FiCode
+  FiStar
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 
@@ -140,7 +139,9 @@ const DEFAULT_PROJECTS = [
 
 export default function GraduationShowcase() {
   const { lang } = useLanguage()
+  const { user } = useAuth()
   const isArabic = lang === 'ar'
+  const projectsKey = getUserStorageKey('al_azher_student_projects', user)
 
   const [activeTrack, setActiveTrack] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -150,7 +151,7 @@ export default function GraduationShowcase() {
   // Local storage project submissions
   const [customProjects, setCustomProjects] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_student_projects')
+      const saved = localStorage.getItem(projectsKey)
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
@@ -224,7 +225,7 @@ export default function GraduationShowcase() {
     const updated = [newProject, ...customProjects]
     setCustomProjects(updated)
     try {
-      localStorage.setItem('al_azher_student_projects', JSON.stringify(updated))
+      localStorage.setItem(projectsKey, JSON.stringify(updated))
     } catch {
       // storage quota fallback
     }

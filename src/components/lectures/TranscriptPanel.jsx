@@ -1,16 +1,12 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   FiSearch,
   FiX,
-  FiPlay,
   FiDownload,
   FiClock,
   FiCopy,
   FiCheck,
   FiFileText,
-  FiExternalLink,
-  FiLayers,
   FiCpu,
 } from 'react-icons/fi'
 import { formatVttTime, searchCues } from '../../utils/vttParser'
@@ -29,10 +25,9 @@ export default function TranscriptPanel({
   currentTime = 0,
   onSeek,
   onGenerateSubtitles,
-  lectureTitle = '',
   className = '',
 }) {
-  const { t, lang } = useLanguage()
+  const { lang } = useLanguage()
   const isArabic = lang === 'ar'
 
   const [selectedTrackLang, setSelectedTrackLang] = useState(() => {
@@ -58,7 +53,7 @@ export default function TranscriptPanel({
     return subtitles.find(s => s.language === selectedTrackLang) || subtitles[0] || null
   }, [subtitles, selectedTrackLang])
 
-  const cues = activeTrack?.cues || []
+  const cues = useMemo(() => activeTrack?.cues || [], [activeTrack])
 
   // Current active cue index
   const activeCueIndex = useMemo(() => {
@@ -97,7 +92,7 @@ export default function TranscriptPanel({
       setCopiedCueId(cue.id)
       toast.success(isArabic ? 'تم نسخ المقطع بالتوقيت' : 'Segment copied with timestamp')
       setTimeout(() => setCopiedCueId(null), 2000)
-    } catch (_e) {
+    } catch {
       toast.error(isArabic ? 'فشل النسخ' : 'Failed to copy')
     }
   }
@@ -141,6 +136,15 @@ export default function TranscriptPanel({
                 >
                   <FiDownload size={13} />
                   <span className="hidden sm:inline">VTT</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => exportSubtitleFile(activeTrack, 'srt')}
+                  className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition text-xs flex items-center gap-1 border border-white/10"
+                  title={isArabic ? 'تحميل كملف SRT' : 'Download SRT'}
+                >
+                  <FiDownload size={13} />
+                  <span className="hidden sm:inline">SRT</span>
                 </button>
                 <button
                   type="button"

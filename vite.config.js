@@ -40,7 +40,7 @@ export default defineConfig({
     cssMinify: 'esbuild',
     // Compression (gzip/brotli) is handled by Vercel/CDN at serve time;
     // if self-hosting, add vite-plugin-compression to emit .gz/.br at build.
-    chunkSizeWarningLimit: 500,
+    chunkSizeWarningLimit: 750,
     rollupOptions: {
       output: {
         // Keep react-icons in its own chunk to avoid bloating vendor-react;
@@ -56,9 +56,10 @@ export default defineConfig({
             if (id.includes('framer-motion')) return 'vendor-motion'
             if (id.includes('react-hot-toast')) return 'vendor-toast'
             if (id.includes('@supabase')) return 'vendor-supabase'
-            // three + R3F + drei ship as one lazy vendor chunk, only fetched
+            // three + R3F + drei ship as lazy vendor chunks, only fetched
             // when a Lazy3DScene actually mounts.
-            if (id.includes('three') || id.includes('@react-three')) return 'vendor-three'
+            if (id.includes('@react-three') || id.includes('three-stdlib') || id.includes('troika') || id.includes('maath')) return 'vendor-r3f'
+            if (id.includes('three')) return 'vendor-three'
             if (id.includes('react-dom') || id.includes('react-router-dom') || id.includes('/react/')) return 'vendor-react'
           }
         },

@@ -167,17 +167,17 @@ describe('Subtitles Service & Pipeline Suite', () => {
     expect(AVAILABLE_GEMINI_MODELS.length).toBeGreaterThanOrEqual(6)
 
     const modelIds = AVAILABLE_GEMINI_MODELS.map(m => m.id)
-    expect(modelIds).toContain('gemini-3.5-flash-lite')
-    expect(modelIds).toContain('gemini-3.6-flash')
-    expect(modelIds).toContain('gemini-3.8-flash')
     expect(modelIds).toContain('gemini-2.5-flash')
     expect(modelIds).toContain('gemini-2.5-flash-lite')
     expect(modelIds).toContain('gemini-2.5-pro')
+    expect(modelIds).toContain('gemini-2.0-flash')
+    expect(modelIds).toContain('gemini-1.5-flash')
+    expect(modelIds).toContain('gemini-1.5-pro')
 
     // Default preferred model is auto
     expect(getPreferredGeminiModel()).toBe('auto')
-    setPreferredGeminiModel('gemini-3.5-flash-lite')
-    expect(getPreferredGeminiModel()).toBe('gemini-3.5-flash-lite')
+    setPreferredGeminiModel('gemini-2.5-flash-lite')
+    expect(getPreferredGeminiModel()).toBe('gemini-2.5-flash-lite')
     setPreferredGeminiModel('auto')
     expect(getPreferredGeminiModel()).toBe('auto')
   })

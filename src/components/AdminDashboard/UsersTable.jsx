@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { FiSearch, FiDownload, FiTrash2, FiEdit2, FiUser, FiSave, FiX, FiKey, FiExternalLink, FiMail, FiBookOpen, FiCalendar, FiGlobe, FiFilter } from 'react-icons/fi'
+import { FiSearch, FiDownload, FiTrash2, FiEdit2, FiUser, FiSave, FiX, FiKey, FiExternalLink, FiMail, FiBookOpen, FiCalendar, FiGlobe } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { deleteStudent, updateStudent, resetPassword } from '../../services'
 import { useLanguage } from '../../context/LanguageContext'

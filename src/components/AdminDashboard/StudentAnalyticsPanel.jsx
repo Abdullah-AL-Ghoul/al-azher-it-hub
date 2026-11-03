@@ -8,18 +8,15 @@ import {
   FiBookOpen,
   FiEye,
   FiHeart,
-  FiStar,
-  FiMessageSquare,
   FiCpu,
   FiTrendingUp,
   FiDownload,
   FiUserCheck,
-  FiAlertCircle,
   FiExternalLink,
 } from 'react-icons/fi'
 import { pageContainer, pageItem, pageContainerReduced, pageItemReduced } from '../../utils/motionTokens'
 import StudentProfileModal from './StudentProfileModal'
-import { exportToJson, exportToCsv } from '../../utils/adminShared'
+import { exportToJson } from '../../utils/adminShared'
 
 // Standard IT faculty majors mapping
 const KNOWN_MAJORS = [

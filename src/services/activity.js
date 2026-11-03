@@ -1,7 +1,7 @@
 import { getSupabase, authRpc } from './supabase'
 
 export async function safeActivity(type, action, detail) {
-  try { await addActivity(type, action, detail) } catch (_e) { /* silent */ }
+  try { await addActivity(type, action, detail) } catch { /* silent */ }
 }
 
 export async function getActivity() {

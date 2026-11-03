@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback, memo } from 'react'
+import { useState, useMemo, useRef, useCallback, memo, lazy, Suspense } from 'react'
 import { FiX, FiUpload, FiFile, FiTrash2, FiCheck, FiLoader, FiAlertCircle, FiYoutube } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { addCourse, updateCourse, addLecture, updateLecture, addSource, updateSource } from '../../services'
@@ -8,23 +8,24 @@ import { extractYouTubeId } from '../../utils/helpers'
 import LectureThumbnail from '../shared/LectureThumbnail'
 import CoursesTable from './CoursesTable'
 import LecturesTable from './LecturesTable'
-import SubtitlesManagement from './SubtitlesManagement'
 import SourcesTable from './SourcesTable'
-import UsersTable from './UsersTable'
-import ActivityLogs from './ActivityLogs'
-import StudentLogs from './StudentLogs'
-import SettingsPanel from './SettingsPanel'
 import CrudForm from './CrudForm'
 import FormField from './FormField'
 import FormActions from './FormActions'
 import CourseProfileModal from './CourseProfileModal'
 import SmartCourseModal from './SmartCourseModal'
 import OverviewPanel from './OverviewPanel'
-import StudentAnalyticsPanel from './StudentAnalyticsPanel'
-import BroadcastPanel from './BroadcastPanel'
 import { INPUT_CLASS } from '../../utils/adminShared'
 import { computeActiveStudents, computeNewStudents } from '../../utils/adminStatsLogic'
 import { useLanguage } from '../../context/LanguageContext'
+
+const SubtitlesManagement = lazy(() => import('./SubtitlesManagement'))
+const UsersTable = lazy(() => import('./UsersTable'))
+const ActivityLogs = lazy(() => import('./ActivityLogs'))
+const StudentLogs = lazy(() => import('./StudentLogs'))
+const SettingsPanel = lazy(() => import('./SettingsPanel'))
+const StudentAnalyticsPanel = lazy(() => import('./StudentAnalyticsPanel'))
+const BroadcastPanel = lazy(() => import('./BroadcastPanel'))
 
 export default memo(function AdminDashboardContent({
  courses,
@@ -129,7 +130,7 @@ export default memo(function AdminDashboardContent({
    setEditingCourseId(null)
    setShowCourseForm(false)
    if (onRefresh) onRefresh()
-  } catch (error) {
+  } catch {
    toast.error(t('inline.admin-dashboard-content.failed-to-save-course'))
   }
  }
@@ -158,7 +159,7 @@ export default memo(function AdminDashboardContent({
     setEditingLectureId(null)
     setShowLectureForm(false)
     if (onRefresh) onRefresh()
-  } catch (error) {
+  } catch {
    toast.error(t('inline.admin-dashboard-content.failed-to-save-lecture'))
   }
  }
@@ -198,7 +199,7 @@ export default memo(function AdminDashboardContent({
    setEditingSourceId(null)
    setShowSourceForm(false)
    if (onRefresh) onRefresh()
-  } catch (error) {
+  } catch {
    toast.error(t('inline.admin-dashboard-content.failed-to-save-source'))
   }
  }
@@ -226,6 +227,7 @@ export default memo(function AdminDashboardContent({
 
  return (
   <div className="space-y-6">
+   <Suspense fallback={<div className="py-12 text-center text-sm text-slate-400">Loading...</div>}>
    {/* ========== COURSES TAB ========== */}
    {selectedTab === 'courses' && (
     <div className="space-y-4">
@@ -710,6 +712,7 @@ setLectureForm({ titleAr: '', titleEn: '', url: '', date: new Date().toISOString
      onRefresh={onRefresh}
     />
    )}
+   </Suspense>
 
      <CourseProfileModal
       course={profileCourse}

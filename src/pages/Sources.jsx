@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -10,8 +11,9 @@ import { formatBytes } from '../services/sourceStorage'
 import { signSourceForFetch } from '../services/sourceStorage'
 import useSecureSourceFile from '../hooks/useSecureSourceFile'
 import { pageContainer, pageItem } from '../utils/motionTokens'
-import { SORT_OPTIONS, getSourceFiles, storagePathFromUrl } from '../utils/helpers'
+import { SORT_OPTIONS, getSourceFiles } from '../utils/helpers'
 import { isSafeUrl } from '../utils/sanitize'
+import { getUserStorageKey } from '../utils/userStorage'
 import toast from 'react-hot-toast'
 import PageHero from '../components/shared/PageHero'
 import FilterBar from '../components/FilterBar'
@@ -39,13 +41,11 @@ import {
   FiBookOpen,
   FiEye,
   FiShare2,
-  FiHelpCircle,
   FiLayers,
-  FiStar,
-  FiBookmark
+  FiStar
 } from 'react-icons/fi'
 import Skeleton from '../components/shared/Skeleton'
-import { SOURCE_CATEGORIES, EXAM_SUB_TYPES, ACADEMIC_YEAR_FILTERS, classifySource } from '../data/sourceCategories'
+import { EXAM_SUB_TYPES, ACADEMIC_YEAR_FILTERS, classifySource } from '../data/sourceCategories'
 
 const sortOptions = SORT_OPTIONS
 const containerVariants = pageContainer
@@ -392,10 +392,19 @@ function UploadModal({ isOpen, onClose, onSubmit, isArabic, t }) {
 export default function Sources() {
   const { lang, t } = useLanguage()
   const { user, isAdmin } = useAuth()
+  const [searchParams] = useSearchParams()
   const isArabic = lang === 'ar'
 
+  const examOnlyParam = searchParams.get('examOnly') === 'true'
+  const tabParam = searchParams.get('tab')
+  const queryParam = searchParams.get('q') || ''
+
   // Navigation mode: 'all' | 'exams' | 'summaries' | 'favorites'
-  const [activeMainTab, setActiveMainTab] = useState('all')
+  const [activeMainTab, setActiveMainTab] = useState(() => {
+    if (examOnlyParam) return 'exams'
+    if (['all', 'exams', 'summaries', 'favorites'].includes(tabParam)) return tabParam
+    return 'all'
+  })
   // Sub-filter for exams: 'all_exams' | 'midterm' | 'final' | 'quiz'
   const [selectedExamType, setSelectedExamType] = useState('all_exams')
   // Sub-filter for academic year: 'all' | '1' | '2' | '3' | '4'
@@ -404,22 +413,30 @@ export default function Sources() {
   const [onlySolvedExams, setOnlySolvedExams] = useState(false)
 
   // Student Favorites / Bookmarks
+  const bookmarksKey = getUserStorageKey('al_azher_bookmarked_sources', user)
   const [bookmarkedIds, setBookmarkedIds] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_bookmarked_sources')
+      const saved = localStorage.getItem(bookmarksKey) || localStorage.getItem('al_azher_bookmarked_sources')
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
     }
   })
 
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(bookmarksKey)
+      if (saved) setBookmarkedIds(JSON.parse(saved))
+    } catch { /* ignore */ }
+  }, [bookmarksKey])
+
   const toggleBookmark = (sourceId) => {
     setBookmarkedIds(prev => {
       const isAlready = prev.includes(sourceId)
       const next = isAlready ? prev.filter(id => id !== sourceId) : [...prev, sourceId]
       try {
-        localStorage.setItem('al_azher_bookmarked_sources', JSON.stringify(next))
-      } catch {}
+        localStorage.setItem(bookmarksKey, JSON.stringify(next))
+      } catch { /* ignore storage error */ }
       if (isAlready) {
         toast.success(isArabic ? 'تمت إزالة المرجع من المفضلة' : 'Removed from bookmarks')
       } else {
@@ -430,8 +447,19 @@ export default function Sources() {
   }
 
   const [activeSubject, setActiveSubject] = useState('all')
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(() => queryParam)
   const [sortBy, setSortBy] = useState('date-desc')
+
+  useEffect(() => {
+    if (examOnlyParam) {
+      setActiveMainTab('exams')
+    } else if (tabParam && ['all', 'exams', 'summaries', 'favorites'].includes(tabParam)) {
+      setActiveMainTab(tabParam)
+    }
+    if (queryParam) {
+      setSearch(queryParam)
+    }
+  }, [examOnlyParam, tabParam, queryParam])
   const [sources, setSources] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -554,7 +582,7 @@ export default function Sources() {
       }
     })
     return result
-  }, [classifiedSources, activeMainTab, selectedExamType, activeSubject, search, sortBy, isArabic, t])
+  }, [classifiedSources, activeMainTab, selectedExamType, onlySolvedExams, bookmarkedIds, selectedAcademicYear, activeSubject, search, sortBy, isArabic, t])
 
   const handleOpenPreview = async (f, sourceTitle) => {
     const fileName = f.name || sourceTitle || 'ملف دراسي'
@@ -579,7 +607,7 @@ export default function Sources() {
           setPreviewModalOpen(true)
           return
         }
-      } catch {}
+      } catch { /* fallback to secureFile.open */ }
       await secureFile.open(f.path, { name: fileName, mode: 'view', signIn: signer })
     }
   }
@@ -1000,7 +1028,7 @@ export default function Sources() {
                                   addStudentLog({ studentId: user.studentId, name: user.name, type: 'VIEW_SOURCE', detail: `${source.titleAr || source.titleEn} — download all`, ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '' }).catch(() => {})
                                 }
                                 for (const f of allFiles.filter(x => x.path)) {
-                                  try { await secureFile.open(f.path, { name: f.name || 'file', mode: 'download', signIn: signer }) } catch {}
+                                  try { await secureFile.open(f.path, { name: f.name || 'file', mode: 'download', signIn: signer }) } catch { /* ignore individual download failure */ }
                                   await new Promise(r => setTimeout(r, 400))
                                 }
                               }}

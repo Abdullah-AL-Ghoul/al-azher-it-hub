@@ -1,15 +1,18 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { useUserData } from '../context/UserDataContext'
-import { getLectures, getSources, addStudentLog, signSourceForFetch, getSubtitlesByLecture, runSubtitleGenerationPipeline } from '../services'
+import { getLectures, getSources, addStudentLog, signSourceForFetch, getSubtitlesByLecture, runSubtitleGenerationPipeline, REPORT_TYPES, submitContentReport } from '../services'
 import { DEFAULT_LECTURES } from '../data/sampleLectures'
 import useSecureSourceFile from '../hooks/useSecureSourceFile'
+import { useFocusTrap } from '../hooks/useFocusTrap'
+import { useScrollLock } from '../hooks/useScrollLock'
 import { useScrollFrame } from '../hooks/useScrollManager.jsx'
 import { pageContainer, pageItem, revealItem } from '../utils/motionTokens'
 import { lectureVideoId, lectureThumb, getSourceFiles } from '../utils/helpers'
+import { getUserStorageKey } from '../utils/userStorage'
 import VideoPlayer from '../components/shared/VideoPlayer'
 import TranscriptPanel from '../components/lectures/TranscriptPanel'
 import StarRating from '../components/shared/StarRating'
@@ -33,6 +36,8 @@ import {
   FiTrash2,
   FiBookmark,
   FiPlus,
+  FiFlag,
+  FiX,
 } from 'react-icons/fi'
 import { FaWhatsapp, FaTelegramPlane } from 'react-icons/fa'
 import ErrorState from '../components/feedback/ErrorState'
@@ -50,6 +55,7 @@ function fmtTime(seconds) {
 
 export default function LectureDetail() {
  const { id } = useParams()
+ const [searchParams] = useSearchParams()
  const { lang, t } = useLanguage()
  const { user } = useAuth()
  const isArabic = lang === 'ar'
@@ -63,9 +69,22 @@ export default function LectureDetail() {
  const [noteSaved, setNoteSaved] = useState(false)
  const [subtitles, setSubtitles] = useState([])
  const [sidebarTab, setSidebarTab] = useState('transcript')
+ const [reportModalOpen, setReportModalOpen] = useState(false)
+ const [reportType, setReportType] = useState('video_issue')
+ const [reportDesc, setReportDesc] = useState('')
+ const [submittingReport, setSubmittingReport] = useState(false)
+
+ const reportModalRef = useFocusTrap(reportModalOpen)
+ useScrollLock(reportModalOpen)
+
+ const initialSeekTime = useMemo(() => {
+  if (!searchParams.has('t')) return 0
+  const parsed = Number(searchParams.get('t'))
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0
+ }, [searchParams])
 
  const playerRef = useRef(null)
- const [currentTime, setCurrentTime] = useState(0)
+ const [currentTime, setCurrentTime] = useState(initialSeekTime)
  const [theaterMode, setTheaterMode] = useState(() => {
   try {
    return localStorage.getItem('al_azher_theater_mode') === 'true'
@@ -77,7 +96,7 @@ export default function LectureDetail() {
  const toggleTheaterMode = useCallback(() => {
   setTheaterMode(prev => {
    const next = !prev
-   try { localStorage.setItem('al_azher_theater_mode', String(next)) } catch (_e) { /* ignore */ }
+   try { localStorage.setItem('al_azher_theater_mode', String(next)) } catch { /* ignore */ }
    return next
   })
  }, [])
@@ -103,10 +122,12 @@ export default function LectureDetail() {
  useEffect(() => {
   if (!lecture) return
   try {
-   const saved = localStorage.getItem(`lecture_note_${lecture.id}`)
+   const key = getUserStorageKey(`lecture_note_${lecture.id}`, user)
+   const saved = localStorage.getItem(key)
    if (saved) setNote(saved)
-  } catch (e) { /* silent */ }
- }, [lecture])
+   else setNote('')
+  } catch { /* silent */ }
+ }, [lecture, user])
 
  const noteSavedTimer = useRef(null)
 
@@ -123,22 +144,24 @@ export default function LectureDetail() {
  const saveNote = useCallback(() => {
   if (!lecture) return
   try {
-   localStorage.setItem(`lecture_note_${lecture.id}`, note.trim())
+   const key = getUserStorageKey(`lecture_note_${lecture.id}`, user)
+   localStorage.setItem(key, note.trim())
    flashSaved()
-  } catch (e) { /* silent */ }
- }, [lecture, note, flashSaved])
+  } catch { /* silent */ }
+ }, [lecture, note, flashSaved, user])
 
  // Auto-save with debounce
  useEffect(() => {
   if (!lecture || !note) return
   const timer = setTimeout(() => {
    try {
-    localStorage.setItem(`lecture_note_${lecture.id}`, note.trim())
+    const key = getUserStorageKey(`lecture_note_${lecture.id}`, user)
+    localStorage.setItem(key, note.trim())
     flashSaved()
-   } catch (e) { /* silent */ }
+   } catch { /* silent */ }
   }, 2000)
   return () => clearTimeout(timer)
- }, [lecture, note, flashSaved])
+ }, [lecture, note, flashSaved, user])
 
  const shareLink = useCallback((channel) => {
   if (!lecture) return
@@ -161,20 +184,22 @@ export default function LectureDetail() {
  useEffect(() => {
   if (!lecture) return
   try {
-   const saved = localStorage.getItem(`lecture_ts_notes_${lecture.id}`)
+   const key = getUserStorageKey(`lecture_ts_notes_${lecture.id}`, user)
+   const saved = localStorage.getItem(key)
    if (saved) setTimestampNotes(JSON.parse(saved))
    else setTimestampNotes([])
   } catch {
    setTimestampNotes([])
   }
- }, [lecture])
+ }, [lecture, user])
 
  const saveTimestampNotesToStorage = useCallback((notesList) => {
   if (!lecture) return
   try {
-   localStorage.setItem(`lecture_ts_notes_${lecture.id}`, JSON.stringify(notesList))
+   const key = getUserStorageKey(`lecture_ts_notes_${lecture.id}`, user)
+   localStorage.setItem(key, JSON.stringify(notesList))
   } catch { /* silent */ }
- }, [lecture])
+ }, [lecture, user])
 
  const addTimestampNote = useCallback(() => {
   if (!newNoteText.trim() || !lecture) return
@@ -260,9 +285,61 @@ export default function LectureDetail() {
     titleAr: lecture.titleAr || '',
     titleEn: lecture.titleEn || '',
    }))
-  } catch (e) { /* silent */ }
-  return () => { try { sessionStorage.removeItem('al_azher_current_lecture') } catch (e) { /* silent */ } }
+  } catch { /* silent */ }
+  return () => { try { sessionStorage.removeItem('al_azher_current_lecture') } catch { /* silent */ } }
  }, [lecture])
+
+  // Seek to ?t=<seconds> query parameter when navigated from GlobalSearch transcript match
+  useEffect(() => {
+    if (loading || !lecture || !searchParams.has('t')) return
+    const tParam = Number(searchParams.get('t'))
+    if (!Number.isFinite(tParam) || tParam < 0) return
+    setCurrentTime(tParam)
+    playerRef.current?.seekTo?.(tParam)
+    const timer = setTimeout(() => {
+      playerRef.current?.seekTo?.(tParam)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [loading, lecture, searchParams])
+
+  // Close report modal on Escape key
+  useEffect(() => {
+    if (!reportModalOpen) return
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation()
+        setReportModalOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [reportModalOpen])
+
+  const handleSubmitReport = async (e) => {
+    e.preventDefault()
+    if (!lecture) return
+    setSubmittingReport(true)
+    try {
+      await submitContentReport({
+        itemType: 'lecture',
+        itemId: lecture.id,
+        itemTitle: isArabic ? (lecture.titleAr || lecture.titleEn) : (lecture.titleEn || lecture.titleAr),
+        subject: isArabic ? (lecture.subjectAr || lecture.subjectEn) : (lecture.subjectEn || lecture.subjectAr),
+        reportType,
+        description: reportDesc,
+        timestampSeconds: Math.floor(currentTime || 0),
+        reporterName: user?.name || (isArabic ? 'طالب' : 'Student'),
+        reporterId: user?.studentId || user?.id || '',
+      })
+      toast.success(isArabic ? 'تم إرسال البلاغ للإدارة بنجاح، شكراً لمساهمتك!' : 'Issue reported successfully, thank you!')
+      setReportModalOpen(false)
+      setReportDesc('')
+    } catch {
+      toast.error(isArabic ? 'تعذر إرسال البلاغ حالياً' : 'Failed to submit report')
+    } finally {
+      setSubmittingReport(false)
+    }
+  }
 
  const relatedSources = useMemo(() => {
   if (!lecture) return []
@@ -288,7 +365,7 @@ export default function LectureDetail() {
   return combined
    .filter(l => (
     (l.subjectAr && lecture.subjectAr && l.subjectAr === lecture.subjectAr) ||
-    (l.subjectEn && lecture.subjectEn && l.subjectEn === lecture.subjectEn)
+    (l.subjectEn && lecture.subjectEn && sOrEqual(l.subjectEn, lecture.subjectEn))
    ))
    .sort((a, b) => {
     const orderA = a.sortOrder ?? 0
@@ -297,6 +374,10 @@ export default function LectureDetail() {
     return (a.date || '').localeCompare(b.date || '') || (a.createdAt || '').localeCompare(b.createdAt || '')
    })
  }, [lectures, lecture])
+
+ function sOrEqual(a, b) {
+  return a === b
+ }
 
  const prevNext = useMemo(() => {
   if (!lecture) return { prev: null, next: null }
@@ -328,8 +409,20 @@ export default function LectureDetail() {
     }
   }, [lecture, id, isArabic])
 
+ const promptGuestLogin = useCallback(() => {
+  toast.error(
+   isArabic
+    ? 'يرجى تسجيل الدخول لحفظ التفضيلات والتقييمات والتقدم الدراسي'
+    : 'Please log in to save bookmarks, ratings, and study progress'
+  )
+ }, [isArabic])
+
  const handleToggleFavorite = useCallback(async () => {
-  if (!user || !lecture) return
+  if (!lecture) return
+  if (!user) {
+   promptGuestLogin()
+   return
+  }
   try {
    await ctxToggleFavorite(id)
    addStudentLog({
@@ -337,11 +430,15 @@ export default function LectureDetail() {
     detail: lecture.titleAr || lecture.titleEn || id,
     device: typeof navigator !== 'undefined' ? navigator.userAgent : '',
    }).catch(() => {})
-  } catch (e) { /* silent */ }
- }, [user, lecture, id, ctxToggleFavorite])
+  } catch { /* silent */ }
+ }, [user, lecture, id, ctxToggleFavorite, promptGuestLogin])
 
  const handleRate = useCallback(async (rating) => {
-  if (!user || !lecture) return
+  if (!lecture) return
+  if (!user) {
+   promptGuestLogin()
+   return
+  }
   try {
    await ctxSetRating(id, rating)
    addStudentLog({
@@ -349,8 +446,8 @@ export default function LectureDetail() {
     detail: `${rating}/5 · ${lecture.titleAr || lecture.titleEn || id}`,
     ip: '', device: typeof navigator !== 'undefined' ? navigator.userAgent : '',
    }).catch(() => {})
-  } catch (e) { /* silent */ }
- }, [user, lecture, id, ctxSetRating])
+  } catch { /* silent */ }
+ }, [user, lecture, id, ctxSetRating, promptGuestLogin])
 
  const handleWatch = useCallback(() => {
   if (!user || !lecture) return
@@ -363,6 +460,16 @@ export default function LectureDetail() {
    }).catch(() => {})
   }
  }, [user, lecture, id, viewed, ctxMarkViewed])
+
+ const toggleComplete = useCallback(() => {
+  if (!lecture) return
+  if (!user) {
+   promptGuestLogin()
+   return
+  }
+  handleWatch()
+  toast.success(isArabic ? 'تم تسجيل المحاضرة كـ مكتملة!' : 'Lecture marked as completed!')
+ }, [lecture, user, promptGuestLogin, handleWatch, isArabic])
 
  if (loading) {
   return (
@@ -440,6 +547,7 @@ export default function LectureDetail() {
         lectureId={lecture.id}
         onWatch={handleWatch}
         autoPlay={true}
+        initialTime={initialSeekTime}
         isTheater={theaterMode}
         onToggleTheater={toggleTheaterMode}
         onTimeUpdate={(t) => setCurrentTime(t)}
@@ -553,11 +661,18 @@ export default function LectureDetail() {
          {isArabic ? lecture.subjectAr : lecture.subjectEn}
         </span>
         <div className="flex items-center gap-1">
-         {user && (
-          <button onClick={handleToggleFavorite} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors" aria-label={isFavorite ? t('lectures.unfavorite') : t('lectures.favorite')}>
-           <FiHeart size={18} className={isFavorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400 dark:text-white/50'} />
-          </button>
-         )}
+         <button
+          type="button"
+          onClick={toggleComplete}
+          className={`p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${isViewed ? 'text-emerald-500' : 'text-slate-400 dark:text-white/50'}`}
+          aria-label={isViewed ? t('lectures.watched') : (isArabic ? 'تحديد كمكتمل' : 'Mark complete')}
+          title={isViewed ? t('lectures.watched') : (isArabic ? 'تحديد كمكتمل' : 'Mark complete')}
+         >
+          <FiCheckCircle size={18} />
+         </button>
+         <button onClick={handleToggleFavorite} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors" aria-label={isFavorite ? t('lectures.unfavorite') : t('lectures.favorite')}>
+          <FiHeart size={18} className={isFavorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400 dark:text-white/50'} />
+         </button>
         </div>
        </div>
 
@@ -623,13 +738,23 @@ export default function LectureDetail() {
        </div>
 
        {/* Rating */}
-       {user && (
-        <div className="mt-5 pt-4 border-t border-black/5 dark:border-white/5">
-         <h2 className="text-xs font-bold text-ink mb-2">{t('inline.lecture-detail.rate-this-lecture')}</h2>
-         <StarRating value={ratings[id] || 0} onRate={handleRate} size={20} />
-         <p className="text-[11px] text-slate-500 dark:text-white/50 mt-1">{t('inline.lecture-detail.tap-the-stars-to')}</p>
-        </div>
-       )}
+       <div className="mt-5 pt-4 border-t border-black/5 dark:border-white/5">
+        <h2 className="text-xs font-bold text-ink mb-2">{t('inline.lecture-detail.rate-this-lecture')}</h2>
+        <StarRating value={ratings[id] || 0} onRate={handleRate} size={20} />
+        <p className="text-[11px] text-slate-500 dark:text-white/50 mt-1">{t('inline.lecture-detail.tap-the-stars-to')}</p>
+       </div>
+
+       {/* Report Issue Action */}
+       <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5">
+        <button
+         type="button"
+         onClick={() => setReportModalOpen(true)}
+         className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 transition"
+        >
+         <FiFlag size={13} />
+         <span>{isArabic ? 'الإبلاغ عن مشكلة في المحاضرة أو الترجمة' : 'Report video or subtitle issue'}</span>
+        </button>
+       </div>
       </div>
 
       {/* 2. Sidebar Tab Controls: Transcript vs Notes */}
@@ -670,10 +795,10 @@ export default function LectureDetail() {
         onSeek={(sec) => playerRef.current?.seekTo?.(sec)}
         onGenerateSubtitles={handleGenerateAiSubtitles}
         lectureTitle={lecture ? (isArabic ? lecture.titleAr : lecture.titleEn) : ''}
-        className="min-h-[420px]"
+        className={subtitles.length > 0 ? 'min-h-[420px]' : ''}
        />
       )}
-      {sidebarTab === 'notes' && user && (
+      {user && (sidebarTab === 'notes' || subtitles.length === 0) && (
        <div className="glass rounded-2xl p-5 border border-white/10 space-y-4">
         {/* Timestamped notes header */}
         <div>
@@ -876,6 +1001,95 @@ export default function LectureDetail() {
      </motion.div>
     )}
    </div>
+
+   {/* Report Content Issue Modal */}
+   {reportModalOpen && (
+     <div
+       className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+       onClick={() => setReportModalOpen(false)}
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="report-modal-title"
+     >
+       <div
+         ref={reportModalRef}
+         className="glass rounded-2xl p-6 max-w-md w-full border border-white/15 bg-white dark:bg-slate-900 shadow-2xl space-y-4"
+         onClick={(e) => e.stopPropagation()}
+       >
+         <div className="flex items-center justify-between pb-2 border-b border-black/5 dark:border-white/10">
+           <div className="flex items-center gap-2">
+             <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center">
+               <FiFlag size={16} />
+             </div>
+             <h3 id="report-modal-title" className="text-sm font-bold text-ink">
+               {isArabic ? 'الإبلاغ عن مشكلة في المحاضرة' : 'Report Lecture Issue'}
+             </h3>
+           </div>
+           <button
+             type="button"
+             onClick={() => setReportModalOpen(false)}
+             className="p-1 text-slate-400 hover:text-ink rounded-lg"
+             aria-label={isArabic ? 'إغلاق' : 'Close'}
+           >
+             <FiX size={16} />
+           </button>
+         </div>
+
+         <form onSubmit={handleSubmitReport} className="space-y-3">
+           <div>
+             <label htmlFor="report-issue-type" className="block text-xs font-semibold text-slate-500 dark:text-white/60 mb-1">
+               {isArabic ? 'نوع المشكلة' : 'Issue Type'}
+             </label>
+             <select
+               id="report-issue-type"
+               value={reportType}
+               onChange={(e) => setReportType(e.target.value)}
+               className="w-full px-3 py-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+             >
+               {REPORT_TYPES.map((rt) => (
+                 <option key={rt.id} value={rt.id} className="bg-white dark:bg-slate-900 text-ink">
+                   {isArabic ? rt.labelAr : rt.labelEn}
+                 </option>
+               ))}
+             </select>
+           </div>
+
+           <div>
+             <label htmlFor="report-issue-desc" className="block text-xs font-semibold text-slate-500 dark:text-white/60 mb-1">
+               {isArabic ? 'وصف المشكلة أو الدقيقة (اختياري)' : 'Description or timestamp (optional)'}
+             </label>
+             <textarea
+               id="report-issue-desc"
+               rows="3"
+               value={reportDesc}
+               onChange={(e) => setReportDesc(e.target.value)}
+               placeholder={isArabic ? 'مثال: الصوت غير واضح عند الدقيقة 12:30 أو خطأ في الترجمة...' : 'e.g., Audio drops at 12:30 or subtitle typo...'}
+               className="w-full px-3 py-2 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs text-ink placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none"
+             />
+           </div>
+
+           <div className="flex items-center gap-2 pt-2">
+             <button
+               type="button"
+               onClick={() => setReportModalOpen(false)}
+               className="flex-1 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 text-xs font-semibold text-ink hover:opacity-80 transition"
+             >
+               {isArabic ? 'إلغاء' : 'Cancel'}
+             </button>
+             <button
+               type="submit"
+               disabled={submittingReport}
+               className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold transition"
+             >
+               {submittingReport
+                 ? (isArabic ? 'جاري الإرسال...' : 'Submitting...')
+                 : (isArabic ? 'إرسال البلاغ' : 'Submit Report')}
+             </button>
+           </div>
+         </form>
+       </div>
+     </div>
+   )}
   </motion.div>
  )
 }

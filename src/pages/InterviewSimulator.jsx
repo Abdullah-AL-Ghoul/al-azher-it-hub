@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
+import { getUserStorageKey } from '../utils/userStorage'
 import PageHero from '../components/shared/PageHero'
 import {
   FiBriefcase,
   FiClock,
-  FiCheckCircle,
-  FiHelpCircle,
   FiAward,
   FiChevronLeft,
   FiChevronRight,
@@ -14,9 +14,7 @@ import {
   FiPause,
   FiRotateCcw,
   FiBookmark,
-  FiCheck,
-  FiZap,
-  FiLayers
+  FiZap
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 
@@ -137,6 +135,8 @@ export default function InterviewSimulator() {
   const { lang } = useLanguage()
   const isArabic = lang === 'ar'
 
+  const { user } = useAuth()
+  const masteredKey = getUserStorageKey('al_azher_interview_mastered', user)
   const [activeTrack, setActiveTrack] = useState('frontend')
   const [currentIdx, setCurrentIdx] = useState(0)
   const [showAnswer, setShowAnswer] = useState(false)
@@ -146,7 +146,7 @@ export default function InterviewSimulator() {
   // Local storage mastered questions
   const [masteredIds, setMasteredIds] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_interview_mastered')
+      const saved = localStorage.getItem(masteredKey)
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
@@ -188,8 +188,8 @@ export default function InterviewSimulator() {
     }
     setMasteredIds(updated)
     try {
-      localStorage.setItem('al_azher_interview_mastered', JSON.stringify(updated))
-    } catch {}
+      localStorage.setItem(masteredKey, JSON.stringify(updated))
+    } catch { /* ignore storage errors */ }
   }
 
   // Timer interval

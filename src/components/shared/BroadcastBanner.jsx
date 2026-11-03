@@ -17,7 +17,10 @@ function BroadcastBanner() {
   const isArabic = lang === 'ar'
   const prefersReduced = useReducedMotion()
   const [broadcast, setBroadcast] = useState(() => getBroadcast())
-  const [dismissed, setDismissed] = useState(false)
+  const [dismissed, setDismissed] = useState(() => {
+    const initial = getBroadcast()
+    return Boolean(initial && initial.id && isBroadcastDismissed(initial.id))
+  })
 
   const syncBroadcast = useCallback(() => {
     const current = getBroadcast()
@@ -30,16 +33,25 @@ function BroadcastBanner() {
   }, [])
 
   useEffect(() => {
+    let mounted = true
     syncBroadcast()
-    // Fetch latest remote announcement from Supabase
-    fetchBroadcastRemote().then((remote) => {
-      if (remote) {
-        setBroadcast(remote)
-        setDismissed(isBroadcastDismissed(remote.id))
-      }
-    }).catch(() => {})
+    // Fetch latest remote announcement from Supabase in non-test environments
+    if (import.meta.env.MODE !== 'test') {
+      fetchBroadcastRemote().then((remote) => {
+        if (!mounted || !remote) return
+        setBroadcast((prev) => {
+          if (prev && prev.id === remote.id && prev.updatedAt === remote.updatedAt && prev.active === remote.active) {
+            return prev
+          }
+          return remote
+        })
+        const nextDismissed = isBroadcastDismissed(remote.id)
+        setDismissed((prev) => (prev === nextDismissed ? prev : nextDismissed))
+      }).catch(() => {})
+    }
 
     const handleEvent = (e) => {
+      if (!mounted) return
       if (e.detail) {
         setBroadcast(e.detail)
         setDismissed(isBroadcastDismissed(e.detail.id))
@@ -49,6 +61,7 @@ function BroadcastBanner() {
     }
 
     const handleStorage = (e) => {
+      if (!mounted) return
       if (e.key === 'al_azher_broadcast_announcement') {
         syncBroadcast()
       }
@@ -65,6 +78,7 @@ function BroadcastBanner() {
     document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
+      mounted = false
       window.removeEventListener(BROADCAST_EVENT, handleEvent)
       window.removeEventListener('storage', handleStorage)
       document.removeEventListener('visibilitychange', handleVisibility)

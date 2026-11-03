@@ -1,10 +1,20 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
-import { FiBook, FiUsers, FiGrid, FiLogIn, FiUpload, FiDownload, FiActivity, FiFileText, FiVideo, FiUser, FiCpu, FiCheckCircle, FiTrendingUp, FiRadio } from 'react-icons/fi'
+import { FiBook, FiUsers, FiGrid, FiLogIn, FiUpload, FiDownload, FiActivity, FiFileText, FiVideo, FiUser, FiCpu, FiCheckCircle, FiTrendingUp, FiRadio, FiFlag, FiCheck, FiTrash2, FiExternalLink, FiClock } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
-import { importAllData } from '../../services'
+import { importAllData, getContentReports, updateContentReportStatus, deleteContentReport, REPORT_TYPES } from '../../services'
 import { exportToJson } from '../../utils/adminShared'
 import { useLanguage } from '../../context/LanguageContext'
+
+function fmtReportTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return ''
+  const s = Math.floor(seconds)
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = String(s % 60).padStart(2, '0')
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`
+}
 
 export default function OverviewPanel({
   courses,
@@ -23,6 +33,25 @@ export default function OverviewPanel({
   const prefersReduced = useReducedMotion()
   const importFileRef = useRef(null)
   const [importing, setImporting] = useState(false)
+  const [reports, setReports] = useState([])
+
+  useEffect(() => {
+    getContentReports().then(setReports).catch(() => {})
+  }, [])
+
+  const handleResolveReport = async (reportId) => {
+    await updateContentReportStatus(reportId, 'resolved')
+    const updated = await getContentReports()
+    setReports(updated)
+    toast.success(isArabic ? 'تم تحديث حالة البلاغ إلى (تم الحل)' : 'Report marked as resolved')
+  }
+
+  const handleDeleteReport = async (reportId) => {
+    await deleteContentReport(reportId)
+    const updated = await getContentReports()
+    setReports(updated)
+    toast.success(isArabic ? 'تم حذف البلاغ' : 'Report deleted')
+  }
 
   // System Health Metrics
   const lecturesWithVideoId = lectures.filter(l => l.videoId).length
@@ -46,7 +75,7 @@ export default function OverviewPanel({
       } else {
         toast.error(t('inline.overview-panel.import-failed'))
       }
-    } catch (err) {
+    } catch {
       toast.error(t('inline.overview-panel.invalid-file-please-use'))
     } finally {
       setImporting(false)
@@ -359,6 +388,98 @@ export default function OverviewPanel({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </motion.div>
+
+      {/* Student Content Issue Reports */}
+      <motion.div initial={prefersReduced ? {} : { opacity: 0, y: 20 }} animate={prefersReduced ? {} : { opacity: 1, y: 0 }} transition={{ delay: 0.85 }} className="stat-tile p-5 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <FiFlag size={16} className="text-amber-500" />
+            <h3 className="text-sm font-bold text-ink">
+              {isArabic ? 'بلاغات وملاحظات الطلاب على المحتوى' : 'Student Content Issue Reports'}
+            </h3>
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 font-bold tabular-nums">
+              {reports.filter(r => r.status !== 'resolved').length}
+            </span>
+          </div>
+        </div>
+        {reports.length === 0 ? (
+          <p className="text-xs text-slate-500 dark:text-slate-400 text-center py-6">
+            {isArabic ? 'لا توجد بلاغات معلقة من الطلاب حالياً' : 'No student content reports submitted yet'}
+          </p>
+        ) : (
+          <div className="space-y-2.5">
+            {reports.slice(0, 10).map((rep) => {
+              const typeMeta = REPORT_TYPES.find(rt => rt.id === rep.reportType)
+              const typeLabel = typeMeta ? (isArabic ? typeMeta.labelAr : typeMeta.labelEn) : rep.reportType
+              const isResolved = rep.status === 'resolved'
+              const timeBadge = fmtReportTime(rep.timestampSeconds)
+              const targetHref = rep.itemType === 'lecture' && rep.itemId
+                ? `/lecture/${rep.itemId}${rep.timestampSeconds > 0 ? `?t=${rep.timestampSeconds}` : ''}`
+                : ''
+              return (
+                <div key={rep.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold ${isResolved ? 'bg-emerald-500/15 text-emerald-500' : 'bg-amber-500/15 text-amber-500'}`}>
+                        {isResolved ? (isArabic ? 'تم الحل' : 'Resolved') : (isArabic ? 'قيد المراجعة' : 'Open')}
+                      </span>
+                      {targetHref ? (
+                        <Link
+                          to={targetHref}
+                          className="text-xs font-bold text-ink hover:text-royal-500 dark:hover:text-cyan-400 truncate inline-flex items-center gap-1 transition-colors"
+                        >
+                          <span className="truncate">{rep.itemTitle}</span>
+                          <FiExternalLink size={11} className="shrink-0 opacity-70" />
+                        </Link>
+                      ) : (
+                        <span className="text-xs font-bold text-ink truncate">{rep.itemTitle}</span>
+                      )}
+                      {rep.subject && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-royal-500/10 text-royal-600 dark:text-cyan-400 font-semibold">
+                          {rep.subject}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-slate-400">({typeLabel})</span>
+                      {timeBadge && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-cyan-500/15 text-cyan-500">
+                          <FiClock size={10} />
+                          <span>{timeBadge}</span>
+                        </span>
+                      )}
+                    </div>
+                    {rep.description && (
+                      <p className="text-xs text-slate-600 dark:text-slate-300">{rep.description}</p>
+                    )}
+                    <p className="text-[10px] text-slate-400">
+                      {rep.reporterName} · {rep.createdAt ? new Date(rep.createdAt).toLocaleString(isArabic ? 'ar-EG' : 'en-US') : ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {!isResolved && (
+                      <button
+                        type="button"
+                        onClick={() => handleResolveReport(rep.id)}
+                        className="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-500 text-xs font-semibold flex items-center gap-1 transition"
+                      >
+                        <FiCheck size={12} />
+                        <span>{isArabic ? 'تم الحل' : 'Resolve'}</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteReport(rep.id)}
+                      className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition"
+                      aria-label={isArabic ? 'حذف البلاغ' : 'Delete report'}
+                    >
+                      <FiTrash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </motion.div>

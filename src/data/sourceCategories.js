@@ -80,7 +80,7 @@ try {
       })
     })
   })
-} catch {}
+} catch { /* ignore catalog initialization errors */ }
 
 /**
  * Intelligently classifies any source into an academic category based on

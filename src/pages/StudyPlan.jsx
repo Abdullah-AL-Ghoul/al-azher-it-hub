@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { getStudyPlan, saveStudyPlan } from '../services'
 import { pageContainer, pageItem } from '../utils/motionTokens'
 import { uid } from '../utils/helpers'
+import { getUserStorageKey } from '../utils/userStorage'
 import { 
   FiExternalLink, 
   FiPlus, 
@@ -18,13 +19,12 @@ import {
   FiCheckCircle, 
   FiClock, 
   FiSearch, 
-  FiFilter, 
   FiRotateCcw,
   FiAward,
-  FiChevronDown,
   FiCheck,
   FiPrinter,
-  FiCalendar
+  FiCalendar,
+  FiChevronDown
 } from 'react-icons/fi'
 import { FaCalculator } from 'react-icons/fa'
 import ErrorState from '../components/feedback/ErrorState'
@@ -44,15 +44,20 @@ const itemVariants = pageItem
 
 export default function StudyPlan() {
   const { lang, t } = useLanguage()
-  const { user, isAdmin } = useAuth()
+  const { isAdmin, user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const isArabic = lang === 'ar'
   const canEdit = isAdmin
   const prefersReduced = useReducedMotion()
   const [showPrintReport, setShowPrintReport] = useState(false)
+  const activePlanKey = getUserStorageKey('al_azher_active_major_plan', user)
 
   // Tabs: 'curriculum' (مسار الخطة), 'schedule' (الجدول الأسبوعي), 'calculator' (حاسبة المعدل), 'links' (الروابط الرسمية)
-  const tabParam = searchParams.get('tab')
+  const rawTabParam = searchParams.get('tab')
+  const tabParam = rawTabParam === 'gpa' ? 'calculator' : rawTabParam
+  const planParam = searchParams.get('plan')
+  const queryParam = searchParams.get('q') || ''
+
   const [activeTab, setActiveTab] = useState(() => {
     if (['curriculum', 'schedule', 'calculator', 'links'].includes(tabParam)) return tabParam
     return 'curriculum'
@@ -63,7 +68,7 @@ export default function StudyPlan() {
     if (tabParam && ['curriculum', 'schedule', 'calculator', 'links'].includes(tabParam) && tabParam !== activeTab) {
       setActiveTab(tabParam)
     }
-  }, [tabParam])
+  }, [tabParam, activeTab])
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab)
@@ -77,10 +82,11 @@ export default function StudyPlan() {
 
   // --- Active Academic Plan (Major) ---
   const [selectedPlanId, setSelectedPlanId] = useState(() => {
+    if (planParam && ACADEMIC_PLANS.some(p => p.id === planParam)) return planParam
     try {
-      const saved = localStorage.getItem('al_azher_active_major_plan')
+      const saved = localStorage.getItem(activePlanKey) || localStorage.getItem('al_azher_active_major_plan')
       if (saved && ACADEMIC_PLANS.some(p => p.id === saved)) return saved
-    } catch {}
+    } catch { /* ignore storage errors */ }
     return 'cse-2025'
   })
 
@@ -89,40 +95,55 @@ export default function StudyPlan() {
   // Helper to load progress for a specific plan
   const loadPlanProgress = (planId) => {
     try {
-      const specific = localStorage.getItem(`al_azher_curriculum_progress_${planId}`)
+      const scopedProgressKey = getUserStorageKey(`al_azher_curriculum_progress_${planId}`, user)
+      const specific = localStorage.getItem(scopedProgressKey) || localStorage.getItem(`al_azher_curriculum_progress_${planId}`)
       if (specific) return JSON.parse(specific)
       if (planId === 'cse-2025') {
         const legacy = localStorage.getItem('al_azher_curriculum_progress')
         if (legacy) return JSON.parse(legacy)
       }
-    } catch {}
+    } catch { /* ignore storage errors */ }
     return {}
   }
 
   // --- Curriculum Tracker State ---
   const [selectedYear, setSelectedYear] = useState('all') // 'all' | 1 | 2 | 3 | 4
   const [selectedType, setSelectedType] = useState('all') // 'all' | 'university' | 'college' | 'major' | 'elective'
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(() => queryParam)
 
   // Course status: { [courseId]: 'passed' | 'enrolled' | 'remaining' }
   const [courseProgress, setCourseProgress] = useState(() => loadPlanProgress(selectedPlanId))
 
+  // Synchronize plan and search query when navigated via GlobalSearch deep-links
+  useEffect(() => {
+    if (planParam && ACADEMIC_PLANS.some(p => p.id === planParam) && planParam !== selectedPlanId) {
+      setSelectedPlanId(planParam)
+      setCourseProgress(loadPlanProgress(planParam))
+      try {
+        localStorage.setItem(activePlanKey, planParam)
+      } catch { /* ignore storage errors */ }
+    }
+    if (queryParam) {
+      setSearchQuery(queryParam)
+      if (!tabParam) setActiveTab('curriculum')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planParam, queryParam, tabParam, selectedPlanId, activePlanKey])
+
   const saveProgress = (newProgress, planId = selectedPlanId) => {
     setCourseProgress(newProgress)
     try {
-      localStorage.setItem(`al_azher_curriculum_progress_${planId}`, JSON.stringify(newProgress))
-      if (planId === 'cse-2025') {
-        localStorage.setItem('al_azher_curriculum_progress', JSON.stringify(newProgress))
-      }
-    } catch {}
+      const scopedProgressKey = getUserStorageKey(`al_azher_curriculum_progress_${planId}`, user)
+      localStorage.setItem(scopedProgressKey, JSON.stringify(newProgress))
+    } catch { /* ignore storage errors */ }
   }
 
   const handlePlanChange = (newPlanId) => {
     if (newPlanId === selectedPlanId) return
     setSelectedPlanId(newPlanId)
     try {
-      localStorage.setItem('al_azher_active_major_plan', newPlanId)
-    } catch {}
+      localStorage.setItem(activePlanKey, newPlanId)
+    } catch { /* ignore storage errors */ }
     const newProgress = loadPlanProgress(newPlanId)
     setCourseProgress(newProgress)
     const targetPlan = getAcademicPlan(newPlanId)

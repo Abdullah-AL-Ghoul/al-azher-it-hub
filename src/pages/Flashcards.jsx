@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
+import { getUserStorageKey } from '../utils/userStorage'
 import { 
   FiLayers, 
   FiRotateCcw, 
@@ -126,7 +128,10 @@ const DEFAULT_DECKS = [
 
 export default function Flashcards() {
   const { lang } = useLanguage()
+  const { user } = useAuth()
   const isArabic = lang === 'ar'
+  const masteryKey = getUserStorageKey('al_azher_flashcards_mastery', user)
+  const customCardsKey = getUserStorageKey('al_azher_custom_flashcards', user)
 
   // Active Deck
   const [activeDeckId, setActiveDeckId] = useState('dsa')
@@ -137,7 +142,7 @@ export default function Flashcards() {
   // Student Mastery Status (Leitner boxes: box1 = hard, box2 = medium, box3 = mastered)
   const [mastery, setMastery] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_flashcards_mastery')
+      const saved = localStorage.getItem(masteryKey)
       return saved ? JSON.parse(saved) : {}
     } catch {
       return {}
@@ -147,7 +152,7 @@ export default function Flashcards() {
   // Custom added cards
   const [customCards, setCustomCards] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_custom_flashcards')
+      const saved = localStorage.getItem(customCardsKey)
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
@@ -166,20 +171,20 @@ export default function Flashcards() {
   // Save mastery to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('al_azher_flashcards_mastery', JSON.stringify(mastery))
+      localStorage.setItem(masteryKey, JSON.stringify(mastery))
     } catch (_e) {
       // ignore
     }
-  }, [mastery])
+  }, [mastery, masteryKey])
 
   // Save custom cards
   useEffect(() => {
     try {
-      localStorage.setItem('al_azher_custom_flashcards', JSON.stringify(customCards))
+      localStorage.setItem(customCardsKey, JSON.stringify(customCards))
     } catch (_e) {
       // ignore
     }
-  }, [customCards])
+  }, [customCards, customCardsKey])
 
   // Combine default deck with custom cards
   const activeDeck = useMemo(() => {

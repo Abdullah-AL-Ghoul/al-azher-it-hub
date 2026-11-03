@@ -6,9 +6,9 @@
  * with resilient localStorage fallback.
  */
 
-import { getSupabase, isSupabaseConfigured, authRpc } from './supabase'
+import { getSupabase, isSupabaseConfigured } from './supabase'
 import { safeActivity } from './activity'
-import { parseVtt, parseSrt, cuesToVtt, validateCues, TECHNICAL_GLOSSARY, translateText, translateCues, applyAcademicGlossary } from '../utils/vttParser'
+import { parseVtt, parseSrt, cuesToVtt, validateCues, translateText, translateCues, applyAcademicGlossary } from '../utils/vttParser'
 import { INITIAL_SUBTITLES } from '../data/sampleSubtitles'
 import { DEFAULT_LECTURES } from '../data/sampleLectures'
 import {
@@ -162,12 +162,36 @@ export async function getSubtitlesByLecture(lectureId, force = false) {
   return result
 }
 
+function isCurrentUserAdmin(options = {}) {
+  if (typeof options.isAdmin === 'boolean') return options.isAdmin
+  try {
+    const raw = sessionStorage.getItem('al_azher_session')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return parsed?.role === 'admin'
+    }
+  } catch (_e) { /* ignore */ }
+  return false
+}
+
 /**
- * Save or update a subtitle track.
+ * Save a subtitle track strictly to local storage (for non-admin students generating AI transcripts).
  * @param {Object} subtitleData
  * @returns {Promise<Object>}
  */
-export async function saveSubtitle(subtitleData) {
+export async function saveLocalSubtitle(subtitleData) {
+  return saveSubtitle(subtitleData, { isAdmin: false })
+}
+
+/**
+ * Save or update a subtitle track.
+ * Only syncs to the shared Supabase database when executed by an authenticated admin.
+ * @param {Object} subtitleData
+ * @param {Object} [options]
+ * @param {boolean} [options.isAdmin]
+ * @returns {Promise<Object>}
+ */
+export async function saveSubtitle(subtitleData, options = {}) {
   const all = await getAllSubtitles(true)
   const id = subtitleData.id || `sub_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
   const validatedCues = validateCues(subtitleData.cues || [])
@@ -217,8 +241,8 @@ export async function saveSubtitle(subtitleData) {
   lastFetchTime = Date.now()
   setLocalSubtitles(all)
 
-  // Sync to Supabase if available
-  if (isSupabaseConfigured()) {
+  // Sync to Supabase ONLY if the caller is a verified admin
+  if (isSupabaseConfigured() && isCurrentUserAdmin(options)) {
     try {
       const supabase = getSupabase()
       await supabase.from('lesson_subtitles').upsert({
@@ -236,38 +260,44 @@ export async function saveSubtitle(subtitleData) {
     } catch (_e) { /* silent DB fallback */ }
   }
 
-  await safeActivity('subtitles', existingIdx >= 0 ? 'UPDATE' : 'ADD', `${record.language} (${record.lectureId})`)
+  if (isCurrentUserAdmin(options)) {
+    await safeActivity('subtitles', existingIdx >= 0 ? 'UPDATE' : 'ADD', `${record.language} (${record.lectureId})`)
+  }
   return record
 }
 
 /**
  * Delete a subtitle track.
  * @param {string} id
+ * @param {Object} [options]
  * @returns {Promise<void>}
  */
-export async function deleteSubtitle(id) {
+export async function deleteSubtitle(id, options = {}) {
   const all = await getAllSubtitles(true)
   const filtered = all.filter(s => s.id !== id)
   memoryCache = filtered
   setLocalSubtitles(filtered)
 
-  if (isSupabaseConfigured()) {
+  if (isSupabaseConfigured() && isCurrentUserAdmin(options)) {
     try {
       const supabase = getSupabase()
       await supabase.from('lesson_subtitles').delete().eq('id', id)
     } catch (_e) { /* silent */ }
   }
 
-  await safeActivity('subtitles', 'DELETE', id)
+  if (isCurrentUserAdmin(options)) {
+    await safeActivity('subtitles', 'DELETE', id)
+  }
 }
 
 /**
  * Change status to 'published' or 'reviewed'.
  * @param {string} id
  * @param {'published'|'reviewed'|'needs_review'|'ai_generated'} newStatus
+ * @param {Object} [options]
  * @returns {Promise<Object>}
  */
-export async function updateSubtitleStatus(id, newStatus) {
+export async function updateSubtitleStatus(id, newStatus, options = {}) {
   const all = await getAllSubtitles(true)
   const target = all.find(s => s.id === id)
   if (!target) throw new Error('Subtitle not found')
@@ -275,7 +305,7 @@ export async function updateSubtitleStatus(id, newStatus) {
   target.updatedAt = new Date().toISOString()
   setLocalSubtitles(all)
 
-  if (isSupabaseConfigured()) {
+  if (isSupabaseConfigured() && isCurrentUserAdmin(options)) {
     try {
       const supabase = getSupabase()
       await supabase.from('lesson_subtitles').update({
@@ -285,7 +315,9 @@ export async function updateSubtitleStatus(id, newStatus) {
     } catch (_e) { /* silent */ }
   }
 
-  await safeActivity('subtitles', 'STATUS', `${id} -> ${newStatus}`)
+  if (isCurrentUserAdmin(options)) {
+    await safeActivity('subtitles', 'STATUS', `${id} -> ${newStatus}`)
+  }
   return target
 }
 

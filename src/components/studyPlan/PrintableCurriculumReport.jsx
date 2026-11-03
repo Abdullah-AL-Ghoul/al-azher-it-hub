@@ -1,13 +1,7 @@
 import { useState } from 'react'
 import { 
   FiPrinter, 
-  FiX, 
-  FiCheckCircle, 
-  FiClock, 
-  FiAward, 
-  FiLayers,
-  FiBookOpen,
-  FiFilter
+  FiX
 } from 'react-icons/fi'
 
 export default function PrintableCurriculumReport({
@@ -19,8 +13,7 @@ export default function PrintableCurriculumReport({
   onClose
 }) {
   const [filterMode, setFilterMode] = useState('all') // 'all' | 'remaining' | 'passed'
-  const [studentCustomName, setStudentCustomName] = useState(user?.name || '')
-  const [studentCustomId, setStudentCustomId] = useState(user?.studentId || '')
+  const [studentCustomName] = useState(user?.name || '')
 
   // Filter courses based on mode
   const filteredYears = activePlan.curriculum.map(yr => ({

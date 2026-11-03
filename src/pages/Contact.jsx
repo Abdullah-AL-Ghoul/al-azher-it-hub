@@ -5,7 +5,7 @@ import { pageContainer, pageItem } from '../utils/motionTokens'
 import SpatialInput from '../components/spatial/SpatialInput'
 import {
   FiSend, FiLoader, FiUser, FiPhone, FiMail, FiLinkedin, FiGlobe,
-  FiMessageSquare, FiCheck, FiClock, FiArrowRight, FiArrowLeft,
+  FiMessageSquare, FiClock, FiArrowRight, FiArrowLeft,
   FiGithub, FiCopy, FiChevronDown, FiExternalLink, FiZap, FiCheckCircle
 } from 'react-icons/fi'
 import { FaWhatsapp } from 'react-icons/fa'
@@ -104,7 +104,7 @@ export default function Contact() {
   const [submitting, setSubmitting] = useState(false)
   const [messageLen, setMessageLen] = useState(0)
   const [activeFaq, setActiveFaq] = useState(null)
-  const [focusedField, setFocusedField] = useState(null)
+  const [, setFocusedField] = useState(null)
 
   const submitTimer = useRef(null)
   const resetTimer = useRef(null)

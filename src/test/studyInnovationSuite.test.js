@@ -1,6 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { ambientAudio } from '../utils/ambientAudio'
 import { APP_ROUTES } from '../router/routes'
+import {
+  REPORT_TYPES,
+  getContentReports,
+  submitContentReport,
+  updateContentReportStatus,
+  deleteContentReport,
+} from '../services/reports'
 
 describe('Study Innovation Suite Unit Tests', () => {
   describe('Ambient Audio Engine', () => {
@@ -106,4 +113,61 @@ describe('Study Innovation Suite Unit Tests', () => {
       })
     })
   })
+
+  describe('Content Issue Reporting Service (Student Feedback Loop)', () => {
+    beforeEach(() => {
+      localStorage.removeItem('al_azher_content_reports_v1')
+    })
+
+    it('exposes structured bilingual REPORT_TYPES', () => {
+      expect(Array.isArray(REPORT_TYPES)).toBe(true)
+      expect(REPORT_TYPES.length).toBeGreaterThanOrEqual(4)
+      expect(REPORT_TYPES.some((t) => t.id === 'video_issue')).toBe(true)
+      expect(REPORT_TYPES.some((t) => t.id === 'subtitle_issue')).toBe(true)
+    })
+
+    it('submits, persists, updates status, and deletes content reports accurately', async () => {
+      expect(await getContentReports()).toEqual([])
+
+      // Edge case: missing both itemTitle and itemId throws error
+      await expect(submitContentReport({ itemId: '', itemTitle: '   ' })).rejects.toThrow('Item reference is required')
+
+      const report = await submitContentReport({
+        itemType: 'lecture',
+        itemId: 'lec-101',
+        itemTitle: 'Data Structures Lecture 1',
+        reportType: 'subtitle_issue',
+        description: 'Translation mismatch at 04:15',
+        reporterId: '20220299',
+        reporterName: 'Abdullah Al-Ghoul',
+      })
+
+      expect(report.id).toMatch(/^rep_/)
+      expect(report.status).toBe('open')
+      expect(report.reportType).toBe('subtitle_issue')
+      expect(await getContentReports()).toHaveLength(1)
+
+      // Edge case: invalid reportType falls back to 'other' and empty fields sanitize cleanly
+      const fallbackReport = await submitContentReport({
+        itemId: 'lec-102',
+        reportType: 'non_existent_type',
+        description: '   ',
+      })
+      expect(fallbackReport.reportType).toBe('other')
+      expect(fallbackReport.reporterName).toBe('طالب')
+      expect(await getContentReports()).toHaveLength(2)
+
+      // Resolve first report
+      const updated = await updateContentReportStatus(report.id, 'resolved')
+      expect(updated?.status).toBe('resolved')
+
+      // Delete fallback report
+      const deleted = await deleteContentReport(fallbackReport.id)
+      expect(deleted).toBe(true)
+      const remaining = await getContentReports()
+      expect(remaining).toHaveLength(1)
+      expect(remaining[0].id).toBe(report.id)
+    })
+  })
 })
+

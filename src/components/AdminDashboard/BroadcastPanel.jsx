@@ -2,7 +2,7 @@ import { useState, useEffect, memo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { FiRadio, FiCheck, FiX, FiAlertTriangle, FiBell, FiAward, FiInfo, FiExternalLink, FiEye, FiZap, FiTrash2, FiSave, FiRotateCcw } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
-import { getBroadcast, saveBroadcastRemote, fetchBroadcastRemote, clearBroadcast, restoreDefaultBroadcast, DEFAULT_BROADCAST, BROADCAST_TYPES } from '../../services/broadcast'
+import { getBroadcast, saveBroadcastRemote, fetchBroadcastRemote, clearBroadcast, DEFAULT_BROADCAST, BROADCAST_TYPES } from '../../services/broadcast'
 import { pageContainer, pageItem, pageContainerReduced, pageItemReduced } from '../../utils/motionTokens'
 
 const PRESET_TEMPLATES = [

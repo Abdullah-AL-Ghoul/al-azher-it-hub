@@ -6,8 +6,6 @@ import { LanguageProvider } from '../context/LanguageContext'
 import {
   saveBroadcast,
   clearBroadcast,
-  restoreDefaultBroadcast,
-  DEFAULT_BROADCAST,
 } from '../services/broadcast'
 
 function renderBanner(lang = 'ar') {

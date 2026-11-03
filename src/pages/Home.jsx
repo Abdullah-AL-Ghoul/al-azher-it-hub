@@ -45,7 +45,7 @@ export default function Home() {
  const [retry, setRetry] = useState(0)
 
  const viewed = useMemo(() => userData?.viewed ?? [], [userData?.viewed])
- const favorites = userData?.favorites ?? []
+ const favorites = useMemo(() => userData?.favorites ?? [], [userData?.favorites])
  const userStats = userData?.stats ?? { viewed: [], lastVisit: null }
  const streak = useMemo(() => currentStreak(user?.studentId), [user?.studentId])
 
@@ -130,6 +130,12 @@ export default function Home() {
    .filter(Boolean)
    .filter(l => viewedSet.has(l.id))
  }, [viewed, lectures])
+
+ const favoriteLectures = useMemo(() => {
+  if (!favorites?.length || !lectures.length) return []
+  const favSet = new Set(favorites)
+  return lectures.filter(l => favSet.has(l.id)).slice(0, 4)
+ }, [favorites, lectures])
 
  const subjectProgress = useMemo(() => {
   if (!lectures.length) return []
@@ -248,7 +254,7 @@ export default function Home() {
         </Link>
 
         {/* GPA Calculator */}
-        <Link to="/study-plan" className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line hover:border-royal-500/30 transition group flex flex-col justify-between">
+        <Link to="/study-plan?tab=calculator" className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line hover:border-royal-500/30 transition group flex flex-col justify-between">
          <div>
           <span className="text-xs text-slate-500 dark:text-white/50 block font-medium">
            {isArabic ? 'المعدل التقديري المسجل' : 'Estimated GPA'}
@@ -270,7 +276,7 @@ export default function Home() {
         </Link>
 
         {/* Past Exams Archive Shortcut */}
-        <Link to="/sources" className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line hover:border-royal-500/30 transition group flex flex-col justify-between">
+        <Link to="/sources?examOnly=true" className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-line hover:border-royal-500/30 transition group flex flex-col justify-between">
          <div>
           <div className="flex items-center justify-between">
            <span className="text-xs text-slate-500 dark:text-white/50 font-medium">{isArabic ? 'أرشيف الامتحانات السابقة' : 'Past Exams Archive'}</span>
@@ -338,7 +344,7 @@ export default function Home() {
        </h2>
       </div>
       <Link to="/tools" className="text-xs text-accent hover:underline font-semibold flex items-center gap-1">
-       <span>{isArabic ? 'مركز كافة الأدوات (8 أدوات) ←' : 'Tools Hub (8 Tools) →'}</span>
+       <span>{isArabic ? 'مركز كافة الأدوات (16 أداة) ←' : 'Tools Hub (16 Tools) →'}</span>
       </Link>
      </div>
 
@@ -531,6 +537,48 @@ export default function Home() {
          )
         })}
        </div>
+      </div>
+     </div>
+    </motion.section>
+   )}
+
+   {/* Saved / Favorite Lectures Strip */}
+   {!isAdmin && favoriteLectures.length > 0 && (
+    <motion.section
+     initial={prefersReduced ? {} : { opacity: 0, y: 20 }}
+     whileInView={prefersReduced ? {} : { opacity: 1, y: 0 }}
+     viewport={{ once: true }}
+     transition={prefersReduced ? {} : revealItem.transition}
+     className="py-8 bg-spatial-page"
+    >
+     <div className="container-page">
+      <div className="flex items-center justify-between mb-6">
+       <h2 className="text-2xl md:text-3xl font-bold gradient-text-spatial flex items-center gap-2">
+        <FiHeart size={22} className="text-rose-500" />
+        <span>{isArabic ? 'محاضراتك المفضلة المحفوظة' : 'Your Saved Lectures'}</span>
+       </h2>
+       <Link to="/profile" className="text-accent hover:text-royal-600 dark:hover:text-cyan-300 font-medium text-sm transition-colors flex items-center gap-1">
+        {t('inline.home.view-all')} <FiArrowLeft className={isArabic ? '' : 'rotate-180'} />
+       </Link>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+       {favoriteLectures.map((lecture) => {
+        const videoId = lectureVideoId(lecture)
+        return (
+         <Link key={lecture.id} to={`/lecture/${lecture.id}`} className="group glass glass-hover lift rounded-xl overflow-hidden block border border-white/10">
+          <div className="relative aspect-video bg-black/30 overflow-hidden">
+           <LectureThumbnail videoId={videoId} alt="" className="group-hover:scale-105 transition-transform duration-500" />
+           <span className="absolute top-2 end-2 px-2 py-0.5 bg-rose-500/85 backdrop-blur-sm rounded-full text-[10px] text-white font-semibold flex items-center gap-1">
+            <FiHeart size={10} className="fill-white" /> {isArabic ? 'مفضلة' : 'Saved'}
+           </span>
+          </div>
+          <div className="p-3">
+           <p className="text-[10px] tracking-widest uppercase text-slate-500 dark:text-white/50 mb-1 tabular-nums">{isArabic ? lecture.subjectAr : lecture.subjectEn}</p>
+           <h3 className="text-xs font-semibold text-ink line-clamp-1 group-hover:text-royal-500 dark:group-hover:text-cyan-300 transition-colors">{isArabic ? lecture.titleAr : lecture.titleEn}</h3>
+          </div>
+         </Link>
+        )
+       })}
       </div>
      </div>
     </motion.section>

@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { motion } from 'framer-motion'
-import { FiPlus, FiTrash2, FiRotateCcw, FiSave, FiCheck, FiAward, FiInfo, FiPercent } from 'react-icons/fi'
+import { useState, useMemo } from 'react'
+import { FiPlus, FiTrash2, FiRotateCcw, FiSave, FiAward } from 'react-icons/fi'
 import { FaCalculator } from 'react-icons/fa'
 import { toast } from 'react-hot-toast'
+import { useAuth } from '../../context/AuthContext'
+import { getUserStorageKey } from '../../utils/userStorage'
 
 const LETTER_GRADES = [
   { letter: 'A+', points: 4.0, minPct: 90, labelAr: 'ممتاز مرتفع' },
@@ -16,7 +17,9 @@ const LETTER_GRADES = [
   { letter: 'F',  points: 0.0, minPct: 0, labelAr: 'راسب' },
 ]
 
-export default function GpaCalculator({ isArabic, t }) {
+export default function GpaCalculator({ isArabic }) {
+  const { user } = useAuth()
+  const gpaStorageKey = getUserStorageKey('al_azher_saved_gpa_calc', user)
   // Mode: 'percentage' (النظام المئوي من 100%) or 'gpa4' (نظام النقاط من 4.0)
   const [scaleMode, setScaleMode] = useState('percentage')
   const [includePrevious, setIncludePrevious] = useState(false)
@@ -33,9 +36,9 @@ export default function GpaCalculator({ isArabic, t }) {
 
   const [courses, setCourses] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_saved_gpa_calc')
+      const saved = localStorage.getItem(gpaStorageKey) || localStorage.getItem('al_azher_saved_gpa_calc')
       if (saved) return JSON.parse(saved)
-    } catch {}
+    } catch { /* ignore storage errors */ }
     return defaultCourses
   })
 
@@ -87,16 +90,16 @@ export default function GpaCalculator({ isArabic, t }) {
     setPrevGpa('')
     setPrevHours('')
     setIncludePrevious(false)
-    try { localStorage.removeItem('al_azher_saved_gpa_calc') } catch {}
+    try { localStorage.removeItem(gpaStorageKey) } catch { /* ignore storage errors */ }
     toast.success(isArabic ? 'تمت إعادة ضبط الحاسبة' : 'Calculator reset')
   }
 
   // Save to storage
   const saveCalculation = () => {
     try {
-      localStorage.setItem('al_azher_saved_gpa_calc', JSON.stringify(courses))
+      localStorage.setItem(gpaStorageKey, JSON.stringify(courses))
       toast.success(isArabic ? 'تم حفظ بيانات المساقات بنجاح' : 'Courses saved locally')
-    } catch {}
+    } catch { /* ignore storage errors */ }
   }
 
   // Calculate Semester GPA

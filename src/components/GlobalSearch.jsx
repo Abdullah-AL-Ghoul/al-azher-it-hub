@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { getLectures, getSources, getAdditions } from '../services'
+import { getLectures, getSources, getAdditions, getAllSubtitles } from '../services'
+import { formatVttTime } from '../utils/vttParser'
 import { modalOverlay, modalContent } from '../utils/motionTokens'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { 
@@ -19,12 +20,14 @@ import {
   FiCheckCircle,
   FiCompass,
   FiClock,
-  FiAward
+  FiAward,
+  FiMessageSquare
 } from 'react-icons/fi'
 import { FaCalculator } from 'react-icons/fa'
 import LectureThumbnail from './shared/LectureThumbnail'
 import { lectureVideoId } from '../utils/helpers'
 import { ACADEMIC_PLANS } from '../data/academicCurriculum'
+import { DEFAULT_LECTURES } from '../data/sampleLectures'
 
 // Build unified catalog of courses from all 6 accredited plans
 const ALL_ACADEMIC_COURSES = []
@@ -76,6 +79,7 @@ const typeIcons = {
   plan: FiLayers,
   action: FiZap,
   lecture: FiFileText,
+  transcript: FiMessageSquare,
   source: FiGrid,
   addition: FiHeart,
   page: FiArrowRight,
@@ -86,19 +90,31 @@ const typeColors = {
   plan: 'from-emerald-500 to-emerald-600',
   action: 'from-amber-500 to-amber-600',
   lecture: 'from-violet-500 to-violet-600',
+  transcript: 'from-teal-500 to-cyan-600',
   source: 'from-orange-500 to-orange-600',
   addition: 'from-rose-500 to-rose-600',
   page: 'from-cyan-500 to-cyan-600',
 }
 
+const SEARCH_CATEGORIES = [
+  { id: 'all', labelAr: 'الكل', labelEn: 'All' },
+  { id: 'course', labelAr: 'المساقات والخطط', labelEn: 'Courses & Plans' },
+  { id: 'lecture', labelAr: 'المحاضرات', labelEn: 'Lectures' },
+  { id: 'transcript', labelAr: 'نصوص المحاضرات', labelEn: 'Transcripts' },
+  { id: 'source', labelAr: 'المصادر والامتحانات', labelEn: 'Sources' },
+  { id: 'action', labelAr: 'الأدوات', labelEn: 'Tools' },
+]
+
 export default function GlobalSearch({ autoOpen = false }) {
-  const { lang, t, toggleLang } = useLanguage()
-  const { user } = useAuth()
+  const { lang, t } = useLanguage()
+  const auth = useAuth()
+  const user = auth?.user || null
   const navigate = useNavigate()
   const isArabic = lang === 'ar'
 
   const [open, setOpen] = useState(!!autoOpen)
   const [query, setQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState('all')
   const [results, setResults] = useState([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -111,6 +127,7 @@ export default function GlobalSearch({ autoOpen = false }) {
   const openModal = useCallback(() => {
     setOpen(true)
     setQuery('')
+    setActiveCategory('all')
     setResults([])
     setActiveIndex(0)
     setLoading(false)
@@ -119,6 +136,7 @@ export default function GlobalSearch({ autoOpen = false }) {
   const closeModal = useCallback(() => {
     setOpen(false)
     setQuery('')
+    setActiveCategory('all')
     setResults([])
     setActiveIndex(0)
     setLoading(false)
@@ -291,35 +309,86 @@ export default function GlobalSearch({ autoOpen = false }) {
         }
       }
 
-      // 4. Fetch dynamic data from services (Lectures, Sources, Additions)
-      let { lectures, sources, additions } = datasetRef.current || {}
+      // 4. Fetch dynamic data from services (Lectures, Sources, Additions, Subtitles)
+      let { lectures, sources, additions, subtitles } = datasetRef.current || {}
       if (!lectures) {
-        ;[lectures, sources, additions] = await Promise.all([
+        ;[lectures, sources, additions, subtitles] = await Promise.all([
           getLectures().catch(() => []),
           getSources().catch(() => []),
           getAdditions().catch(() => []),
+          getAllSubtitles().catch(() => []),
         ])
         if (seq !== searchSeq.current) return
-        datasetRef.current = { lectures, sources, additions }
+        datasetRef.current = { lectures, sources, additions, subtitles }
       }
 
-      // Match Lectures
-      lectures.forEach(l => {
+      // Combine fetched lectures with DEFAULT_LECTURES fallback for complete lookup
+      const allLectures = [...(lectures || [])]
+      DEFAULT_LECTURES.forEach(dl => {
+        if (!allLectures.some(l => l.id === dl.id || l.id === dl.aliasId || l.aliasId === dl.id)) {
+          allLectures.push(dl)
+        }
+      })
+
+      // Match Lectures (including instructor/doctor name)
+      allLectures.forEach(l => {
         const title = isArabic ? l.titleAr : l.titleEn
         const subject = isArabic ? l.subjectAr : l.subjectEn
-        if (title?.toLowerCase().includes(lower) || subject?.toLowerCase().includes(lower)) {
+        const doctor = isArabic ? (l.doctorAr || l.doctorEn) : (l.doctorEn || l.doctorAr)
+        if (
+          title?.toLowerCase().includes(lower) ||
+          subject?.toLowerCase().includes(lower) ||
+          l.doctorAr?.toLowerCase().includes(lower) ||
+          l.doctorEn?.toLowerCase().includes(lower)
+        ) {
           items.push({
             type: 'lecture',
             title: title || '',
-            subtitle: subject || '',
+            subtitle: [subject, doctor].filter(Boolean).join(' • '),
             id: l.id,
             videoId: lectureVideoId(l),
           })
         }
       })
 
+      // Match Lecture Transcripts & Subtitles (Cue-level search with timestamp deep-link)
+      if (Array.isArray(subtitles) && lower.length >= 2) {
+        let transcriptMatches = 0
+        for (const track of subtitles) {
+          if (transcriptMatches >= 16) break
+          const parentLecture = allLectures.find(
+            l =>
+              l.id === track.lectureId ||
+              l.id === track.aliasLectureId ||
+              l.aliasId === track.lectureId ||
+              l.aliasId === track.aliasLectureId
+          )
+          const lectureId = parentLecture?.id || track.lectureId
+          const lectureName = parentLecture
+            ? (isArabic ? (parentLecture.titleAr || parentLecture.titleEn) : (parentLecture.titleEn || parentLecture.titleAr))
+            : (track.lectureTitle || track.lectureId)
+          const cues = Array.isArray(track.cues) ? track.cues : []
+          for (const cue of cues) {
+            if (transcriptMatches >= 16) break
+            if (cue.text?.toLowerCase().includes(lower)) {
+              const startSec = Math.max(0, Number(cue.start) || 0)
+              const fullVtt = formatVttTime(startSec)
+              const timeStr = startSec >= 3600 ? fullVtt.slice(0, 8) : fullVtt.slice(3, 8)
+              items.push({
+                type: 'transcript',
+                id: lectureId,
+                timestamp: Math.floor(startSec),
+                title: cue.text,
+                subtitle: `${lectureName} • ⏱️ ${timeStr}`,
+              })
+              transcriptMatches += 1
+            }
+          }
+        }
+      }
+
       // Match Sources
-      sources.forEach(s => {
+      ;(sources || []).forEach(s => {
         const title = isArabic ? s.titleAr : s.titleEn
         const subject = isArabic ? s.subjectAr : s.subjectEn
         if (title?.toLowerCase().includes(lower) || subject?.toLowerCase().includes(lower)) {
@@ -333,7 +402,7 @@ export default function GlobalSearch({ autoOpen = false }) {
       })
 
       // Match Additions
-      additions.forEach(a => {
+      ;(additions || []).forEach(a => {
         const title = isArabic ? a.titleAr : a.titleEn
         if (title?.toLowerCase().includes(lower)) {
           items.push({
@@ -358,7 +427,7 @@ export default function GlobalSearch({ autoOpen = false }) {
       })
 
       if (seq !== searchSeq.current) return
-      setResults(items.slice(0, 16))
+      setResults(items)
       setActiveIndex(0)
     } catch {
       if (seq === searchSeq.current) setResults([])
@@ -366,6 +435,41 @@ export default function GlobalSearch({ autoOpen = false }) {
       if (seq === searchSeq.current) setLoading(false)
     }
   }, [isArabic, quickActions])
+
+  const filteredResults = useMemo(() => {
+    if (activeCategory === 'course') {
+      return results.filter(r => r.type === 'course' || r.type === 'plan').slice(0, 24)
+    }
+    if (activeCategory === 'source') {
+      return results.filter(r => r.type === 'source' || r.type === 'addition').slice(0, 24)
+    }
+    if (activeCategory === 'action') {
+      return results.filter(r => r.type === 'action' || r.type === 'page').slice(0, 24)
+    }
+    if (activeCategory !== 'all') {
+      return results.filter(r => r.type === activeCategory).slice(0, 24)
+    }
+    // For 'all': deduplicate repeated course codes across plans and balance categories
+    // so courses don't starve lectures, transcripts, sources, and actions.
+    const seenCodes = new Set()
+    const coursesAndPlans = []
+    const nonCourses = []
+    for (const r of results) {
+      if (r.type === 'course') {
+        if (!seenCodes.has(r.code)) {
+          seenCodes.add(r.code)
+          coursesAndPlans.push(r)
+        }
+      } else if (r.type === 'plan') {
+        coursesAndPlans.push(r)
+      } else {
+        nonCourses.push(r)
+      }
+    }
+    if (nonCourses.length === 0) return coursesAndPlans.slice(0, 24)
+    const maxCoursesInAll = Math.max(6, 24 - nonCourses.length)
+    return [...coursesAndPlans.slice(0, maxCoursesInAll), ...nonCourses].slice(0, 24)
+  }, [results, activeCategory])
 
   useEffect(() => {
     const timer = setTimeout(() => performSearch(query), 120)
@@ -378,17 +482,22 @@ export default function GlobalSearch({ autoOpen = false }) {
     } else if (item.type === 'plan') {
       try {
         localStorage.setItem('al_azher_active_major_plan', item.planId)
-      } catch {}
-      navigate('/study-plan')
+      } catch { /* ignore storage errors */ }
+      navigate(`/study-plan?plan=${encodeURIComponent(item.planId)}`)
     } else if (item.type === 'course') {
       try {
         localStorage.setItem('al_azher_active_major_plan', item.planId)
-      } catch {}
-      navigate('/study-plan')
+      } catch { /* ignore storage errors */ }
+      const qParam = item.code ? `&q=${encodeURIComponent(item.code)}` : ''
+      navigate(`/study-plan?plan=${encodeURIComponent(item.planId)}${qParam}`)
     } else if (item.type === 'lecture') {
       navigate(item.id ? `/lecture/${item.id}` : '/lectures')
+    } else if (item.type === 'transcript') {
+      const tParam = Number.isFinite(item.timestamp) ? `?t=${item.timestamp}` : ''
+      navigate(item.id ? `/lecture/${item.id}${tParam}` : '/lectures')
     } else if (item.type === 'source') {
-      navigate('/sources')
+      const qParam = item.title ? `?q=${encodeURIComponent(item.title)}` : ''
+      navigate(`/sources${qParam}`)
     } else if (item.type === 'addition') {
       navigate('/additions')
     }
@@ -396,7 +505,7 @@ export default function GlobalSearch({ autoOpen = false }) {
   }, [navigate, closeModal])
 
   const handleKeyDown = (e) => {
-    const activeList = query.trim() ? results : quickActions
+    const activeList = query.trim() ? filteredResults : quickActions
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       setActiveIndex(i => Math.min(i + 1, activeList.length - 1))
@@ -422,6 +531,7 @@ export default function GlobalSearch({ autoOpen = false }) {
       case 'plan': return isArabic ? 'خطة تخصص' : 'Degree Plan'
       case 'action': return isArabic ? 'إجراء سريع' : 'Action'
       case 'lecture': return isArabic ? 'محاضرة' : 'Lecture'
+      case 'transcript': return isArabic ? 'نص المحاضرة' : 'Transcript'
       case 'source': return isArabic ? 'ملف / مصدر' : 'Source'
       case 'addition': return isArabic ? 'إضافة' : 'Addition'
       default: return isArabic ? 'صفحة' : 'Page'
@@ -493,7 +603,7 @@ export default function GlobalSearch({ autoOpen = false }) {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isArabic ? 'ابحث في الخطط، المساقات، الامتحانات، المحاضرات...' : 'Search plans, courses, exams, lectures...'}
+                placeholder={isArabic ? 'ابحث في المساقات، المحاضرات، نصوص الفيديو، والامتحانات...' : 'Search courses, lectures, video transcripts, exams...'}
                 className="flex-1 bg-transparent text-ink placeholder-slate-400 dark:placeholder-white/40 text-sm sm:text-base font-medium outline-none"
                 autoComplete="off"
                 role="combobox"
@@ -515,8 +625,31 @@ export default function GlobalSearch({ autoOpen = false }) {
               </kbd>
             </div>
 
+            {/* Category Filter Pills */}
+            {query.trim() && (
+              <div className="flex items-center gap-1.5 px-4 py-2 border-b border-black/5 dark:border-white/5 overflow-x-auto no-scrollbar bg-black/[0.01] dark:bg-white/[0.01]">
+                {SEARCH_CATEGORIES.map(cat => {
+                  const isActive = activeCategory === cat.id
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => { setActiveCategory(cat.id); setActiveIndex(0) }}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition ${
+                        isActive
+                          ? 'bg-royal-500 text-white shadow-sm'
+                          : 'bg-black/5 dark:bg-white/5 text-slate-500 dark:text-white/60 hover:text-ink'
+                      }`}
+                    >
+                      {isArabic ? cat.labelAr : cat.labelEn}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
             {/* Results / Zero State Panel */}
-            <div ref={listRef} className="max-h-[62vh] overflow-y-auto overscroll-contain">
+            <div ref={listRef} className="max-h-[60vh] overflow-y-auto overscroll-contain">
               {loading && query.trim() && (
                 <div className="py-12 text-center text-sm text-slate-400 dark:text-white/40 flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-royal-500 border-t-transparent rounded-full animate-spin" />
@@ -525,14 +658,14 @@ export default function GlobalSearch({ autoOpen = false }) {
               )}
 
               {/* No Results */}
-              {!loading && query.trim() && results.length === 0 && (
+              {!loading && query.trim() && filteredResults.length === 0 && (
                 <div className="py-12 text-center px-4">
                   <FiSearch size={36} className="mx-auto mb-3 text-slate-300 dark:text-white/20" />
                   <p className="text-sm font-semibold text-ink">
                     {isArabic ? 'لم يتم العثور على نتائج مطابقة' : 'No matching results found'}
                   </p>
                   <p className="text-xs text-slate-400 dark:text-white/40 mt-1">
-                    {isArabic ? 'جرب البحث برمز المساق (مثل ITCS1401) أو باسم المادة أو التخصص' : 'Try searching by course code (e.g. ITCS1401), title, or major'}
+                    {isArabic ? 'جرب البحث برمز المساق (مثل ITCS1401) أو باسم المادة أو كلمة داخل المحاضرة' : 'Try searching by course code (e.g. ITCS1401), title, or spoken keyword'}
                   </p>
                 </div>
               )}
@@ -605,9 +738,9 @@ export default function GlobalSearch({ autoOpen = false }) {
               )}
 
               {/* Live Search Results */}
-              {results.length > 0 && (
+              {filteredResults.length > 0 && (
                 <div id="global-search-results" role="listbox" className="p-2 space-y-1">
-                  {results.map((item, i) => {
+                  {filteredResults.map((item, i) => {
                     const Icon = item.icon || typeIcons[item.type] || FiFileText
                     const isSelected = i === activeIndex
 
@@ -673,9 +806,9 @@ export default function GlobalSearch({ autoOpen = false }) {
                 </span>
               </div>
 
-              {results.length > 0 && (
+              {filteredResults.length > 0 && (
                 <span className="font-semibold tabular-nums text-royal-600 dark:text-cyan-400">
-                  {results.length} {isArabic ? 'نتيجة' : 'results'}
+                  {filteredResults.length} {isArabic ? 'نتيجة' : 'results'}
                 </span>
               )}
             </div>

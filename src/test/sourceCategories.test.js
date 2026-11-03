@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { classifySource, ACADEMIC_YEAR_FILTERS, EXAM_SUB_TYPES } from '../data/sourceCategories'
+import { classifySource, ACADEMIC_YEAR_FILTERS } from '../data/sourceCategories'
 
 describe('sourceCategories utility test suite', () => {
   it('correctly classifies midterm and final exams with semantic labels', () => {
@@ -21,7 +21,7 @@ describe('sourceCategories utility test suite', () => {
     const withSolution2 = classifySource({ titleAr: 'Final Exam 2023 Solved' })
     expect(withSolution2.hasSolution).toBe(true)
 
-    const noSolution = classifySource({ titleAr: 'أسئلة امتحان غير محلولة' })
+    const _noSolution = classifySource({ titleAr: 'أسئلة امتحان غير محلولة' })
     // wait, 'غير محلولة' contains 'حل', let's check normal question paper
     const normal = classifySource({ titleAr: 'امتحان نصفي برمجة حاسوب 1' })
     expect(normal.hasSolution).toBe(false)

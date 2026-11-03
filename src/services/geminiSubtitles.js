@@ -14,51 +14,21 @@ const GEMINI_MODEL_STORAGE_KEY = 'al_azher_gemini_preferred_model'
 
 export const AVAILABLE_GEMINI_MODELS = [
   {
-    id: 'gemini-3.5-flash-lite',
-    name: 'Gemini 3.5 Flash-Lite',
-    tier: 'recommended',
-    descriptionAr: 'الأسرع والأقل تأثراً بضغط السيرفرات، خفيف ومثالي للترجمة الفورية',
-    descriptionEn: 'Ultra-fast & resilient to server demand spikes, high throughput',
-    badge: 'موصى به للسرعة',
-    badgeEn: 'Recommended',
-    badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  },
-  {
-    id: 'gemini-3.6-flash',
-    name: 'Gemini 3.6 Flash',
-    tier: 'balanced',
-    descriptionAr: 'متوازن بين الذكاء والسرعة للاستخدام الأكاديمي',
-    descriptionEn: 'Balanced intelligence & speed for academic workflows',
-    badge: 'متوازن',
-    badgeEn: 'Balanced',
-    badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-  },
-  {
-    id: 'gemini-3.8-flash',
-    name: 'Gemini 3.8 Flash',
-    tier: 'flagship',
-    descriptionAr: 'الأحدث والأعلى ذكاءً (قد يشهد ضغطاً مؤقتاً في ساعات الذروة)',
-    descriptionEn: 'Latest flagship intelligence (may experience peak-hour demand)',
-    badge: 'الأعلى ذكاءً',
-    badgeEn: 'Flagship',
-    badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  },
-  {
     id: 'gemini-2.5-flash',
     name: 'Gemini 2.5 Flash',
-    tier: 'stable',
-    descriptionAr: 'نموذج مستقر عالي الاعتمادية ومناسب للتفريغ الصوتي',
-    descriptionEn: 'High reliability stable model for audio transcription',
-    badge: 'مستقر وموثوق',
-    badgeEn: 'Stable',
-    badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    tier: 'recommended',
+    descriptionAr: 'نموذج مستقر وعالي الاعتمادية ومثالي للتفريغ الصوتي والترجمة الأكاديمية',
+    descriptionEn: 'High-reliability stable model ideal for audio transcription and academic translation',
+    badge: 'موصى به',
+    badgeEn: 'Recommended',
+    badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   },
   {
     id: 'gemini-2.5-flash-lite',
     name: 'Gemini 2.5 Flash-Lite',
     tier: 'fast',
-    descriptionAr: 'خفيف وسريع جداً، استجابة فورية بأقل زمن انتظار',
-    descriptionEn: 'Fast & lightweight with minimal latency',
+    descriptionAr: 'الأسرع والأقل تأثراً بضغط السيرفرات، خفيف ومثالي للترجمة الفورية',
+    descriptionEn: 'Ultra-fast & resilient to server demand spikes with minimal latency',
     badge: 'سريع جداً',
     badgeEn: 'Fast',
     badgeColor: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
@@ -73,10 +43,39 @@ export const AVAILABLE_GEMINI_MODELS = [
     badgeEn: 'Pro Reasoning',
     badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   },
+  {
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash',
+    tier: 'stable',
+    descriptionAr: 'نموذج احتياطي مستقر متعدد الوسائط وسريع الاستجابة',
+    descriptionEn: 'Reliable multimodal fallback model with fast response times',
+    badge: 'مستقر',
+    badgeEn: 'Stable',
+    badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  },
+  {
+    id: 'gemini-1.5-flash',
+    name: 'Gemini 1.5 Flash',
+    tier: 'standard',
+    descriptionAr: 'النموذج القياسي عالي السرعة للتفريغ الأكاديمي والترجمة المعتمدة',
+    descriptionEn: 'Standard high-speed model for academic transcription and certified translation',
+    badge: 'معتمد',
+    badgeEn: 'Standard',
+    badgeColor: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+  },
+  {
+    id: 'gemini-1.5-pro',
+    name: 'Gemini 1.5 Pro',
+    tier: 'pro',
+    descriptionAr: 'سياق أكاديمي فائق الطول للمحاضرات الكاملة والمستندات الموسعة',
+    descriptionEn: 'Long-context multimodal model for full-length lectures and extended research',
+    badge: 'سياق طويل',
+    badgeEn: 'Long Context',
+    badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  },
 ]
 
 const CANDIDATE_MODELS = AVAILABLE_GEMINI_MODELS.map((m) => m.id)
-const PRIMARY_MODEL = CANDIDATE_MODELS[0]
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
 
 /**
@@ -464,7 +463,7 @@ export async function testGeminiConnection(testKey, targetModel) {
 
   // Otherwise, run auto-cascade to find the fastest operational model
   try {
-    const { text, model, cascaded } = await callGeminiGenerateContent(
+    const { model, cascaded } = await callGeminiGenerateContent(
       key,
       [
         {
@@ -673,7 +672,7 @@ ${JSON.stringify(cues.map(c => ({ start: c.start, end: c.end, text: c.text })))}
  * @returns {Promise<Array<Object>>}
  */
 export async function runGeminiSubtitlePipeline({
-  lectureId,
+  lectureId: _lectureId,
   lectureTitle,
   lectureSubject,
   audioFile,

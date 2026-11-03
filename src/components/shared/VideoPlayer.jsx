@@ -13,8 +13,6 @@ import {
   FiRotateCcw,
   FiTv,
   FiCheck,
-  FiType,
-  FiSliders,
 } from 'react-icons/fi'
 import LectureThumbnail from './LectureThumbnail'
 import { useLanguage } from '../../context/LanguageContext'
@@ -65,6 +63,7 @@ const VideoPlayer = forwardRef(function VideoPlayer({
   title,
   onWatch,
   autoPlay = false,
+  initialTime = 0,
   lectureId = '',
   studentId: studentIdProp = '',
   isTheater = false,
@@ -84,8 +83,13 @@ const VideoPlayer = forwardRef(function VideoPlayer({
   const [embedFailed, setEmbedFailed] = useState(false)
   const watchedRef = useRef(false)
   const iframeRef = useRef(null)
+  const videoElRef = useRef(null)
   const containerRef = useRef(null)
   const barRef = useRef(null)
+
+  const parsedInitialTime = Number.isFinite(Number(initialTime)) && Number(initialTime) > 0
+    ? Math.floor(Number(initialTime))
+    : 0
 
   // Player telemetry
   const [isPlaying, setIsPlaying] = useState(Boolean(autoPlay))
@@ -94,11 +98,11 @@ const VideoPlayer = forwardRef(function VideoPlayer({
   const [pct, setPct] = useState(0)
   const [fullscreen, setFullscreen] = useState(false)
   const [speedOpen, setSpeedOpen] = useState(false)
-  const timeRef = useRef(0)
+  const timeRef = useRef(parsedInitialTime)
   const playerStateRef = useRef(-1)
 
   // Subtitle Telemetry & Overlay State
-  const [currentTime, setCurrentTime] = useState(0)
+  const [currentTime, setCurrentTime] = useState(parsedInitialTime)
   const [selectedSubLang, setSelectedSubLang] = useState(() => {
     try {
       return localStorage.getItem('al_azher_sub_lang') || 'ar'
@@ -144,20 +148,20 @@ const VideoPlayer = forwardRef(function VideoPlayer({
 
   const handleSelectSubLang = useCallback((targetLang) => {
     setSelectedSubLang(targetLang)
-    try { localStorage.setItem('al_azher_sub_lang', targetLang) } catch (_e) {}
+    try { localStorage.setItem('al_azher_sub_lang', targetLang) } catch { /* ignore storage errors */ }
     onSubtitleChange?.(targetLang)
   }, [onSubtitleChange])
 
   const handleUpdateSubStyle = useCallback((updates) => {
     setSubStyle((prev) => {
       const next = { ...prev, ...updates }
-      try { localStorage.setItem('al_azher_sub_style', JSON.stringify(next)) } catch (_e) {}
+      try { localStorage.setItem('al_azher_sub_style', JSON.stringify(next)) } catch { /* ignore storage errors */ }
       return next
     })
   }, [])
 
   // Resume state
-  const [resumeSec, setResumeSec] = useState(0)
+  const [resumeSec, setResumeSec] = useState(parsedInitialTime)
   const [resumeChip, setResumeChip] = useState(0)
   const storageKey = useMemo(
     () => `yt_pos_${studentId || 'guest'}_${lectureId || 'x'}`,
@@ -341,11 +345,18 @@ const VideoPlayer = forwardRef(function VideoPlayer({
     seekTo: (sec) => {
       const target = Math.max(0, Number(sec) || 0)
       timeRef.current = target
+      setCurrentTime(target)
+      onTimeUpdate?.(target)
+      if (videoElRef.current) {
+        try {
+          videoElRef.current.currentTime = target
+        } catch { /* ignore */ }
+      }
       post('seekTo', [target, true])
     },
     getCurrentTime: () => timeRef.current,
     togglePlayPause: () => togglePlayPause(),
-  }), [post, togglePlayPause])
+  }), [post, togglePlayPause, onTimeUpdate])
 
   const onKeyDown = useCallback((e) => {
     if (!inline) return
@@ -411,11 +422,17 @@ const VideoPlayer = forwardRef(function VideoPlayer({
           style={{ aspectRatio: '16 / 9' }}
         >
           <video
+            ref={videoElRef}
             src={url}
             controls
             autoPlay={autoPlay}
             playsInline
             className="w-full h-full object-contain"
+            onLoadedMetadata={(e) => {
+              if (parsedInitialTime > 0) {
+                try { e.currentTarget.currentTime = parsedInitialTime } catch { /* ignore */ }
+              }
+            }}
             onTimeUpdate={(e) => {
               const t = e.currentTarget.currentTime
               timeRef.current = t

@@ -71,7 +71,7 @@ export function AuthProvider({ children }) {
       sessionStorage.removeItem(STORAGE_KEY)
       sessionStorage.removeItem(LAST_ACTIVE_KEY)
       sessionStorage.setItem(EXPIRED_KEY, '1')
-     } catch (_e) {}
+     } catch { /* ignore storage errors */ }
      setUser(null)
      setLoading(false)
      return
@@ -265,7 +265,7 @@ export function AuthProvider({ children }) {
    const now = Date.now()
    const prev = Number(sessionStorage.getItem(LAST_ACTIVE_KEY) || 0)
    if (now - prev > 30000) {
-    try { sessionStorage.setItem(LAST_ACTIVE_KEY, String(now)) } catch (_e) {}
+    try { sessionStorage.setItem(LAST_ACTIVE_KEY, String(now)) } catch { /* ignore storage errors */ }
    }
   }
 
@@ -276,7 +276,7 @@ export function AuthProvider({ children }) {
   const checkInterval = setInterval(() => {
    const lastActive = Number(sessionStorage.getItem(LAST_ACTIVE_KEY) || 0)
    if (lastActive && Date.now() - lastActive > INACTIVITY_TIMEOUT_MS) {
-    try { sessionStorage.setItem(EXPIRED_KEY, '1') } catch (_e) {}
+    try { sessionStorage.setItem(EXPIRED_KEY, '1') } catch { /* ignore storage errors */ }
     logout()
    }
   }, 60000)

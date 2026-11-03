@@ -1,23 +1,16 @@
-import { useState, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
+import { getUserStorageKey } from '../utils/userStorage'
 import PageHero from '../components/shared/PageHero'
 import {
-  FiFileText,
   FiPrinter,
   FiDownload,
-  FiPlus,
   FiTrash2,
-  FiCheck,
   FiRotateCcw,
   FiUser,
   FiCode,
-  FiFolder,
-  FiExternalLink,
-  FiMail,
-  FiPhone,
-  FiGithub,
-  FiLinkedin
+  FiFolder
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 
@@ -66,16 +59,27 @@ const DEFAULT_RESUME = {
 
 export default function ResumeBuilder() {
   const { lang } = useLanguage()
+  const { user } = useAuth()
   const isArabic = lang === 'ar'
+  const resumeKey = getUserStorageKey('al_azher_resume_draft', user)
 
   const [resumeData, setResumeData] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_resume_draft')
+      const saved = localStorage.getItem(resumeKey)
       return saved ? JSON.parse(saved) : DEFAULT_RESUME
     } catch {
       return DEFAULT_RESUME
     }
   })
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(resumeKey)
+      setResumeData(saved ? JSON.parse(saved) : DEFAULT_RESUME)
+    } catch {
+      setResumeData(DEFAULT_RESUME)
+    }
+  }, [resumeKey])
 
   const [newProject, setNewProject] = useState({ title: '', tech: '', point: '' })
 
@@ -85,7 +89,7 @@ export default function ResumeBuilder() {
 
   const handleSaveDraft = () => {
     try {
-      localStorage.setItem('al_azher_resume_draft', JSON.stringify(resumeData))
+      localStorage.setItem(resumeKey, JSON.stringify(resumeData))
       toast.success(isArabic ? 'تم حفظ مسودة السيرة الذاتية بنجاح' : 'Resume draft saved locally')
     } catch {
       toast.error(isArabic ? 'تعذر الحفظ في المتصفح' : 'Could not save draft')

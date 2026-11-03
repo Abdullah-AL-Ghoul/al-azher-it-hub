@@ -9,21 +9,18 @@ import {
   FiUser, 
   FiPrinter, 
   FiAlertTriangle, 
-  FiCheckCircle, 
   FiRotateCcw,
-  FiBookOpen,
   FiX,
   FiEdit2,
-  FiShare2,
-  FiCopy,
-  FiCheck,
-  FiFileText
+  FiShare2
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import {
   downloadIcsSchedule,
   formatScheduleShareText
 } from '../../utils/calendarExport'
+import { useAuth } from '../../context/AuthContext'
+import { getUserStorageKey } from '../../utils/userStorage'
 
 const DAYS = [
   { id: 'sat', nameAr: 'السبت', nameEn: 'Saturday', shortAr: 'س', shortEn: 'Sat' },
@@ -52,13 +49,16 @@ const COLOR_PALETTES = [
   { id: 'teal', name: 'فيروزي', bg: 'bg-teal-500/15 border-teal-500/40 text-teal-700 dark:text-teal-300', dot: 'bg-teal-500' },
 ]
 
-export default function WeeklyScheduleBuilder({ activePlan, isArabic, t }) {
+export default function WeeklyScheduleBuilder({ activePlan, isArabic }) {
+  const { user } = useAuth()
+  const scheduleKey = getUserStorageKey('al_azher_weekly_schedule', user)
+
   // Saved Schedule slots
   const [entries, setEntries] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_weekly_schedule')
+      const saved = localStorage.getItem(scheduleKey) || localStorage.getItem('al_azher_weekly_schedule')
       if (saved) return JSON.parse(saved)
-    } catch {}
+    } catch { /* ignore storage errors */ }
     return [
       {
         id: 'init_1',
@@ -113,9 +113,9 @@ export default function WeeklyScheduleBuilder({ activePlan, isArabic, t }) {
   // Save to localStorage whenever entries change
   useEffect(() => {
     try {
-      localStorage.setItem('al_azher_weekly_schedule', JSON.stringify(entries))
-    } catch {}
-  }, [entries])
+      localStorage.setItem(scheduleKey, JSON.stringify(entries))
+    } catch { /* ignore storage errors */ }
+  }, [entries, scheduleKey])
 
   // Flat catalog of courses from activePlan for autocomplete / fast pick
   const planCourses = useMemo(() => {

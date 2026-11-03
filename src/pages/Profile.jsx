@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -60,7 +60,9 @@ export default function Profile() {
  const { user, updateUser } = useAuth()
  const prefersReduced = useReducedMotion()
  const navigate = useNavigate()
+ const [searchParams] = useSearchParams()
  const isArabic = lang === 'ar'
+ const reportParam = searchParams.get('report') === 'true'
 
   const [editing, setEditing] = useState(false)
  const [profileData, setProfileData] = useState({
@@ -80,13 +82,17 @@ export default function Profile() {
  const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' })
  const [pwSaving, setPwSaving] = useState(false)
  const [logDates, setLogDates] = useState([])
- const [showPrintReport, setShowPrintReport] = useState(false)
+ const [showPrintReport, setShowPrintReport] = useState(() => reportParam)
+
+ useEffect(() => {
+  if (reportParam) setShowPrintReport(true)
+ }, [reportParam])
 
  const activePlanId = useMemo(() => {
   try {
    const saved = localStorage.getItem('al_azher_active_major_plan')
    if (saved && ACADEMIC_PLANS.some(p => p.id === saved)) return saved
-  } catch {}
+  } catch { /* ignore storage errors */ }
   return 'cse-2025'
  }, [])
 
@@ -116,7 +122,7 @@ export default function Profile() {
     const legacy = localStorage.getItem('al_azher_curriculum_progress')
     if (legacy) return JSON.parse(legacy)
    }
-  } catch {}
+  } catch { /* ignore storage errors */ }
   return {}
  }, [activePlanId])
 
@@ -163,7 +169,7 @@ export default function Profile() {
      }
     }
    }
-  } catch {}
+  } catch { /* ignore storage errors */ }
   return null
  }, [])
 

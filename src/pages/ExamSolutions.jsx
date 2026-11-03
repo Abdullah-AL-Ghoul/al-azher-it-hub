@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
+import { getUserStorageKey } from '../utils/userStorage'
 import PageHero from '../components/shared/PageHero'
 import {
   FiFileText,
@@ -12,10 +14,7 @@ import {
   FiChevronUp,
   FiBookmark,
   FiEdit3,
-  FiCheck,
-  FiAward,
-  FiHelpCircle,
-  FiLayers
+  FiHelpCircle
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 
@@ -274,7 +273,10 @@ public:
 
 export default function ExamSolutions() {
   const { lang } = useLanguage()
+  const { user } = useAuth()
   const isArabic = lang === 'ar'
+  const scratchpadsKey = getUserStorageKey('al_azher_exam_scratchpads', user)
+  const bookmarkedExamsKey = getUserStorageKey('al_azher_bookmarked_exams', user)
 
   const [selectedCourse, setSelectedCourse] = useState('all')
   const [selectedType, setSelectedType] = useState('all')
@@ -282,7 +284,7 @@ export default function ExamSolutions() {
   const [revealedSolutions, setRevealedSolutions] = useState({})
   const [scratchpads, setScratchpads] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_exam_scratchpads')
+      const saved = localStorage.getItem(scratchpadsKey)
       return saved ? JSON.parse(saved) : {}
     } catch {
       return {}
@@ -290,7 +292,7 @@ export default function ExamSolutions() {
   })
   const [bookmarkedIds, setBookmarkedIds] = useState(() => {
     try {
-      const saved = localStorage.getItem('al_azher_bookmarked_exams')
+      const saved = localStorage.getItem(bookmarkedExamsKey)
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
@@ -307,7 +309,7 @@ export default function ExamSolutions() {
       const exists = prev.includes(id)
       const updated = exists ? prev.filter((item) => item !== id) : [...prev, id]
       try {
-        localStorage.setItem('al_azher_bookmarked_exams', JSON.stringify(updated))
+        localStorage.setItem(bookmarkedExamsKey, JSON.stringify(updated))
       } catch {
         // ignore
       }
@@ -324,7 +326,7 @@ export default function ExamSolutions() {
     setScratchpads((prev) => {
       const updated = { ...prev, [id]: text }
       try {
-        localStorage.setItem('al_azher_exam_scratchpads', JSON.stringify(updated))
+        localStorage.setItem(scratchpadsKey, JSON.stringify(updated))
       } catch {
         // ignore
       }

@@ -2,14 +2,9 @@ import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { 
   FiPieChart, 
-  FiTrendingUp, 
   FiTarget, 
-  FiCheckCircle, 
-  FiAward, 
   FiSliders, 
-  FiHelpCircle,
-  FiBookOpen,
-  FiArrowLeft
+  FiBookOpen
 } from 'react-icons/fi'
 import { 
   calculateCategoryBreakdown, 
@@ -23,8 +18,7 @@ export default function AcademicAnalyticsDashboard({
   passedHours = 0,
   totalCurriculumHours = 136,
   savedGpa = null,
-  isArabic = true,
-  t
+  isArabic = true
 }) {
   // Target GPA Simulator State (default target 85% or current + 3%)
   const currentGpaNum = savedGpa ? parseFloat(savedGpa) : 80.0

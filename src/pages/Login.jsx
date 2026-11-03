@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { updateLastVisit, addStudentLog } from '../services'
-import { FiUser, FiLock, FiMail, FiRefreshCw, FiCheck } from 'react-icons/fi'
+import { FiUser, FiLock, FiRefreshCw, FiCheck } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import SpatialInput from '../components/spatial/SpatialInput'
 import AuthLayout from '../components/auth/AuthLayout'
@@ -57,7 +57,7 @@ export default function Login() {
           clearInterval(interval)
           try {
             sessionStorage.removeItem('login_lockout_until')
-          } catch (_e) {}
+          } catch { /* ignore storage errors */ }
           setError('')
           return 0
         }
@@ -87,7 +87,7 @@ export default function Login() {
             : 'Session expired due to inactivity. Please log in again.'
         )
       }
-    } catch (_e) {}
+    } catch { /* ignore storage errors */ }
   }, [isArabic])
 
   useEffect(() => {
@@ -146,20 +146,25 @@ export default function Login() {
         } else {
           localStorage.removeItem('al_azher_remembered_id')
         }
-      } catch (_e) {}
+      } catch { /* ignore storage errors */ }
       sessionStorage.setItem('al_azher_just_auth', '1')
 
       const logVisit = async () => {
+        // IP lookup is best-effort: ad blockers must not suppress visit/login logging
+        let ip = null
         try {
-          const ipRes = await fetch('https://api.ipify.org?format=json')
-          const ipData = await ipRes.json()
-          try {
-            updateLastVisit(ipData.ip, navigator.userAgent)
-          } catch (_e) {}
-          try {
-            addStudentLog({ type: 'LOGIN', detail: '', device: navigator.userAgent })
-          } catch (_e) {}
-        } catch (_e) {}
+          const ctrl = new AbortController()
+          const timer = setTimeout(() => ctrl.abort(), 3000)
+          const ipRes = await fetch('https://api.ipify.org?format=json', { signal: ctrl.signal })
+          clearTimeout(timer)
+          ip = (await ipRes.json())?.ip || null
+        } catch { /* ignore network errors */ }
+        try {
+          await updateLastVisit(ip, navigator.userAgent)
+        } catch { /* ignore telemetry errors */ }
+        try {
+          await addStudentLog({ type: 'LOGIN', detail: '', device: navigator.userAgent, ip })
+        } catch { /* ignore telemetry errors */ }
       }
       setTimeout(logVisit, 0)
       const targetDestination = location.state?.from || (result.user.role === 'admin' ? '/admin' : '/home')
@@ -175,21 +180,21 @@ export default function Login() {
         const secs = Number(result.retryAfter) || 30
         try {
           sessionStorage.setItem('login_lockout_until', String(Date.now() + secs * 1000))
-        } catch (_e) {}
+        } catch { /* ignore storage errors */ }
         setLockoutSeconds(secs)
       } else {
         let failures = 1
         try {
           failures = (Number(sessionStorage.getItem('login_consecutive_failures')) || 0) + 1
           sessionStorage.setItem('login_consecutive_failures', String(failures))
-        } catch (_e) {}
+        } catch { /* ignore storage errors */ }
 
         if (failures >= 5) {
           const LOCK_TIME = 30
           try {
             sessionStorage.setItem('login_lockout_until', String(Date.now() + LOCK_TIME * 1000))
             sessionStorage.setItem('login_consecutive_failures', '0')
-          } catch (_e) {}
+          } catch { /* ignore storage errors */ }
           setLockoutSeconds(LOCK_TIME)
         } else if (failures >= 3) {
           const rem = 5 - failures

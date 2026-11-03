@@ -10,7 +10,7 @@ import AuthLogo from '../components/auth/AuthLogo'
 import AuthAlert from '../components/auth/AuthAlert'
 import AuthSubmitButton from '../components/auth/AuthSubmitButton'
 import PasswordStrengthIndicator from '../components/auth/PasswordStrengthIndicator'
-import { FiUser, FiLock, FiMail, FiArrowLeft, FiArrowRight, FiCheckCircle, FiSmile, FiSend, FiShield } from 'react-icons/fi'
+import { FiUser, FiLock, FiMail, FiArrowLeft, FiArrowRight, FiCheckCircle, FiSmile } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 
 export default function ForgotPassword() {

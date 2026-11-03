@@ -10,7 +10,6 @@ import {
   searchCues,
   TECHNICAL_GLOSSARY,
   applyAcademicGlossary,
-  translateText,
   translateCues,
 } from '../utils/vttParser'
 

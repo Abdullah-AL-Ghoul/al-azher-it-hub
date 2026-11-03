@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
@@ -81,7 +81,7 @@ export default function CourseRoadmap() {
     try {
       const saved = localStorage.getItem('al_azher_active_major_plan')
       if (saved && ACADEMIC_PLANS.some(p => p.id === saved)) return saved
-    } catch {}
+    } catch { /* ignore storage errors */ }
     return 'cse-2025'
   })
 
@@ -122,7 +122,7 @@ export default function CourseRoadmap() {
     setSelectedPlanId(newPlanId)
     try {
       localStorage.setItem('al_azher_active_major_plan', newPlanId)
-    } catch {}
+    } catch { /* ignore storage errors */ }
     const planObj = getAcademicPlan(newPlanId)
     const newItems = buildCurriculumDefaults(planObj)
     setRoadmap(newItems)
@@ -136,7 +136,7 @@ export default function CourseRoadmap() {
     )
   }
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       const [c, r] = await Promise.all([getCourses(), getRoadmap()])
@@ -157,13 +157,13 @@ export default function CourseRoadmap() {
     } finally {
       if (mountedRef.current) setLoading(false)
     }
-  }
+  }, [activePlan])
 
   useEffect(() => {
     mountedRef.current = true
     loadData()
     return () => { mountedRef.current = false }
-  }, [])
+  }, [loadData])
 
   const handleRetry = () => {
     loadData()

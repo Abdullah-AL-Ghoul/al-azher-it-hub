@@ -112,7 +112,7 @@ const TOOLS_CONFIG = [
     color: 'from-pink-600 to-rose-500',
     badgeAr: 'توقع درجات التخرج',
     badgeEn: 'Graduation Predictor',
-    to: '/study-plan?tab=gpa',
+    to: '/study-plan?tab=calculator',
     actionTextAr: 'حساب وتوقع المعدل',
     actionTextEn: 'Calculate GPA',
     featuresAr: ['حساب المعدل التراكمي', 'توقع درجات الفصول القادمة', 'تحليل متطلبات التخرج', 'حساب مراتب الشرف'],

@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   FiFileText,
   FiPlus,
@@ -8,40 +7,30 @@ import {
   FiPlay,
   FiCheckCircle,
   FiAlertCircle,
-  FiClock,
   FiUploadCloud,
-  FiDownload,
-  FiEye,
   FiSearch,
-  FiFilter,
   FiCheck,
   FiX,
   FiCpu,
   FiScissors,
-  FiLayers,
   FiRefreshCw,
-  FiDollarSign,
   FiShield,
-  FiSliders,
   FiKey,
   FiActivity,
-  FiZap,
-  FiServer,
-  FiCheckSquare,
+  FiSliders,
+  FiDollarSign,
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 import { useLanguage } from '../../context/LanguageContext'
-import { formatVttTime, parseVttTime, validateCues } from '../../utils/vttParser'
+import { formatVttTime, validateCues } from '../../utils/vttParser'
 import {
   getAllSubtitles,
   saveSubtitle,
-  deleteSubtitle,
-  updateSubtitleStatus,
   importSubtitleFile,
-  exportSubtitleFile,
   runSubtitleGenerationPipeline,
-  translateSubtitleTrack,
   translateCues,
+  translateCuesWithGemini,
+  translateSubtitleTrack,
   getGeminiApiKey,
   setGeminiApiKey,
   removeGeminiApiKey,
@@ -80,14 +69,13 @@ const STATUS_BADGES = {
 
 export default function SubtitlesManagement({
   lectures = [],
-  courses = [],
   onRefresh,
 }) {
-  const { t, lang } = useLanguage()
+  const { lang } = useLanguage()
   const isArabic = lang === 'ar'
 
   const [subtitles, setSubtitles] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
@@ -95,10 +83,8 @@ export default function SubtitlesManagement({
   const [editorSubtitle, setEditorSubtitle] = useState(null)
   const [generationModalOpen, setGenerationModalOpen] = useState(false)
   const [importModalOpen, setImportModalOpen] = useState(false)
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null)
 
   // Editor states
-  const [activeCueId, setActiveCueId] = useState(null)
   const [previewTime, setPreviewTime] = useState(0)
   const [isTranslatingEditor, setIsTranslatingEditor] = useState(false)
   const [editorTranslateProgress, setEditorTranslateProgress] = useState(null)
@@ -110,7 +96,7 @@ export default function SubtitlesManagement({
   const [audioFile, setAudioFile] = useState(null)
   const [authorizedConfirmation, setAuthorizedConfirmation] = useState(false)
   const [sourceLang, setSourceLang] = useState('en')
-  const [targetLangs, setTargetLangs] = useState(['ar'])
+  const [targetLangs] = useState(['ar'])
   const [selectedEngine, setSelectedEngine] = useState('gemini-flash')
   const [generationProgress, setGenerationProgress] = useState(null) // { step, label, pct }
   const [isGenerating, setIsGenerating] = useState(false)
@@ -207,7 +193,7 @@ export default function SubtitlesManagement({
     try {
       const data = await getAllSubtitles(true)
       setSubtitles(data || [])
-    } catch (_err) {
+    } catch {
       toast.error(isArabic ? 'فشل تحميل بيانات الترجمات' : 'Failed to load subtitles')
     } finally {
       setLoading(false)
@@ -415,11 +401,11 @@ export default function SubtitlesManagement({
         setEditorTranslateProgress(isArabic ? 'جاري الترجمة بـ Google Gemini Flash...' : 'Translating with Google Gemini...')
         try {
           translatedCues = await translateCuesWithGemini(editorSubtitle.cues, targetLang, {
-            onProgress: ({ current, total, pct, label }) => {
+            onProgress: ({ pct, label }) => {
               setEditorTranslateProgress(label || `Gemini: ${pct}%`)
             },
           })
-        } catch (_err) {
+        } catch {
           translatedCues = await translateCues(
             editorSubtitle.cues,
             currentLang,

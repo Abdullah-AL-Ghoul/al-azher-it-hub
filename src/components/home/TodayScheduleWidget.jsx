@@ -1,16 +1,16 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { 
   FiCalendar, 
   FiClock, 
   FiMapPin, 
   FiUser, 
   FiArrowLeft, 
-  FiCheckCircle, 
   FiSun, 
   FiCoffee 
 } from 'react-icons/fi'
+import { useAuth } from '../../context/AuthContext'
+import { getUserStorageKey } from '../../utils/userStorage'
 
 const DAY_MAP = {
   0: { id: 'sun', nameAr: 'الأحد', nameEn: 'Sunday' },
@@ -22,15 +22,17 @@ const DAY_MAP = {
   6: { id: 'sat', nameAr: 'السبت', nameEn: 'Saturday' },
 }
 
-export default function TodayScheduleWidget({ isArabic, t }) {
+export default function TodayScheduleWidget({ isArabic }) {
+  const { user } = useAuth()
   const [scheduleEntries, setScheduleEntries] = useState([])
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('al_azher_weekly_schedule')
+      const scheduleKey = getUserStorageKey('al_azher_weekly_schedule', user)
+      const saved = localStorage.getItem(scheduleKey) || localStorage.getItem('al_azher_weekly_schedule')
       if (saved) setScheduleEntries(JSON.parse(saved))
-    } catch {}
-  }, [])
+    } catch { /* ignore storage errors */ }
+  }, [user])
 
   const currentDayInfo = useMemo(() => {
     const dayIndex = new Date().getDay()

@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 import { pageContainer, pageItem } from '../utils/motionTokens'
 import PageHero from '../components/shared/PageHero'
@@ -228,6 +228,13 @@ export default function ExamSimulator() {
     setExamFinished(false)
   }
 
+  // Submit / Finish Exam
+  const handleFinishExam = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    setExamFinished(true)
+    toast.success(isArabic ? 'تم تسليم الامتحان وحساب النتيجة!' : 'Exam submitted and scored!')
+  }, [isArabic])
+
   // Timer countdown
   useEffect(() => {
     if (examStarted && examMode === 'timed' && !examFinished) {
@@ -245,7 +252,7 @@ export default function ExamSimulator() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [examStarted, examMode, examFinished])
+  }, [examStarted, examMode, examFinished, handleFinishExam])
 
   // Select Option
   const handleSelectOption = (questionId, optionIdx) => {
@@ -254,13 +261,6 @@ export default function ExamSimulator() {
     if (examMode === 'practice') {
       setShowPracticeExplanation((prev) => ({ ...prev, [questionId]: true }))
     }
-  }
-
-  // Submit / Finish Exam
-  const handleFinishExam = () => {
-    if (timerRef.current) clearInterval(timerRef.current)
-    setExamFinished(true)
-    toast.success(isArabic ? 'تم تسليم الامتحان وحساب النتيجة!' : 'Exam submitted and scored!')
   }
 
   // Calculate Results

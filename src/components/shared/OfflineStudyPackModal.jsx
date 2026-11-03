@@ -5,8 +5,7 @@ import {
   FiShield, 
   FiX, 
   FiWifi, 
-  FiWifiOff,
-  FiCheckCircle
+  FiWifiOff
 } from 'react-icons/fi'
 import { toast } from 'react-hot-toast'
 

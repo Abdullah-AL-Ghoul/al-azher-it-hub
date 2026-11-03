@@ -9,10 +9,11 @@ import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useScrollLock } from '../hooks/useScrollLock'
 import { useNotifications } from '../hooks/useNotifications'
 import { HiMenu, HiX } from 'react-icons/hi'
-import { FiSun, FiMoon, FiMonitor, FiUser, FiLogOut, FiShield, FiBell, FiX, FiBookOpen, FiFolder, FiFileText, FiLayers, FiSettings, FiSearch } from 'react-icons/fi'
+import { FiSun, FiMoon, FiMonitor, FiUser, FiLogOut, FiShield, FiBell, FiX, FiBookOpen, FiFolder, FiFileText, FiLayers, FiSettings, FiSearch, FiHardDrive } from 'react-icons/fi'
 import SiteLogo from './shared/SiteLogo'
 import ConfirmDialog from './shared/ConfirmDialog'
 import BroadcastBanner from './shared/BroadcastBanner'
+import OfflineStudyPackModal from './shared/OfflineStudyPackModal'
 
 const iconMap = { FiBookOpen, FiFolder, FiFileText, FiLayers, FiUser, FiSettings }
 
@@ -47,23 +48,25 @@ export default memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showOfflineModal, setShowOfflineModal] = useState(false)
   const notifTrapRef = useFocusTrap(showNotifications)
   const mobileTrapRef = useFocusTrap(isOpen)
   const notifAreaRef = useRef(null)
   const { notifications, unreadCount, markAsRead } = useNotifications(user)
-  useScrollLock(isOpen || showNotifications)
+  useScrollLock(isOpen || showNotifications || showOfflineModal)
 
   // Escape closes whichever layer is actually open — not both at once.
   useEffect(() => {
-    if (!isOpen && !showNotifications) return
+    if (!isOpen && !showNotifications && !showOfflineModal) return
     const handleEsc = (e) => {
       if (e.key !== 'Escape') return
-      if (showNotifications) setShowNotifications(false)
+      if (showOfflineModal) setShowOfflineModal(false)
+      else if (showNotifications) setShowNotifications(false)
       else if (isOpen) setIsOpen(false)
     }
     document.addEventListener('keydown', handleEsc)
     return () => document.removeEventListener('keydown', handleEsc)
-  }, [isOpen, showNotifications])
+  }, [isOpen, showNotifications, showOfflineModal])
 
   // Outside click closes the notifications panel (it only closed via Escape
   // or the tiny X before — clicking anywhere else left it stuck open).
@@ -433,7 +436,7 @@ export default memo(function Navbar() {
                   {t('nav.language')}
                 </button>
                 {!user && (
-                  <Link to="/" onClick={() => setIsOpen(false)} className="w-full text-start px-4 py-3 min-h-[44px] rounded-xl text-sm font-semibold btn-spatial flex items-center gap-2">
+                  <Link to="/login" onClick={() => setIsOpen(false)} className="w-full text-start px-4 py-3 min-h-[44px] rounded-xl text-sm font-semibold btn-spatial flex items-center gap-2">
                     <FiUser size={16} /> {t('nav.login')}
                   </Link>
                 )}
@@ -458,6 +461,10 @@ export default memo(function Navbar() {
         confirmText={t('nav.logout')}
         cancelText={t('common.cancel')}
         variant="danger"
+      />
+      <OfflineStudyPackModal
+        isOpen={showOfflineModal}
+        onClose={() => setShowOfflineModal(false)}
       />
     </>
   )

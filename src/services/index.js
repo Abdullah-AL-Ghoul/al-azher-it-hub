@@ -26,6 +26,7 @@ export {
   getAllSubtitles,
   getSubtitlesByLecture,
   saveSubtitle,
+  saveLocalSubtitle,
   deleteSubtitle,
   updateSubtitleStatus,
   importSubtitleFile,
@@ -43,3 +44,11 @@ export {
   transcribeAudioWithGemini,
   translateCuesWithGemini,
 } from './subtitles'
+export {
+  REPORT_TYPES,
+  getContentReports,
+  submitContentReport,
+  updateContentReportStatus,
+  deleteContentReport,
+} from './reports'
+
